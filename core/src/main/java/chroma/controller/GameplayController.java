@@ -9,6 +9,7 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
@@ -117,6 +118,10 @@ public class GameplayController implements Screen {
         // Add key objects to the physics world
         physics.addObject(level.getGoalDoor());
         physics.addObject(level.getAvatar());
+
+        for (Enemy enemy : level.getEnemies()) {
+            physics.addObject(enemy);
+        }
 
         // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
