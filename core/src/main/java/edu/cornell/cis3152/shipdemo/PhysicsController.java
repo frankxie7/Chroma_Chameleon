@@ -1,0 +1,84 @@
+package edu.cornell.cis3152.shipdemo;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import edu.cornell.gdiac.physics2.ObstacleSprite;
+import edu.cornell.gdiac.util.PooledList;
+import java.util.Iterator;
+
+public class PhysicsController implements ContactListener {
+    private World world;
+    public PooledList<ObstacleSprite> objects;
+    public PooledList<ObstacleSprite> addQueue;
+    private static final int WORLD_VELOC = 6;
+    private static final int WORLD_POSIT = 2;
+
+    public PhysicsController(float gravityY) {
+        world = new World(new Vector2(0, gravityY), false);
+        world.setContactListener(this);
+        objects = new PooledList<>();
+        addQueue = new PooledList<>();
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public void addObject(ObstacleSprite obj) {
+        objects.add(obj);
+        obj.getObstacle().activatePhysics(world);
+    }
+
+    public void queueObject(ObstacleSprite obj) {
+        addQueue.add(obj);
+    }
+
+    public void update(float dt) {
+        // Add newly queued objects
+        while (!addQueue.isEmpty()) {
+            ObstacleSprite spr = addQueue.poll();
+            objects.add(spr);
+            spr.getObstacle().activatePhysics(world);
+        }
+        // Step the physics world
+        world.step(dt, WORLD_VELOC, WORLD_POSIT);
+        // Update each object and remove it if needed
+        Iterator<PooledList<ObstacleSprite>.Entry> iterator = objects.entryIterator();
+        while (iterator.hasNext()) {
+            PooledList<ObstacleSprite>.Entry entry = iterator.next();
+            ObstacleSprite spr = entry.getValue();
+            if (spr.getObstacle().isRemoved()) {
+                spr.getObstacle().deactivatePhysics(world);
+                entry.remove();
+            } else {
+                spr.update(dt);
+            }
+        }
+    }
+
+    @Override
+    public void beginContact(Contact contact) {
+        // You can process global collision events here.
+        // For example, if the player collides with the goal door,
+        // you might notify a higher-level controller.
+    }
+    @Override public void endContact(Contact contact) {}
+    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
+    @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
+
+    public void dispose() {
+        for (ObstacleSprite spr : objects) {
+            spr.getObstacle().deactivatePhysics(world);
+        }
+        objects.clear();
+        addQueue.clear();
+        if (world != null) {
+            world.dispose();
+        }
+        world = null;
+    }
+}
