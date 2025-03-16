@@ -371,5 +371,18 @@ public class Chameleon extends ObstacleSprite {
             batch.outline( sensorOutline, transform );
         }
     }
+
+    /**
+     * Returns the primary fixture associated with this game object.
+     * This fixture can be used for raycasting.
+     *
+     * @return the first fixture from the physics body, or null if not available.
+     */
+    public Fixture getFixture() {
+        if (obstacle.getBody() != null && obstacle.getBody().getFixtureList().size > 0) {
+            return obstacle.getBody().getFixtureList().first();
+        }
+        return null;
+    }
 }
 

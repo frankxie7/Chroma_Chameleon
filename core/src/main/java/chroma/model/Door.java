@@ -15,6 +15,7 @@
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.physics2.BoxObstacle;
@@ -52,27 +53,33 @@ public class Door extends ObstacleSprite {
 
         float x = settings.get("pos").getFloat(0);
         float y = settings.get("pos").getFloat(1);
-        float s = settings.getFloat( "size" );
-        float size = s*units;
+        float s = settings.getFloat("size");
+        float size = s * units;
 
         obstacle = new BoxObstacle(x, y, s, s);
-
-        obstacle.setDensity( settings.getFloat( "density", 0 ) );
-        obstacle.setFriction( settings.getFloat( "friction", 0 ) );
-        obstacle.setRestitution( settings.getFloat( "restitution", 0 ) );
-        obstacle.setPhysicsUnits( units );
-        obstacle.setBodyType( BodyDef.BodyType.StaticBody);
+        obstacle.setDensity(settings.getFloat("density", 0));
+        obstacle.setFriction(settings.getFloat("friction", 0));
+        obstacle.setRestitution(settings.getFloat("restitution", 0));
+        obstacle.setPhysicsUnits(units);
+        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);
-        obstacle.setUserData( this );
+        obstacle.setUserData(this);
         obstacle.setName("goal");
 
-        debug = ParserUtils.parseColor( settings.get("debug"),  Color.WHITE);
+        debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
-        // Create a rectangular mesh the same size as the door, adjusted by
-        // the physics units. For all meshes attached to a physics body, we
-        // want (0,0) to be in the center of the mesh. So the method call below
-        // is (x,y,w,h) where x, y is the bottom left.
-        mesh.set(-size/2.0f,-size/2.0f,size,size);
+        mesh.set(-size / 2.0f, -size / 2.0f, size, size);
     }
 
+    /**
+     * Returns the primary fixture associated with this door.
+     *
+     * @return the first fixture from the physics body, or null if not available.
+     */
+    public Fixture getFixture() {
+        if (obstacle.getBody() != null && obstacle.getBody().getFixtureList().size > 0) {
+            return obstacle.getBody().getFixtureList().first();
+        }
+        return null;
+    }
 }

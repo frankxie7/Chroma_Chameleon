@@ -18,6 +18,7 @@
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.math.Poly2;
@@ -58,9 +59,8 @@ public class Terrain extends ObstacleSprite {
     public Terrain(float[] points, float units, JsonValue settings) {
         super();
 
-        float tile = settings.getFloat( "tile" );
+        float tile = settings.getFloat("tile");
 
-        // Construct a Poly2 object, breaking it into triangles
         Poly2 poly = new Poly2();
         PolyTriangulator triangulator = new PolyTriangulator();
         triangulator.set(points);
@@ -68,14 +68,15 @@ public class Terrain extends ObstacleSprite {
         triangulator.getPolygon(poly);
 
         obstacle = new PolygonObstacle(points);
-        obstacle.setBodyType( BodyDef.BodyType.StaticBody );
-        obstacle.setDensity( settings.getFloat( "density", 0 ) );
-        obstacle.setFriction( settings.getFloat( "friction", 0 ) );
-        obstacle.setRestitution( settings.getFloat( "restitution", 0 ) );
-        obstacle.setPhysicsUnits( units );
-        obstacle.setUserData( this );
+        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
+        obstacle.setDensity(settings.getFloat("density", 0));
+        obstacle.setFriction(settings.getFloat("friction", 0));
+        obstacle.setRestitution(settings.getFloat("restitution", 0));
+        obstacle.setPhysicsUnits(units);
+        obstacle.setUserData(this);
 
-        debug = ParserUtils.parseColor( settings.get("debug"),  Color.WHITE);
+        debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
+
 
         // Create a polygon mesh matching the physics body, adjusted by the
         // physics units. We take the save polygon we used to create the
@@ -86,5 +87,15 @@ public class Terrain extends ObstacleSprite {
         poly.scl( units );
         mesh.set(poly,tile,tile);
     }
-
+    /**
+     * Returns the primary fixture associated with this terrain object.
+     *
+     * @return the first fixture from the physics body, or null if not available.
+     */
+    public Fixture getFixture() {
+        if (obstacle.getBody() != null && obstacle.getBody().getFixtureList().size > 0) {
+            return obstacle.getBody().getFixtureList().first();
+        }
+        return null;
+    }
 }
