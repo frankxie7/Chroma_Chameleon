@@ -16,6 +16,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -24,6 +25,8 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
+import edu.cornell.gdiac.math.Poly2;
+import edu.cornell.gdiac.math.PolyTriangulator;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
 
@@ -174,6 +177,14 @@ public class GameplayController implements Screen {
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
         }
+        if(input.didSecondary()){
+            level.getAvatar().setShooting(true);
+            System.out.println(level.getAvatar().isShooting());
+        }
+
+        if(level.getAvatar().isShooting()){
+            level.getAvatar().shootRays();
+        }
 
         // Optionally, if shooting, create bullets.
     }
@@ -203,10 +214,12 @@ public class GameplayController implements Screen {
             batch.drawText(badMessage, width / 2, height / 2);
         }
         batch.end();
+
     }
 
     @Override
     public void render(float delta) {
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
         if (!active)
             return;
         if (!preUpdate(delta))
@@ -214,6 +227,22 @@ public class GameplayController implements Screen {
         update(delta);
         postUpdate(delta);
         draw(delta);
+        float ppm = 1.01f;
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(1, 1, 0, 1);
+        for (int i = 0; i < level.getAvatar().getNumRays(); i++) {
+            if(level.getAvatar().getPosition() != null && level.getAvatar().getEndpoints()[i] != null){
+                Vector2 v1 = level.getAvatar().getPosition();
+                Vector2 v2 = level.getAvatar().getEndpoints()[i];
+                float x1 = v1.x * 29f;
+                float y1 = v1.y * 29f;
+                float x2 = v2.x * 29f;
+                float y2 = v2.y * 29f;
+                System.out.println(x2);
+                shapeRenderer.line(x1,y1,x2,y2);
+            }
+        }
+        shapeRenderer.end();
     }
 
     @Override

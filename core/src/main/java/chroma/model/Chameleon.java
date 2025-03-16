@@ -61,6 +61,36 @@ public class Chameleon extends ObstacleSprite {
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
+    //Number of rays to shoot
+    private Vector2 position;
+
+    private int numRays = 3;
+    //Length of the rays
+    private float rayLength = 5f;
+    //Endpoints of the rays
+    private Vector2[] endpoints;
+    //Angle of character
+    private float angle;
+
+
+    /**
+     * Returns the posiiton of the Chameleon
+     * @return position the position of the chameleon
+     */
+    public Vector2 getPosition(){return position;}
+
+    /**
+     * Returns the endpoints of a given raycast from the player
+     * @return endpoints the endpoints of the raycast
+     */
+    public Vector2[] getEndpoints(){return endpoints;}
+
+    /**
+     * Returns the number of rays
+     * @return numRays - the numbers of rays
+     */
+    public int getNumRays(){return numRays;}
+
 
     /**
      * Returns the left/right movement of this character.
@@ -201,6 +231,8 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
 
+        endpoints = new Vector2[numRays];
+
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
@@ -262,6 +294,17 @@ public class Chameleon extends ObstacleSprite {
 //        factory.makeRect( (sensorCenter.x-w/2)*u,(sensorCenter.y-h/2)*u, w*u, h*u,  sensorOutline);
     }
 
+    public void shootRays() {
+        float angleStep = (float) Math.PI/2f / (float) numRays;
+        for (int i = 0; i < numRays; i++) {
+            float angleOffset = (i - numRays / 2) * angleStep;
+            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
+                (float) Math.sin(angle +angleOffset)).nor();
+
+            Vector2 endPoint = new Vector2(position.cpy()).add(direction.scl(rayLength));
+            endpoints[i] = new Vector2(endPoint);
+        }
+    }
 
     /**
      * Applies the force to the body of Traci
@@ -277,6 +320,8 @@ public class Chameleon extends ObstacleSprite {
         float vx = obstacle.getVX();
         float vy = obstacle.getVY();
         Body body = obstacle.getBody();
+        position = obstacle.getBody().getPosition();
+        angle = obstacle.getBody().getAngle();
 
         float moveX = getMovement();
         float moveY = getVerticalMovement();
