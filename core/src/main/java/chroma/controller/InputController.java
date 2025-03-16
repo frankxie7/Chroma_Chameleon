@@ -14,6 +14,7 @@
  */
 package chroma.controller;
 
+import chroma.model.Level;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
@@ -330,12 +331,14 @@ public class InputController {
             vertical -= 1.0f;
         }
 
+
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         crosshair.set(Gdx.input.getX(), Gdx.input.getY());
         crosshair.scl(1/scale.x,-1/scale.y);
         crosshair.y += bounds.height;
         clampPosition(bounds);
+
     }
 
     /**

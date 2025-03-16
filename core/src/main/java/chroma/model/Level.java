@@ -20,6 +20,7 @@ import java.util.List;
 public class Level {
     private Door goalDoor;
     private Chameleon avatar;
+    private List<Enemy> enemies;
     private List<Terrain> walls;
     private List<Terrain> platforms;
 
@@ -37,6 +38,21 @@ public class Level {
         avatar = new Chameleon(units, chamData);
         avatar.setTexture(avatarTex);
         avatar.createSensor();
+
+        enemies = new ArrayList<>();
+        JsonValue enemiesData = constants.get("enemies");
+        if (enemiesData != null) {
+            Texture enemyTex = directory.getEntry("platform-traci", Texture.class);
+            JsonValue enemyPositions = enemiesData.get("positions");
+            JsonValue enemyNames = enemiesData.get("names");
+            for (int i = 0; i < enemyPositions.size; i++) {
+                float[] coords = enemyPositions.get(i).asFloatArray();
+                String name = enemyNames.get(i).asString();
+                Enemy enemy = new Enemy(coords, name, units, enemiesData);
+                enemy.setTexture(enemyTex);
+                enemies.add(enemy);
+            }
+        }
 
         // Create walls
         walls = new ArrayList<>();
@@ -73,6 +89,10 @@ public class Level {
 
     public Chameleon getAvatar() {
         return avatar;
+    }
+
+    public List<Enemy> getEnemies() {
+        return enemies;
     }
 
     public List<Terrain> getWalls() {

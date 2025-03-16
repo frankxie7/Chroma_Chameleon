@@ -9,15 +9,12 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
-import chroma.model.Chameleon;
 import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -168,9 +165,6 @@ public class GameplayController implements Screen {
         level.getAvatar().setShooting(input.didSecondary());
         level.getAvatar().applyForce();
 
-        debugAllFixtures(level.getAvatar());
-        debugFixture(level.getAvatar());
-
         // Check if player fell off the world
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
@@ -267,26 +261,4 @@ public class GameplayController implements Screen {
         }
         failed = value;
     }
-    private void debugAllFixtures(ObstacleSprite obj) {
-        Body body = obj.getObstacle().getBody();
-        if (body != null && body.getFixtureList().size > 0) {
-            System.out.println("Fixture exists! There are " + body.getFixtureList().size + " fixtures.");
-            Fixture fixture = body.getFixtureList().first();
-        } else {
-            System.out.println("No fixtures found for object: " + obj);
-        }
-    }
-
-    private void debugFixture(ObstacleSprite obj) {
-        Chameleon ch = level.getAvatar();
-        Fixture fixture = ch.getFixture();
-        if (fixture != null) {
-            System.out.println("Fixture exists for Chameleon!");
-        } else {
-            System.out.println("No fixture found for Chameleon.");
-        }
-
-    }
-
-
 }

@@ -1,11 +1,7 @@
 package chroma.controller;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.*;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
@@ -66,6 +62,23 @@ public class PhysicsController implements ContactListener {
                 spr.update(dt);
             }
         }
+    }
+
+    /**
+     * Casts a ray from start to end and returns the first fixture hit.
+     * Used for AI vision and paint collision detection.
+     *
+     * @param start The starting point of the ray.
+     * @param end The ending point of the ray.
+     * @return The first fixture hit by the ray, or null if nothing is hit.
+     */
+    public Fixture raycast(Vector2 start, Vector2 end) {
+        final Fixture[] hitFixture = {null};
+        world.rayCast((fixture, point, normal, fraction) -> {
+            hitFixture[0] = fixture;
+            return fraction;
+        }, start, end);
+        return hitFixture[0];
     }
 
     @Override
