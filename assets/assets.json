@@ -1,0 +1,27 @@
+{
+	"textures": {
+        "shared-earth" : {
+            "file":  "shared/earthtile.png",
+            "wrapU": "repeated",
+            "wrapV": "repeated"
+        },
+        "shared-goal":   "shared/goaldoor.png",
+        "platform-traci"    : "platform/traci.png",
+        "platform-chameleon": "platform/idle.png",
+        "platform-rope"     : "platform/ropebridge.png",
+        "platform-barrier"  : "platform/barrier.png",
+        "platform-bullet"   : "platform/bullet.png",
+        "background": "platform/floortile.png"
+    },
+    "jsons"  : {
+        "platform-constants": "platform/constants.json"
+    },
+    "soundfx" : {
+    },
+    "fonts": {
+        "shared-retro": {
+            "file": "shared/RetroGame.ttf",
+            "size": 64
+        }
+    }
+}
