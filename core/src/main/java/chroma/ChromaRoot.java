@@ -1,5 +1,7 @@
-package edu.cornell.cis3152.shipdemo;
+package chroma;
 
+import chroma.controller.GameplayController;
+import chroma.controller.LoadingMode;
 import com.badlogic.gdx.*;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;

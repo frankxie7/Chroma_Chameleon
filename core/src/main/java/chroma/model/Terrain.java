@@ -14,7 +14,7 @@
  * Author:  Walker M. White
  * Version: 2/8/2025
  */
- package edu.cornell.cis3152.shipdemo;
+ package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.BodyDef;

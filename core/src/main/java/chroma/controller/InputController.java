@@ -12,7 +12,7 @@
  * Author:  Walker M. White
  * Version: 2/8/2025
  */
-package edu.cornell.cis3152.shipdemo;
+package chroma.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

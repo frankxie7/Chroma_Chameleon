@@ -1,9 +1,9 @@
-package edu.cornell.cis3152.shipdemo.lwjgl3;
+package chroma.lwjgl3;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 
-import edu.cornell.cis3152.shipdemo.ChromaRoot;
+import chroma.ChromaRoot;
 
 
 /** Launches the desktop (LWJGL3) application. */

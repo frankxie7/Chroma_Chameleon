@@ -1,4 +1,4 @@
-package edu.cornell.cis3152.shipdemo;
+package chroma.controller;
 
 /**
  * GameplayController
@@ -9,11 +9,12 @@ package edu.cornell.cis3152.shipdemo;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import chroma.model.Level;
+import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -24,8 +25,6 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
-import edu.cornell.gdiac.util.PooledList;
-import java.util.Iterator;
 
 public class GameplayController implements Screen {
 

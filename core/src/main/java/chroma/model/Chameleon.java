@@ -1,4 +1,4 @@
-package edu.cornell.cis3152.shipdemo;
+package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Affine2;

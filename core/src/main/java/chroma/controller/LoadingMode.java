@@ -20,7 +20,7 @@
  * @author: Walker M. White
  * @date: 11/21/2024
  */
-package edu.cornell.cis3152.shipdemo;
+package chroma.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;

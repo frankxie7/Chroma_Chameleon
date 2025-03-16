@@ -14,7 +14,7 @@
  */
 //Note, the above license and copyright applies to this file only.
 
-package edu.cornell.cis3152.shipdemo.lwjgl3;
+package chroma.lwjgl3;
 
 import org.lwjgl.system.macosx.LibC;
 
