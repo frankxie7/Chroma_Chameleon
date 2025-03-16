@@ -5,7 +5,18 @@ import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Level
+ * -----
+ * This class is responsible for constructing the game environment from JSON configuration.
+ * It instantiates key game objects CURRENTLY including:
+ *   - The goal door.
+ *   - The player (Chameleon).
+ *   - Walls and platforms.
+ *
+ * Level encapsulates the object creation logic so that higher-level controllers need not manage
+ * the details of each object's construction. Getter methods provide access to these objects.
+ */
 public class Level {
     private Door goalDoor;
     private Chameleon avatar;

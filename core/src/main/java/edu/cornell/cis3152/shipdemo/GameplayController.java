@@ -1,6 +1,14 @@
 package edu.cornell.cis3152.shipdemo;
 
-
+/**
+ * GameplayController
+ * ------------------
+ * This class acts as the high-level coordinator for the game. It is responsible for:
+ * - Managing game state and flow (reset, win, lose, and level transitions).
+ * - Handling player input (via InputController) and applying it to game objects.
+ * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
+ * - Rendering all game objects and UI messages.
+ */
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;

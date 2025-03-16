@@ -10,6 +10,14 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
 
+/**
+ * PhysicsController
+ * -----------------
+ * This class is responsible for managing the Box2D physics simulation.
+ * It creates and steps a Box2D World, maintains a collection of physics objects (ObstacleSprites),
+ * and handles updating and disposing of these objects. It also implements ContactListener to allow
+ * global processing of collision events. (idk if we should have this)
+ */
 public class PhysicsController implements ContactListener {
     private World world;
     public PooledList<ObstacleSprite> objects;
