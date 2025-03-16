@@ -1,5 +1,6 @@
 package edu.cornell.cis3152.shipdemo;
 
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -19,6 +20,7 @@ import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
 
 public class GameplayController implements Screen {
+
     public static final int EXIT_QUIT = 0;
     public static final int EXIT_NEXT = 1;
     public static final int EXIT_PREV = 2;
@@ -65,8 +67,9 @@ public class GameplayController implements Screen {
 
         // For converting input coordinates
         scale = new Vector2();
-        bounds = new Rectangle(0,0,worldConf.get("bounds").getFloat( 0 ), worldConf.get("bounds").getFloat( 1 ));
-        resize(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        bounds = new Rectangle(0, 0, worldConf.get("bounds").getFloat(0),
+            worldConf.get("bounds").getFloat(1));
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera = new OrthographicCamera();
 
         // Initialize the PhysicsController with gravity
@@ -192,28 +195,43 @@ public class GameplayController implements Screen {
 
     @Override
     public void render(float delta) {
-        if (!active) return;
-        if (!preUpdate(delta)) return;
+        if (!active)
+            return;
+        if (!preUpdate(delta))
+            return;
         update(delta);
         postUpdate(delta);
         draw(delta);
     }
 
-    @Override public void show() { active = true; }
-    @Override public void hide() { active = false; }
-    @Override public void pause() { }
-    @Override public void resume() { }
+    @Override
+    public void show() {
+        active = true;
+    }
+
+    @Override
+    public void hide() {
+        active = false;
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
 
     @Override
     public void resize(int width, int height) {
-        this.width  = width;
+        this.width = width;
         this.height = height;
         if (camera == null) {
             camera = new OrthographicCamera();
         }
-        camera.setToOrtho( false, width, height );
-        scale.x = width/bounds.width;
-        scale.y = height/bounds.height;
+        camera.setToOrtho(false, width, height);
+        scale.x = width / bounds.width;
+        scale.y = height / bounds.height;
         reset();
     }
 

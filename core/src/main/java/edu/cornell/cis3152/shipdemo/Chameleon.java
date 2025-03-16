@@ -4,7 +4,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+
 import com.badlogic.gdx.physics.box2d.BodyDef;
+
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
@@ -181,6 +183,7 @@ public class Chameleon extends ObstacleSprite {
 
         float x = data.get("pos").getFloat(0);
         float y = data.get("pos").getFloat(1);
+
         float s = data.getFloat("size");
         float size = s * units;
 
@@ -202,9 +205,11 @@ public class Chameleon extends ObstacleSprite {
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
+
         maxspeed = data.getFloat("maxspeed", 0);
         damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
+
         shotLimit = data.getInt("shot_cool", 0);
 
         isShooting = false;
@@ -214,6 +219,7 @@ public class Chameleon extends ObstacleSprite {
         // Create a rectangular mesh for the chameleon.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
     }
+
 
 
     /**
