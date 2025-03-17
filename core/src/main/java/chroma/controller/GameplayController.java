@@ -32,6 +32,9 @@ import edu.cornell.gdiac.util.ScreenListener;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.math.PolyTriangulator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GameplayController implements Screen {
 
     public static final int EXIT_QUIT = 0;
@@ -58,6 +61,8 @@ public class GameplayController implements Screen {
     // New modules
     private PhysicsController physics;
     private Level level;
+
+    private List<AIController> aiControllers;
 
     // For UI messages
     private BitmapFont displayFont;
@@ -126,6 +131,10 @@ public class GameplayController implements Screen {
 
         for (Enemy enemy : level.getEnemies()) {
             physics.addObject(enemy);
+            if (aiControllers == null) {
+                aiControllers = new ArrayList<>();
+            }
+            aiControllers.add(new AIController(enemy, this, physics, level));
         }
             // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
@@ -177,6 +186,11 @@ public class GameplayController implements Screen {
         // Ensure the chameleon's orientation is updated (this call is now redundant
         // if Chameleon.update() calls updateOrientation(), but is safe to include)
         level.getAvatar().updateOrientation();
+
+        // Update all AI enemies
+        for (AIController ai : aiControllers) {
+            ai.update(dt);
+        }
 
         // Check if player fell off the world
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
@@ -327,4 +341,8 @@ public class GameplayController implements Screen {
         }
         failed = value;
     }
+
+    public float getWorldWidth() { return worldWidth; }
+
+    public float getWorldHeight() { return worldHeight; }
 }
