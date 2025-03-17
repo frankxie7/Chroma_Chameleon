@@ -47,6 +47,7 @@ public class PhysicsController implements ContactListener {
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         this.directory = directory;
+        endpoints = new Vector2[numRays];
     }
 
     public World getWorld() {
