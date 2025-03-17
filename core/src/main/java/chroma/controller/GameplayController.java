@@ -165,13 +165,16 @@ public class GameplayController implements Screen {
         level.getAvatar().setShooting(input.didSecondary());
         level.getAvatar().applyForce();
 
+        // Ensure the chameleon's orientation is updated (this call is now redundant
+        // if Chameleon.update() calls updateOrientation(), but is safe to include)
+        level.getAvatar().updateOrientation();
+
         // Check if player fell off the world
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
         }
-
-        // Optionally, if shooting, create bullets.
     }
+
 
     private void postUpdate(float dt) {
         physics.update(dt);

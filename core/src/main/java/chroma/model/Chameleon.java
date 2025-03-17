@@ -71,7 +71,8 @@ public class Chameleon extends ObstacleSprite {
     private Vector2[] endpoints;
     //Angle of character
     private float angle;
-
+    // For asset rotation, nothing to do with raycasting.
+    private float orientation = 0.0f;
 
     /**
      * Returns the posiiton of the Chameleon
@@ -363,6 +364,9 @@ public class Chameleon extends ObstacleSprite {
         } else {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
+        // Update orientation based on current velocity
+        updateOrientation();
+        // Then call the superclass update
         super.update(dt);
     }
 
@@ -377,12 +381,11 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void draw(SpriteBatch batch) {
-        if (faceRight) {
-            flipCache.setToScaling( 1,1 );
-        } else {
-            flipCache.setToScaling( -1,1 );
-        }
-        super.draw(batch,flipCache);
+        // Use an affine transform with rotation set to the computed orientation.
+        // Note: Since the mesh is centered at (0,0), rotation occurs about the center.
+        Affine2 transform = new Affine2();
+        transform.setToRotation(orientation);
+        super.draw(batch, transform);
     }
 
     /**
@@ -414,6 +417,17 @@ public class Chameleon extends ObstacleSprite {
 
             //
             batch.outline( sensorOutline, transform );
+        }
+    }
+
+    // For asset drawing
+    public void updateOrientation() {
+        Body body = obstacle.getBody();
+        if (body != null) {
+            Vector2 vel = body.getLinearVelocity();
+            if (vel.len2() > 0.0001f) { // Only update if velocity is significant
+                orientation = (float) Math.toDegrees(Math.atan2(vel.y, vel.x));
+            }
         }
     }
 
