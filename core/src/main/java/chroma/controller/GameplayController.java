@@ -271,17 +271,40 @@ public class GameplayController implements Screen {
         batch.end();
     }
     private void updateCamera() {
-        // Get the player's position from the physics body (in world/physics units)
-        Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
-
-        // Compute the conversion factor (this is the same as used when initializing objects)
+        // 1) Convert our world units to pixel coordinates
         float units = (height == 0) ? 1 : (height / worldHeight);
+        // The map extents in pixel coordinates
+        float mapWidth  = worldWidth  * units;
+        float mapHeight = worldHeight * units;
 
-        // Set the camera's position so that the player is centered in the view.
-        // We multiply the player's position by the conversion factor to get the position in screen coordinates.
-        camera.position.set(playerPos.x * units, playerPos.y * units, 0);
+        // 2) Center camera on the player’s position (in pixels)
+        Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
+        float desiredCamX = playerPos.x * units;
+        float desiredCamY = playerPos.y * units;
+
+        // 3) Figure out half the camera’s viewport so we can clamp
+        float halfViewWidth  = camera.viewportWidth  / 2f;
+        float halfViewHeight = camera.viewportHeight / 2f;
+
+        // Clamp horizontally
+        if (desiredCamX < halfViewWidth) {
+            desiredCamX = halfViewWidth;
+        } else if (desiredCamX > mapWidth - halfViewWidth) {
+            desiredCamX = mapWidth - halfViewWidth;
+        }
+
+        // Clamp vertically
+        if (desiredCamY < halfViewHeight) {
+            desiredCamY = halfViewHeight;
+        } else if (desiredCamY > mapHeight - halfViewHeight) {
+            desiredCamY = mapHeight - halfViewHeight;
+        }
+
+        // 4) Apply final clamped position to the camera
+        camera.position.set(desiredCamX, desiredCamY, 0);
         camera.update();
     }
+
 
 
     @Override
