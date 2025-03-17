@@ -201,7 +201,7 @@ public class GameplayController implements Screen {
             System.out.println(level.getAvatar().isShooting());
         }
         if(level.getAvatar().isShooting()){
-            level.getAvatar().shootRays();
+            physics.shootRays(level.getAvatar(),0);
             physics.addPaint(level.getAvatar());
         }
     }

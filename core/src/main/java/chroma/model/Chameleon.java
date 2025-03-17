@@ -323,6 +323,7 @@ public class Chameleon extends ObstacleSprite {
         Body body = obstacle.getBody();
         position = obstacle.getPosition();
         angle = obstacle.getBody().getAngle();
+        System.out.println("chameleon" + obstacle.getBody());
 
         float moveX = getMovement();
         float moveY = getVerticalMovement();

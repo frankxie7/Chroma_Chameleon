@@ -18,8 +18,10 @@
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.math.Poly2;
@@ -66,7 +68,6 @@ public class Terrain extends ObstacleSprite {
         triangulator.set(points);
         triangulator.calculate();
         triangulator.getPolygon(poly);
-
         obstacle = new PolygonObstacle(points);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setDensity(settings.getFloat("density", 0));
@@ -74,7 +75,6 @@ public class Terrain extends ObstacleSprite {
         obstacle.setRestitution(settings.getFloat("restitution", 0));
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
-
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
 
