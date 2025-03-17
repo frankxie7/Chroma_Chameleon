@@ -1,6 +1,7 @@
 package chroma.controller;
 
 import chroma.model.Chameleon;
+import chroma.model.Enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -30,6 +31,8 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_VELOC = 6;
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
+    private boolean playerCollidedWithEnemy = false;
+
     //Number of rays to shoot
     private int numRays = 30;
     //Length of the rays
@@ -44,7 +47,6 @@ public class PhysicsController implements ContactListener {
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         this.directory = directory;
-        endpoints = new Vector2[numRays];
     }
 
     public World getWorld() {
@@ -122,6 +124,7 @@ public class PhysicsController implements ContactListener {
                 sprite.setDebugColor(Color.ORANGE);
                 sprite.setTexture(Tex);
                 addObject(sprite);
+
             }
         }
     }
@@ -135,6 +138,10 @@ public class PhysicsController implements ContactListener {
      * @return The first fixture hit by the ray, or null if nothing is hit.
      */
     public Fixture raycast(Vector2 start, Vector2 end) {
+        if (world == null || start == null || end == null) return null;
+        if (Float.isNaN(start.x) || Float.isNaN(start.y) ||
+            Float.isNaN(end.x) || Float.isNaN(end.y)) return null;
+
         final Fixture[] hitFixture = {null};
         world.rayCast((fixture, point, normal, fraction) -> {
             hitFixture[0] = fixture;
@@ -143,17 +150,47 @@ public class PhysicsController implements ContactListener {
         return hitFixture[0];
     }
 
-
+    public void castVisionCone(Vector2 start, float angle, float coneWidth, int numRays) {
+        float stepAngle = coneWidth / (numRays - 1);
+        for (int i = 0; i < numRays; i++) {
+            float rayAngle = angle - coneWidth / 2 + stepAngle * i;
+            Vector2 direction = new Vector2(1, 0).rotateRad(rayAngle);
+            direction.scl(100);
+            Fixture hitFixture = raycast(start, start.cpy().add(direction));
+            if (hitFixture != null) {
+                // Handle the collision (if any)
+            }
+        }
+    }
 
     @Override
     public void beginContact(Contact contact) {
         // You can process global collision events here.
         // For example, if the player collides with the goal door,
         // you might notify a higher-level controller.
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object userDataA = fixtureA.getBody().getUserData();
+        Object userDataB = fixtureB.getBody().getUserData();
+
+        // Check if the player collides with an enemy
+        if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
+            (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
+            playerCollidedWithEnemy = true;
+        }
     }
     @Override public void endContact(Contact contact) {}
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
+
+    public boolean didPlayerCollideWithEnemy() {
+        return playerCollidedWithEnemy;
+    }
+
+    public void resetCollisionFlags() {
+        playerCollidedWithEnemy = false;
+    }
 
     public void dispose() {
         for (ObstacleSprite spr : objects) {

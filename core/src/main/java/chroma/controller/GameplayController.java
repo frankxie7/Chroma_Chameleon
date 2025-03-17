@@ -14,6 +14,7 @@ import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -204,6 +205,7 @@ public class GameplayController implements Screen {
             physics.shootRays(level.getAvatar(),0);
             physics.addPaint(level.getAvatar());
         }
+        updateCamera();
     }
 
 
@@ -212,13 +214,20 @@ public class GameplayController implements Screen {
     }
 
     private void draw(float dt) {
-        ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
+        ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
 //       Since the background is not a game model its texture is not given by Level.
         // Handled manually
 
+        // Calculate the conversion factor from world units to screen pixels.
+        float units = (height == 0) ? 1 : (height / worldHeight);
+        // Compute the full map dimensions in screen pixels.
+        float mapWidth = worldWidth * units;
+        float mapHeight = worldHeight * units;
+
+        // Get background configuration.
         JsonValue bgConfig = constants.get("background");
         float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
 
@@ -230,9 +239,11 @@ public class GameplayController implements Screen {
         int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
         int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
 
-        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
-        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
+        // Compute how many tiles we need to cover the entire map area.
+        int tilesX = (int) Math.ceil(mapWidth / (float) effectiveTileWidth);
+        int tilesY = (int) Math.ceil(mapHeight / (float) effectiveTileHeight);
 
+        // Draw the background tiles so they cover the entire map.
         for (int i = 0; i < tilesX; i++) {
             for (int j = 0; j < tilesY; j++) {
                 float x = i * effectiveTileWidth;
@@ -240,7 +251,6 @@ public class GameplayController implements Screen {
                 batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
             }
         }
-
 
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {
@@ -260,6 +270,42 @@ public class GameplayController implements Screen {
         }
         batch.end();
     }
+    private void updateCamera() {
+        // 1) Convert our world units to pixel coordinates
+        float units = (height == 0) ? 1 : (height / worldHeight);
+        // The map extents in pixel coordinates
+        float mapWidth  = worldWidth  * units;
+        float mapHeight = worldHeight * units;
+
+        // 2) Center camera on the player’s position (in pixels)
+        Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
+        float desiredCamX = playerPos.x * units;
+        float desiredCamY = playerPos.y * units;
+
+        // 3) Figure out half the camera’s viewport so we can clamp
+        float halfViewWidth  = camera.viewportWidth  / 2f;
+        float halfViewHeight = camera.viewportHeight / 2f;
+
+        // Clamp horizontally
+        if (desiredCamX < halfViewWidth) {
+            desiredCamX = halfViewWidth;
+        } else if (desiredCamX > mapWidth - halfViewWidth) {
+            desiredCamX = mapWidth - halfViewWidth;
+        }
+
+        // Clamp vertically
+        if (desiredCamY < halfViewHeight) {
+            desiredCamY = halfViewHeight;
+        } else if (desiredCamY > mapHeight - halfViewHeight) {
+            desiredCamY = mapHeight - halfViewHeight;
+        }
+
+        // 4) Apply final clamped position to the camera
+        camera.position.set(desiredCamX, desiredCamY, 0);
+        camera.update();
+    }
+
+
 
     @Override
     public void render(float delta) {

@@ -17,6 +17,7 @@
  package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -77,15 +78,9 @@ public class Terrain extends ObstacleSprite {
         obstacle.setUserData(this);
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
-
-        // Create a polygon mesh matching the physics body, adjusted by the
-        // physics units. We take the save polygon we used to create the
-        // physics obstacle and scale it up. We then use that to set the
-        // mesh. The attribute tile is used to define how we scale/stretch
-        // the texture to fit to the polygon. Try experimenting with this in
-        // the JSON to see what happens.
-        poly.scl( units );
-        mesh.set(poly,tile,tile);
+        // Scale the polygon and create the mesh.
+        poly.scl(units);
+        mesh.set(poly, tile, tile);
     }
     /**
      * Returns the primary fixture associated with this terrain object.
