@@ -48,6 +48,7 @@ public class GameplayController implements Screen {
     private boolean complete;
     private boolean failed;
     private int countdown;
+    private int failureDelay;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -105,6 +106,7 @@ public class GameplayController implements Screen {
         badMessage.setText("FAILURE!");
         badMessage.setColor(com.badlogic.gdx.graphics.Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
+        badMessage.setFont(displayFont);
 
         reset();
     }
@@ -197,10 +199,18 @@ public class GameplayController implements Screen {
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
         }
+
+        // Check if player collided with an enemy
+        if (!failed && physics.didPlayerCollideWithEnemy()) {
+            setFailure(true);
+            physics.resetCollisionFlags();
+        }
+
         if(input.didSecondary()){
             level.getAvatar().setShooting(true);
             System.out.println(level.getAvatar().isShooting());
         }
+
         if(level.getAvatar().isShooting()){
             level.getAvatar().shootRays();
             physics.addPaint(level.getAvatar());
@@ -256,6 +266,7 @@ public class GameplayController implements Screen {
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
         }
+
 
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
@@ -361,6 +372,11 @@ public class GameplayController implements Screen {
 
     public void setSpriteBatch(SpriteBatch batch) {
         this.batch = batch;
+    }
+
+    private void setVictory() {
+        complete = true;
+        countdown = EXIT_COUNT;
     }
 
     private void setFailure(boolean value) {
