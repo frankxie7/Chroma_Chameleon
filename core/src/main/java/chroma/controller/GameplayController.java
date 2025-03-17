@@ -12,14 +12,13 @@ package chroma.controller;
 import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
+import chroma.model.Bomb;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -30,8 +29,6 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
-import edu.cornell.gdiac.math.Poly2;
-import edu.cornell.gdiac.math.PolyTriangulator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -196,9 +193,18 @@ public class GameplayController implements Screen {
             ai.update(dt);
         }
 
-        // Check if player fell off the world
-        if (!failed && level.getAvatar().getObstacle().getY() < -1) {
-            setFailure(true);
+        // Update the bomb
+        if (input.didTertiary()) {
+            Vector2 pos = input.getCrossHair();
+            float units = (height == 0) ? 1 : (height / worldHeight);
+            Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
+            JsonValue bombData = constants.get("bomb");
+            Bomb bomb = new Bomb(units, bombData,pos);
+            bomb.setTexture(bombTex);
+            bomb.getObstacle().setName("bomb");
+            level.getBombs().add(bomb);
+            physics.addObject(bomb);
+
         }
 
         // Check if player collided with an enemy

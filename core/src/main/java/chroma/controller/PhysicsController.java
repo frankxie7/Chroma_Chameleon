@@ -3,6 +3,7 @@ package chroma.controller;
 import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
+import chroma.model.Bomb;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -34,6 +35,8 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
+
+    private boolean playerWithBomb = false;
 
 
     //Number of rays to shoot
@@ -183,6 +186,12 @@ public class PhysicsController implements ContactListener {
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
             playerCollidedWithEnemy = true;
         }
+
+        // Check if the player collides with the bomb
+        if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            playerWithBomb = true;
+        }
     }
     @Override public void endContact(Contact contact) {}
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
@@ -194,6 +203,14 @@ public class PhysicsController implements ContactListener {
 
     public void resetCollisionFlags() {
         playerCollidedWithEnemy = false;
+    }
+
+    public boolean didPlayerCollideWithBomb() {
+        return playerWithBomb;
+    }
+
+    public void resetBombFlags() {
+        playerWithBomb = false;
     }
 
     public void dispose() {
