@@ -301,8 +301,7 @@ public class Chameleon extends ObstacleSprite {
             float angleOffset = (i - numRays / 2f) * angleStep;
             Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
                 (float) Math.sin(angle +angleOffset)).nor();
-            System.out.println(position);
-
+            position = obstacle.getPosition();
             Vector2 endPoint = new Vector2(position.cpy()).add(direction.scl(rayLength));
             endpoints[i] = new Vector2(endPoint);
         }

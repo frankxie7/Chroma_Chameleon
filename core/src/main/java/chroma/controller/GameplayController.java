@@ -251,6 +251,7 @@ public class GameplayController implements Screen {
                 batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
             }
         }
+
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
