@@ -78,7 +78,8 @@ public class Terrain extends ObstacleSprite {
 
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
-
+        // Scale the polygon and create the mesh.
+        poly.scl(units);
         mesh.set(poly, tile, tile);
     }
     /**
