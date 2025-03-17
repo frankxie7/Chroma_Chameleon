@@ -2,12 +2,13 @@ package chroma.controller;
 
 import chroma.model.Chameleon;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.utils.ShortArray;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.math.Poly2;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
@@ -92,10 +93,12 @@ public class PhysicsController implements ContactListener {
                 triangle.setPosition(x1*1.75f,y1*1.75f);
                 triangle.setBodyType(BodyType.StaticBody);
                 triangle.setSensor(true);
+                Texture Tex = directory.getEntry("platform-chameleon", Texture.class);
                 ObstacleSprite sprite = new ObstacleSprite(triangle,false);
                 sprite.setDebugColor(Color.ORANGE);
+                sprite.setTexture(Tex);
                 addObject(sprite);
-
+                System.out.println("complete");
             }
         }
     }
