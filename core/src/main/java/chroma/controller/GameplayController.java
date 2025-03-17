@@ -14,6 +14,7 @@ import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -204,6 +205,7 @@ public class GameplayController implements Screen {
             level.getAvatar().shootRays();
             physics.addPaint(level.getAvatar());
         }
+        updateCamera();
     }
 
 
@@ -212,13 +214,20 @@ public class GameplayController implements Screen {
     }
 
     private void draw(float dt) {
-        ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
+        ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
 //       Since the background is not a game model its texture is not given by Level.
         // Handled manually
 
+        // Calculate the conversion factor from world units to screen pixels.
+        float units = (height == 0) ? 1 : (height / worldHeight);
+        // Compute the full map dimensions in screen pixels.
+        float mapWidth = worldWidth * units;
+        float mapHeight = worldHeight * units;
+
+        // Get background configuration.
         JsonValue bgConfig = constants.get("background");
         float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
 
@@ -230,9 +239,11 @@ public class GameplayController implements Screen {
         int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
         int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
 
-        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
-        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
+        // Compute how many tiles we need to cover the entire map area.
+        int tilesX = (int) Math.ceil(mapWidth / (float) effectiveTileWidth);
+        int tilesY = (int) Math.ceil(mapHeight / (float) effectiveTileHeight);
 
+        // Draw the background tiles so they cover the entire map.
         for (int i = 0; i < tilesX; i++) {
             for (int j = 0; j < tilesY; j++) {
                 float x = i * effectiveTileWidth;
@@ -240,7 +251,6 @@ public class GameplayController implements Screen {
                 batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
             }
         }
-
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
@@ -259,6 +269,19 @@ public class GameplayController implements Screen {
         }
         batch.end();
     }
+    private void updateCamera() {
+        // Get the player's position from the physics body (in world/physics units)
+        Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
+
+        // Compute the conversion factor (this is the same as used when initializing objects)
+        float units = (height == 0) ? 1 : (height / worldHeight);
+
+        // Set the camera's position so that the player is centered in the view.
+        // We multiply the player's position by the conversion factor to get the position in screen coordinates.
+        camera.position.set(playerPos.x * units, playerPos.y * units, 0);
+        camera.update();
+    }
+
 
     @Override
     public void render(float delta) {
