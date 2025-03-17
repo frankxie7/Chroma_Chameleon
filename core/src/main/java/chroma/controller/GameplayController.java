@@ -77,10 +77,11 @@ public class GameplayController implements Screen {
         bounds = new Rectangle(0, 0, worldConf.get("bounds").getFloat(0),
             worldConf.get("bounds").getFloat(1));
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         camera = new OrthographicCamera();
 
         // Initialize the PhysicsController with gravity
-        physics = new PhysicsController(gravityY);
+        physics = new PhysicsController(gravityY,directory);
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
@@ -94,6 +95,7 @@ public class GameplayController implements Screen {
         badMessage.setColor(com.badlogic.gdx.graphics.Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
 
+
         reset();
     }
 
@@ -103,7 +105,7 @@ public class GameplayController implements Screen {
             physics.dispose();
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
-        physics = new PhysicsController(gravityY);
+        physics = new PhysicsController(gravityY,directory);
         complete = false;
         failed = false;
         countdown = -1;
@@ -113,6 +115,7 @@ public class GameplayController implements Screen {
 
         // Build the level (environment) including walls and platforms
         level = new Level(directory, units, constants);
+
 
         // Add key objects to the physics world
         physics.addObject(level.getGoalDoor());
@@ -165,6 +168,7 @@ public class GameplayController implements Screen {
         level.getAvatar().setShooting(input.didSecondary());
         level.getAvatar().applyForce();
 
+
         // Ensure the chameleon's orientation is updated (this call is now redundant
         // if Chameleon.update() calls updateOrientation(), but is safe to include)
         level.getAvatar().updateOrientation();
@@ -172,6 +176,10 @@ public class GameplayController implements Screen {
         // Check if player fell off the world
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
+        }
+        if(level.getAvatar().isShooting()){
+            level.getAvatar().shootRays();
+            physics.addPaint(level.getAvatar());
         }
     }
 
@@ -211,6 +219,7 @@ public class GameplayController implements Screen {
             return;
         update(delta);
         postUpdate(delta);
+
         draw(delta);
     }
 

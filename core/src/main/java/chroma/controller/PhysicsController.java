@@ -1,8 +1,16 @@
 package chroma.controller;
 
+import chroma.model.Chameleon;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
+import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
 
@@ -20,12 +28,15 @@ public class PhysicsController implements ContactListener {
     public PooledList<ObstacleSprite> addQueue;
     private static final int WORLD_VELOC = 6;
     private static final int WORLD_POSIT = 2;
+    private AssetDirectory directory;
 
-    public PhysicsController(float gravityY) {
+
+    public PhysicsController(float gravityY,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
         objects = new PooledList<>();
         addQueue = new PooledList<>();
+        this.directory = directory;
     }
 
     public World getWorld() {
@@ -64,6 +75,35 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    public void addPaint(Chameleon avatar) {
+        for (int i = 0; i < avatar.getNumRays() - 1; i++) {
+            if (avatar.getPosition() != null
+                && avatar.getEndpoints()[i] != null) {
+                Vector2 v1 = avatar.getPosition();
+                Vector2 v2 = avatar.getEndpoints()[i].cpy();
+                Vector2 v3 = avatar.getEndpoints()[i + 1].cpy();
+                float x1 = v1.x;
+                float y1 = v1.y;
+                float x2 = v2.x;
+                float y2 = v2.y;
+                float x3 = v3.x;
+                float y3 = v3.y;
+                float[] points = new float[]{x1,y1,x2,y2,x3,y3};
+                PolygonObstacle triangle = new PolygonObstacle(points);
+                triangle.setBodyType(BodyType.StaticBody);
+                triangle.setX(x1+x1);
+                triangle.setY(y1+y1);
+                triangle.setSensor(true);
+                Texture Tex = directory.getEntry("platform-chameleon", Texture.class);
+                ObstacleSprite sprite = new ObstacleSprite(triangle,false);
+                sprite.setDebugColor(Color.ORANGE);
+                sprite.setTexture(Tex);
+                addObject(sprite);
+                System.out.println("complete");
+            }
+        }
+    }
+
     /**
      * Casts a ray from start to end and returns the first fixture hit.
      * Used for AI vision and paint collision detection.
@@ -80,6 +120,8 @@ public class PhysicsController implements ContactListener {
         }, start, end);
         return hitFixture[0];
     }
+
+
 
     @Override
     public void beginContact(Contact contact) {

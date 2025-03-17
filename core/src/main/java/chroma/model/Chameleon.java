@@ -61,12 +61,12 @@ public class Chameleon extends ObstacleSprite {
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
-    //Number of rays to shoot
+    //Position
     private Vector2 position;
-
-    private int numRays = 3;
+    //Number of rays to shoot
+    private int numRays = 10;
     //Length of the rays
-    private float rayLength = 5f;
+    private float rayLength = 10f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Angle of character
@@ -298,9 +298,10 @@ public class Chameleon extends ObstacleSprite {
     public void shootRays() {
         float angleStep = (float) Math.PI/2f / (float) numRays;
         for (int i = 0; i < numRays; i++) {
-            float angleOffset = (i - numRays / 2) * angleStep;
+            float angleOffset = (i - numRays / 2f) * angleStep;
             Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
                 (float) Math.sin(angle +angleOffset)).nor();
+            System.out.println(position);
 
             Vector2 endPoint = new Vector2(position.cpy()).add(direction.scl(rayLength));
             endpoints[i] = new Vector2(endPoint);
@@ -321,7 +322,7 @@ public class Chameleon extends ObstacleSprite {
         float vx = obstacle.getVX();
         float vy = obstacle.getVY();
         Body body = obstacle.getBody();
-        position = obstacle.getBody().getPosition();
+        position = obstacle.getPosition();
         angle = obstacle.getBody().getAngle();
 
         float moveX = getMovement();

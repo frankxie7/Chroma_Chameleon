@@ -11,7 +11,8 @@
         "platform-rope"     : "platform/ropebridge.png",
         "platform-barrier"  : "platform/barrier.png",
         "platform-bullet"   : "platform/bullet.png",
-        "background": "platform/floortile.png"
+        "background": "platform/floortile.png",
+        "platform-white": "platform/white_texture.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
