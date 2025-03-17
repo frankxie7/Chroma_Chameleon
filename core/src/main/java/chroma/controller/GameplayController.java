@@ -15,7 +15,9 @@ import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -188,6 +190,32 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
+//       Since the background is not a game model its texture is not given by Level.
+        // Handled manually
+
+        JsonValue bgConfig = constants.get("background");
+        float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
+
+        Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
+        floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+        int nativeTileWidth = floorTile.getWidth();
+        int nativeTileHeight = floorTile.getHeight();
+        int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
+        int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
+
+        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
+        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
+
+        for (int i = 0; i < tilesX; i++) {
+            for (int j = 0; j < tilesY; j++) {
+                float x = i * effectiveTileWidth;
+                float y = j * effectiveTileHeight;
+                batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
+            }
+        }
+
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
@@ -204,9 +232,10 @@ public class GameplayController implements Screen {
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
+
+
+
         batch.end();
-
-
     }
 
     @Override
