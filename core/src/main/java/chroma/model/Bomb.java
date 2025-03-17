@@ -10,6 +10,9 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.WheelObstacle;
 
 public class Bomb extends ObstacleSprite{
+    private static final float LIFETIME = 3f;
+    private float timeAlive;
+
     public Bomb (float units, JsonValue settings, Vector2 pos) {
 
         float s = settings.getFloat( "size" );
@@ -29,5 +32,20 @@ public class Bomb extends ObstacleSprite{
         debug = ParserUtils.parseColor( settings.get( "debug" ), Color.WHITE );
 
         mesh.set( -radius, -radius, 2 * radius, 2 * radius );
+
+        timeAlive = 0;
+    }
+
+    @Override
+    public void update(float dt) {
+        // Calculate time existing
+        timeAlive += dt;
+
+        // Then call the superclass update
+        super.update(dt);
+    }
+
+    public boolean isExpired() {
+        return timeAlive >= LIFETIME;
     }
 }

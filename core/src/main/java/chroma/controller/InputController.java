@@ -87,6 +87,11 @@ public class InputController {
     /** For the gamepad crosshair control */
     private float momentum;
 
+    /** The mouse position*/
+    private Vector2 mousePos;
+    /** The mousePos cache*/
+    private Vector2 mousecache;
+
     /** An X-Box controller (if it is connected) */
     XBoxController xbox;
 
@@ -125,6 +130,10 @@ public class InputController {
      */
     public Vector2 getCrossHair() {
         return crosscache.set(crosshair);
+    }
+
+    public Vector2 getMousePos() {
+        return mousecache.set(mousePos);
     }
 
     /**
@@ -225,6 +234,8 @@ public class InputController {
         }
         crosshair = new Vector2();
         crosscache = new Vector2();
+        mousePos = new Vector2();
+        mousecache = new Vector2();
     }
 
     /**
@@ -337,8 +348,11 @@ public class InputController {
         crosshair.set(Gdx.input.getX(), Gdx.input.getY());
         crosshair.scl(1/scale.x,-1/scale.y);
         crosshair.y += bounds.height;
-        clampPosition(bounds);
 
+        mousePos.set(Gdx.input.getX(), Gdx.input.getY());
+        mousePos.scl(1/scale.x,-1/scale.y);
+        mousePos.y += bounds.height;
+        clampPosition(bounds);
     }
 
     /**
@@ -350,5 +364,7 @@ public class InputController {
     private void clampPosition(Rectangle bounds) {
         crosshair.x = Math.max(bounds.x, Math.min(bounds.x+bounds.width, crosshair.x));
         crosshair.y = Math.max(bounds.y, Math.min(bounds.y+bounds.height, crosshair.y));
+        mousePos.x = Math.max(bounds.x, Math.min(bounds.x+bounds.width, mousePos.x));
+        mousePos.y = Math.max(bounds.y, Math.min(bounds.y+bounds.height, mousePos.y));
     }
 }

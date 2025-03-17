@@ -24,9 +24,11 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Rectangle;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.audio.SoundEffectManager;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
+import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
 
@@ -195,16 +197,12 @@ public class GameplayController implements Screen {
 
         // Update the bomb
         if (input.didTertiary()) {
-            Vector2 pos = input.getCrossHair();
-            float units = (height == 0) ? 1 : (height / worldHeight);
-            Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
-            JsonValue bombData = constants.get("bomb");
-            Bomb bomb = new Bomb(units, bombData,pos);
-            bomb.setTexture(bombTex);
-            bomb.getObstacle().setName("bomb");
-            level.getBombs().add(bomb);
-            physics.addObject(bomb);
-
+            createBomb();
+        }
+        for (Bomb b: level.getBombs()) {
+            if (b.isExpired()) {
+                removeBomb(b);
+            }
         }
 
         // Check if player collided with an enemy
@@ -224,6 +222,34 @@ public class GameplayController implements Screen {
         updateCamera();
     }
 
+
+    /**
+     * Adds a new bullet to the world and send it in the right direction.
+     */
+    private void createBomb() {
+        InputController input = InputController.getInstance();
+        Vector2 pos = input.getMousePos();
+
+        float units = (height == 0) ? 1 : (height / worldHeight);
+
+        Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
+        JsonValue bombData = constants.get("bomb");
+        Bomb bomb = new Bomb(units, bombData,pos);
+        bomb.setTexture(bombTex);
+        bomb.getObstacle().setName("bomb");
+
+        level.getBombs().add(bomb);
+        physics.queueObject(bomb);
+    }
+
+    /**
+     * Removes a new bomb from the world.
+     *
+     * @param  bomb   the bomb to remove
+     */
+    public void removeBomb(ObstacleSprite bomb) {
+        bomb.getObstacle().markRemoved(true);
+    }
 
     private void postUpdate(float dt) {
         physics.update(dt);
