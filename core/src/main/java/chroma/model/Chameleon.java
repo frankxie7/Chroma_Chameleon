@@ -84,13 +84,6 @@ public class Chameleon extends ObstacleSprite {
     }
 
     /**
-     * Returns the orientation of this character
-     *
-     * @return the orientation of the character
-     */
-    public float getOrientation(){return orientation;}
-
-    /**
      * Sets the left/right movement of this character.
      *
      * This is the result of input times force.
@@ -217,7 +210,7 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
-//        obstacle.setSensor(true);
+
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
@@ -294,6 +287,7 @@ public class Chameleon extends ObstacleSprite {
         float vy = obstacle.getVY();
         Body body = obstacle.getBody();
         position = obstacle.getPosition();
+
 
         float moveX = getMovement();
         float moveY = getVerticalMovement();

@@ -4,18 +4,11 @@ import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
 import chroma.model.Terrain;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
 
@@ -36,11 +29,13 @@ public class PhysicsController implements ContactListener {
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
 
+    private boolean playerWithBomb = false;
+
 
     //Number of rays to shoot
-    private int numRays = 30;
+    private int numRays = 3;
     //Length of the rays
-    private float rayLength = 4f;
+    private float rayLength = 10f;
     //Endpoints of the rays
     private Vector2[] endpoints;
 
@@ -112,7 +107,7 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    public void addPaint(Chameleon avatar,JsonValue settings) {
+    public void addPaint(Chameleon avatar, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -181,6 +176,12 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
             playerCollidedWithEnemy = true;
+        }
+
+        // Check if the player collides with the bomb
+        if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            playerWithBomb = true;
         }
     }
     @Override public void endContact(Contact contact) {}

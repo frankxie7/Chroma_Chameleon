@@ -24,6 +24,7 @@ public class Level {
     private List<Enemy> enemies;
     private List<Terrain> walls;
     private List<Terrain> platforms;
+    private List<Bomb> bombs;
 
     public Level(AssetDirectory directory, float units, JsonValue constants) {
         // Create the goal door
@@ -82,6 +83,8 @@ public class Level {
                 platforms.add(platform);
             }
         }
+
+        bombs = new ArrayList<>();
     }
 
     public Door getGoalDoor() {
@@ -102,5 +105,9 @@ public class Level {
 
     public List<Terrain> getPlatforms() {
         return platforms;
+    }
+
+    public List<Bomb> getBombs() {
+        return bombs;
     }
 }

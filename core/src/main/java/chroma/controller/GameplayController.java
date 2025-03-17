@@ -9,7 +9,6 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
-import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
@@ -19,9 +18,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -32,8 +28,6 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
-import edu.cornell.gdiac.math.Poly2;
-import edu.cornell.gdiac.math.PolyTriangulator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -184,7 +178,6 @@ public class GameplayController implements Screen {
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
-
         level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
         level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
         level.getAvatar().setShooting(input.didSecondary());
@@ -199,9 +192,14 @@ public class GameplayController implements Screen {
             ai.update(dt);
         }
 
-        // Check if player fell off the world
-        if (!failed && level.getAvatar().getObstacle().getY() < -1) {
-            setFailure(true);
+        // Update the bomb
+        if (input.didTertiary()) {
+            createBomb();
+        }
+        for (Bomb b: level.getBombs()) {
+            if (b.isExpired()) {
+                removeBomb(b);
+            }
         }
 
         // Check if player collided with an enemy
@@ -215,12 +213,40 @@ public class GameplayController implements Screen {
         }
 
         if(level.getAvatar().isShooting()){
-            physics.shootRays(level.getAvatar(),level.getAvatar().getOrientation());
+            physics.shootRays(level.getAvatar(),0);
             physics.addPaint(level.getAvatar(),constants);
         }
         updateCamera();
     }
 
+
+    /**
+     * Adds a new bullet to the world and send it in the right direction.
+     */
+    private void createBomb() {
+        InputController input = InputController.getInstance();
+        Vector2 pos = input.getMousePos();
+
+        float units = (height == 0) ? 1 : (height / worldHeight);
+
+        Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
+        JsonValue bombData = constants.get("bomb");
+        Bomb bomb = new Bomb(units, bombData,pos);
+        bomb.setTexture(bombTex);
+        bomb.getObstacle().setName("bomb");
+
+        level.getBombs().add(bomb);
+        physics.queueObject(bomb);
+    }
+
+    /**
+     * Removes a new bomb from the world.
+     *
+     * @param  bomb   the bomb to remove
+     */
+    public void removeBomb(ObstacleSprite bomb) {
+        bomb.getObstacle().markRemoved(true);
+    }
 
     private void postUpdate(float dt) {
         physics.update(dt);
