@@ -199,7 +199,6 @@ public class GameplayController implements Screen {
         }
         if(input.didSecondary()){
             level.getAvatar().setShooting(true);
-            System.out.println(level.getAvatar().isShooting());
         }
         if(level.getAvatar().isShooting()){
             physics.shootRays(level.getAvatar(),0);

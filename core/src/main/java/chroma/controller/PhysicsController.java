@@ -34,7 +34,7 @@ public class PhysicsController implements ContactListener {
     private boolean playerCollidedWithEnemy = false;
 
     //Number of rays to shoot
-    private int numRays = 30;
+    private int numRays = 3;
     //Length of the rays
     private float rayLength = 10f;
     //Endpoints of the rays
@@ -94,8 +94,8 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                endPoint.set(point);
-                return fraction; // Stop at the first hit
+
+                return fraction;
             };
             world.rayCast(callback,obstacle.getPosition(),endPoint);
             endpoints[i] = new Vector2(endPoint);
@@ -120,10 +120,9 @@ public class PhysicsController implements ContactListener {
                 triangle.setPosition(x1*1.75f,y1*1.75f);
                 triangle.setBodyType(BodyType.StaticBody);
                 triangle.setSensor(true);
-                Texture Tex = directory.getEntry("platform-chameleon", Texture.class);
-                ObstacleSprite sprite = new ObstacleSprite(triangle,false);
+                ObstacleSprite sprite = new ObstacleSprite();
+                sprite.setObstacle(triangle);
                 sprite.setDebugColor(Color.ORANGE);
-                sprite.setTexture(Tex);
                 addObject(sprite);
 
             }
@@ -205,3 +204,4 @@ public class PhysicsController implements ContactListener {
         world = null;
     }
 }
+

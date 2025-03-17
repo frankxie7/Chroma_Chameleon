@@ -70,6 +70,7 @@ public class Enemy extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName(name);
 
+
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);

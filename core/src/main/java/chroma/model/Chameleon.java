@@ -231,6 +231,7 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
+        obstacle.setSensor(true);
 
         endpoints = new Vector2[numRays];
 
@@ -295,18 +296,6 @@ public class Chameleon extends ObstacleSprite {
 //        factory.makeRect( (sensorCenter.x-w/2)*u,(sensorCenter.y-h/2)*u, w*u, h*u,  sensorOutline);
     }
 
-    public void shootRays() {
-        float angleStep = (float) Math.PI/2f / (float) numRays;
-        for (int i = 0; i < numRays; i++) {
-            float angleOffset = (i - numRays / 2f) * angleStep;
-            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
-                (float) Math.sin(angle +angleOffset)).nor();
-            position = obstacle.getPosition();
-            Vector2 endPoint = new Vector2(position.cpy()).add(direction.scl(rayLength));
-            endpoints[i] = new Vector2(endPoint);
-        }
-    }
-
     /**
      * Applies the force to the body of Traci
      *
@@ -323,7 +312,6 @@ public class Chameleon extends ObstacleSprite {
         Body body = obstacle.getBody();
         position = obstacle.getPosition();
         angle = obstacle.getBody().getAngle();
-        System.out.println("chameleon" + obstacle.getBody());
 
         float moveX = getMovement();
         float moveY = getVerticalMovement();
