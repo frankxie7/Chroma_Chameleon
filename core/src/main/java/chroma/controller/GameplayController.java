@@ -222,24 +222,24 @@ public class GameplayController implements Screen {
         JsonValue bgConfig = constants.get("background");
         float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
 
-//        Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
-//        floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-//
-//        int nativeTileWidth = floorTile.getWidth();
-//        int nativeTileHeight = floorTile.getHeight();
-//        int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
-//        int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
-//
-//        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
-//        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
-//
-//        for (int i = 0; i < tilesX; i++) {
-//            for (int j = 0; j < tilesY; j++) {
-//                float x = i * effectiveTileWidth;
-//                float y = j * effectiveTileHeight;
-//                batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
-//            }
-//        }
+        Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
+        floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+        int nativeTileWidth = floorTile.getWidth();
+        int nativeTileHeight = floorTile.getHeight();
+        int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
+        int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
+
+        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
+        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
+
+        for (int i = 0; i < tilesX; i++) {
+            for (int j = 0; j < tilesY; j++) {
+                float x = i * effectiveTileWidth;
+                float y = j * effectiveTileHeight;
+                batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
+            }
+        }
 
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {

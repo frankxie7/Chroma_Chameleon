@@ -12,7 +12,8 @@
         "platform-barrier"  : "platform/barrier.png",
         "platform-bullet"   : "platform/bullet.png",
         "background": "platform/floortile.png",
-        "platform-white": "platform/white_texture.png"
+        "platform-white": "platform/white_texture.png",
+        "floor-tiles": "platform/floortile.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
