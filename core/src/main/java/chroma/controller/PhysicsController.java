@@ -10,6 +10,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
@@ -32,6 +33,12 @@ public class PhysicsController implements ContactListener {
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
 
+    //Number of rays to shoot
+    private int numRays = 30;
+    //Length of the rays
+    private float rayLength = 10f;
+    //Endpoints of the rays
+    private Vector2[] endpoints;
 
 
     public PhysicsController(float gravityY,AssetDirectory directory) {
@@ -40,6 +47,7 @@ public class PhysicsController implements ContactListener {
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         this.directory = directory;
+        endpoints = new Vector2[numRays];
     }
 
     public World getWorld() {
@@ -78,13 +86,29 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    public void shootRays(Chameleon obstacle,float angle) {
+        float angleStep = (float) Math.PI/2f / (float) numRays;
+        for (int i = 0; i < numRays; i++) {
+            float angleOffset = (i - numRays / 2f) * angleStep;
+            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
+                (float) Math.sin(angle +angleOffset)).nor();
+            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
+            RayCastCallback callback = (fixture, point, normal, fraction) -> {
+                endPoint.set(point);
+                return fraction; // Stop at the first hit
+            };
+            world.rayCast(callback,obstacle.getPosition(),endPoint);
+            endpoints[i] = new Vector2(endPoint);
+        }
+    }
+
     public void addPaint(Chameleon avatar) {
-        for (int i = 0; i < avatar.getNumRays() - 1; i++) {
+        for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
-                && avatar.getEndpoints()[i] != null) {
+                && endpoints[i] != null) {
                 Vector2 v1 = avatar.getPosition();
-                Vector2 v2 = avatar.getEndpoints()[i].cpy();
-                Vector2 v3 = avatar.getEndpoints()[i + 1].cpy();
+                Vector2 v2 = endpoints[i];
+                Vector2 v3 = endpoints[i + 1];
                 float x1 = v1.x;
                 float y1 = v1.y;
                 float x2 = v2.x;
@@ -101,7 +125,7 @@ public class PhysicsController implements ContactListener {
                 sprite.setDebugColor(Color.ORANGE);
                 sprite.setTexture(Tex);
                 addObject(sprite);
-                System.out.println("complete");
+
             }
         }
     }
@@ -157,7 +181,6 @@ public class PhysicsController implements ContactListener {
             playerCollidedWithEnemy = true;
         }
     }
-
     @Override public void endContact(Contact contact) {}
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}

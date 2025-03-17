@@ -212,7 +212,7 @@ public class GameplayController implements Screen {
         }
 
         if(level.getAvatar().isShooting()){
-            level.getAvatar().shootRays();
+            physics.shootRays(level.getAvatar(),0);
             physics.addPaint(level.getAvatar());
         }
         updateCamera();
