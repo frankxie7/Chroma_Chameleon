@@ -91,10 +91,10 @@ public class PhysicsController implements ContactListener {
                 float[] points = new float[]{x1,y1,x2,y2,x3,y3};
                 PolygonObstacle triangle = new PolygonObstacle(points);
                 triangle.setBodyType(BodyType.StaticBody);
-                triangle.setX(x1+x1);
-                triangle.setY(y1+y1);
+                System.out.println(x3);
+                triangle.setX(x1);
                 triangle.setSensor(true);
-                Texture Tex = directory.getEntry("platform-chameleon", Texture.class);
+                Texture Tex = directory.getEntry("platform-white", Texture.class);
                 ObstacleSprite sprite = new ObstacleSprite(triangle,false);
                 sprite.setDebugColor(Color.ORANGE);
                 sprite.setTexture(Tex);
