@@ -153,5 +153,4 @@ public class ChromaRoot extends Game implements ScreenListener {
             Gdx.app.exit();
         }
     }
-
 }

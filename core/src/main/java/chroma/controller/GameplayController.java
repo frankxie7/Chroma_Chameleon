@@ -9,12 +9,16 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -25,6 +29,11 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
+import edu.cornell.gdiac.math.Poly2;
+import edu.cornell.gdiac.math.PolyTriangulator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameplayController implements Screen {
 
@@ -53,6 +62,8 @@ public class GameplayController implements Screen {
     private PhysicsController physics;
     private Level level;
 
+    private List<AIController> aiControllers;
+
     // For UI messages
     private BitmapFont displayFont;
     private TextLayout goodMessage;
@@ -77,11 +88,10 @@ public class GameplayController implements Screen {
         bounds = new Rectangle(0, 0, worldConf.get("bounds").getFloat(0),
             worldConf.get("bounds").getFloat(1));
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         camera = new OrthographicCamera();
 
         // Initialize the PhysicsController with gravity
-        physics = new PhysicsController(gravityY,directory);
+        physics = new PhysicsController(gravityY);
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
@@ -95,7 +105,6 @@ public class GameplayController implements Screen {
         badMessage.setColor(com.badlogic.gdx.graphics.Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
 
-
         reset();
     }
 
@@ -105,7 +114,7 @@ public class GameplayController implements Screen {
             physics.dispose();
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
-        physics = new PhysicsController(gravityY,directory);
+        physics = new PhysicsController(gravityY);
         complete = false;
         failed = false;
         countdown = -1;
@@ -116,12 +125,18 @@ public class GameplayController implements Screen {
         // Build the level (environment) including walls and platforms
         level = new Level(directory, units, constants);
 
-
         // Add key objects to the physics world
         physics.addObject(level.getGoalDoor());
         physics.addObject(level.getAvatar());
 
-        // Add all walls and platforms
+        for (Enemy enemy : level.getEnemies()) {
+            physics.addObject(enemy);
+            if (aiControllers == null) {
+                aiControllers = new ArrayList<>();
+            }
+            aiControllers.add(new AIController(enemy, this, physics, level));
+        }
+            // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
         }
@@ -168,14 +183,22 @@ public class GameplayController implements Screen {
         level.getAvatar().setShooting(input.didSecondary());
         level.getAvatar().applyForce();
 
-
         // Ensure the chameleon's orientation is updated (this call is now redundant
         // if Chameleon.update() calls updateOrientation(), but is safe to include)
         level.getAvatar().updateOrientation();
 
+        // Update all AI enemies
+        for (AIController ai : aiControllers) {
+            ai.update(dt);
+        }
+
         // Check if player fell off the world
         if (!failed && level.getAvatar().getObstacle().getY() < -1) {
             setFailure(true);
+        }
+        if(input.didSecondary()){
+            level.getAvatar().setShooting(true);
+            System.out.println(level.getAvatar().isShooting());
         }
         if(level.getAvatar().isShooting()){
             level.getAvatar().shootRays();
@@ -192,6 +215,32 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
+//       Since the background is not a game model its texture is not given by Level.
+        // Handled manually
+
+        JsonValue bgConfig = constants.get("background");
+        float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
+
+        Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
+        floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+        int nativeTileWidth = floorTile.getWidth();
+        int nativeTileHeight = floorTile.getHeight();
+        int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
+        int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
+
+        int tilesX = (int) Math.ceil(camera.viewportWidth / (float) effectiveTileWidth);
+        int tilesY = (int) Math.ceil(camera.viewportHeight / (float) effectiveTileHeight);
+
+        for (int i = 0; i < tilesX; i++) {
+            for (int j = 0; j < tilesY; j++) {
+                float x = i * effectiveTileWidth;
+                float y = j * effectiveTileHeight;
+                batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
+            }
+        }
+
         // Draw all objects managed by the physics controller
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
@@ -273,4 +322,8 @@ public class GameplayController implements Screen {
         }
         failed = value;
     }
+
+    public float getWorldWidth() { return worldWidth; }
+
+    public float getWorldHeight() { return worldHeight; }
 }

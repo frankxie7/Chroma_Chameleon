@@ -17,6 +17,7 @@
  package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
@@ -54,7 +55,6 @@ public class Terrain extends ObstacleSprite {
      *
      * @param points    The outline of the shape as x,y pairs
      * @param units     The physics units
-     * @param data      The physics constants for this rope bridge
      */
     public Terrain(float[] points, float units, JsonValue settings) {
         super();
@@ -97,5 +97,10 @@ public class Terrain extends ObstacleSprite {
             return obstacle.getBody().getFixtureList().first();
         }
         return null;
+    }
+
+    public boolean contains(Vector2 point) {
+        Fixture fixture = getFixture();
+        return fixture != null && fixture.testPoint(point);
     }
 }
