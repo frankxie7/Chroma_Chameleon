@@ -2,12 +2,14 @@ package chroma.controller;
 
 import chroma.model.Chameleon;
 import chroma.model.Enemy;
+import chroma.model.Spray;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.Obstacle;
@@ -32,6 +34,7 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
+
 
     //Number of rays to shoot
     private int numRays = 3;
@@ -102,7 +105,7 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    public void addPaint(Chameleon avatar) {
+    public void addPaint(Chameleon avatar, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -116,14 +119,15 @@ public class PhysicsController implements ContactListener {
                 float x3 = v3.x;
                 float y3 = v3.y;
                 float[] points = new float[]{x1,y1,x2,y2,x3,y3};
-                PolygonObstacle triangle = new PolygonObstacle(points);
-                triangle.setPosition(x1*1.75f,y1*1.75f);
-                triangle.setBodyType(BodyType.StaticBody);
-                triangle.setSensor(true);
-                ObstacleSprite sprite = new ObstacleSprite();
-                sprite.setObstacle(triangle);
-                sprite.setDebugColor(Color.ORANGE);
-                addObject(sprite);
+//                PolygonObstacle triangle = new PolygonObstacle(points);
+//                triangle.setPosition(x1*1.75f,y1*1.75f);
+//                triangle.setBodyType(BodyType.StaticBody);
+//                triangle.setSensor(true);
+//                triangle.setName("spray");
+//                ObstacleSprite sprite = new ObstacleSprite();
+//                sprite.setObstacle(triangle);
+//                sprite.setDebugColor(Color.ORANGE);
+                addObject(new Spray(points,settings));
 
             }
         }

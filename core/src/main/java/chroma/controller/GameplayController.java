@@ -91,6 +91,7 @@ public class GameplayController implements Screen {
             worldConf.get("bounds").getFloat(1));
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera = new OrthographicCamera();
+        float units = height == 0 ? 1 : height /worldHeight;
 
         // Initialize the PhysicsController with gravity
         physics = new PhysicsController(gravityY, directory);
@@ -212,7 +213,7 @@ public class GameplayController implements Screen {
 
         if(level.getAvatar().isShooting()){
             physics.shootRays(level.getAvatar(),0);
-            physics.addPaint(level.getAvatar());
+            physics.addPaint(level.getAvatar(),constants);
         }
         updateCamera();
     }
