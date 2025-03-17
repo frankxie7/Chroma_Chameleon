@@ -231,7 +231,7 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
-        obstacle.setSensor(true);
+//        obstacle.setSensor(true);
 
         endpoints = new Vector2[numRays];
 
