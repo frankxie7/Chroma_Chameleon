@@ -2,13 +2,10 @@ package chroma.controller;
 
 import chroma.model.Chameleon;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
@@ -30,8 +27,7 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
 
-
-    public PhysicsController(float gravityY,AssetDirectory directory) {
+    public PhysicsController(float gravityY, AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
         objects = new PooledList<>();
@@ -90,7 +86,7 @@ public class PhysicsController implements ContactListener {
                 float y3 = v3.y;
                 float[] points = new float[]{x1,y1,x2,y2,x3,y3};
                 PolygonObstacle triangle = new PolygonObstacle(points);
-                triangle.setBodyType(BodyType.StaticBody);
+                triangle.setBodyType(BodyDef.BodyType.StaticBody);
                 triangle.setX(x1+x1);
                 triangle.setY(y1+y1);
                 triangle.setSensor(true);
@@ -114,14 +110,14 @@ public class PhysicsController implements ContactListener {
      */
     public Fixture raycast(Vector2 start, Vector2 end) {
         final Fixture[] hitFixture = {null};
-        world.rayCast((fixture, point, normal, fraction) -> {
-            hitFixture[0] = fixture;
-            return fraction;
-        }, start, end);
+        if (world != null) {
+            world.rayCast((fixture, point, normal, fraction) -> {
+                hitFixture[0] = fixture;
+                return fraction;
+            }, start, end);
+        }
         return hitFixture[0];
     }
-
-
 
     @Override
     public void beginContact(Contact contact) {

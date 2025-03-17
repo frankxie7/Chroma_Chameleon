@@ -242,7 +242,9 @@ public class AIController {
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getObstacle().getPosition();
         Vector2 direction = new Vector2(target).sub(enemyPos).nor();
-        enemy.getObstacle().getBody().applyForceToCenter(direction.scl(speed), true);
+        if (enemy.getObstacle().getBody() != null) {
+            enemy.getObstacle().getBody().applyForceToCenter(direction.scl(speed), true);
+        }
     }
 
     // Updated update method: 'playerVisible' is true if the player is visible.
@@ -282,7 +284,9 @@ public class AIController {
             if (waypoint != null) {
                 moveTowards(waypoint, wanderSpeed);
             } else {
-                enemy.getObstacle().getBody().setLinearVelocity(0, 0);
+                if (enemy.getObstacle().getBody() != null) {
+                    enemy.getObstacle().getBody().setLinearVelocity(0, 0);
+                }
             }
         }
         enemy.update(delta);
