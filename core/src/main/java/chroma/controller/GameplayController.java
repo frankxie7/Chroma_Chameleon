@@ -9,6 +9,7 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -182,6 +184,7 @@ public class GameplayController implements Screen {
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
+
         level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
         level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
         level.getAvatar().setShooting(input.didSecondary());
@@ -212,7 +215,7 @@ public class GameplayController implements Screen {
         }
 
         if(level.getAvatar().isShooting()){
-            physics.shootRays(level.getAvatar(),0);
+            physics.shootRays(level.getAvatar(),level.getAvatar().getOrientation());
             physics.addPaint(level.getAvatar(),constants);
         }
         updateCamera();
