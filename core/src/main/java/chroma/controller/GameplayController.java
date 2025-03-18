@@ -1,9 +1,18 @@
 package chroma.controller;
 
-import chroma.model.Bomb;
+/**
+ * GameplayController
+ * ------------------
+ * This class acts as the high-level coordinator for the game. It is responsible for:
+ * - Managing game state and flow (reset, win, lose, and level transitions).
+ * - Handling player input (via InputController) and applying it to game objects.
+ * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
+ * - Rendering all game objects and UI messages.
+ */
 import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
+import chroma.model.Bomb;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -193,14 +202,7 @@ public class GameplayController implements Screen {
      */
     private void update(float dt) {
         InputController input = InputController.getInstance();
-
-        // Update the chameleon movement
-        float hmove = input.getHorizontal();
-        float vmove = input.getVertical();
-        level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
-        level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
-        level.getAvatar().setShooting(input.didSecondary());
-        level.getAvatar().applyForce();
+        level.getAvatar().update(dt);
         level.getAvatar().updateOrientation();
 
         // Update AI enemies
@@ -285,15 +287,13 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-
+//        batch.setColor(new Color(0.5f, 0f, 0.5f, 1f));
         // Draw tiled background
         float mapWidth  = worldWidth  * units;
         float mapHeight = worldHeight * units;
 
         JsonValue bgConfig = constants.get("background");
-        // Has nothing to do with unit/scale, this is for the scaling of a single tile
         float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f);
-
         Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
         floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
@@ -323,7 +323,12 @@ public class GameplayController implements Screen {
             for (ObstacleSprite sprite : physics.objects) {
                 sprite.drawDebug(batch);
             }
+
+            batch.end(); // End SpriteBatch before using ShapeRenderer
+            aiControllers.get(0).debugRender(camera); // Call debug grid rendering
+            batch.begin(); // Resume SpriteBatch rendering
         }
+
 
         // UI messages
         if (complete && !failed) {
@@ -332,6 +337,7 @@ public class GameplayController implements Screen {
             batch.drawText(badMessage, width / 2, height / 2);
         }
 
+        batch.setColor(Color.WHITE);
         batch.end();
     }
 
@@ -441,6 +447,9 @@ public class GameplayController implements Screen {
         failed = value;
     }
 
-    public float getWorldWidth()  { return worldWidth;  }
+    public OrthographicCamera getCamera() { return camera; }
+
+    public float getWorldWidth() { return worldWidth; }
+
     public float getWorldHeight() { return worldHeight; }
 }

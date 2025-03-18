@@ -39,14 +39,12 @@ public class PhysicsController implements ContactListener {
 
     private boolean playerWithBomb = false;
 
-
     //Number of rays to shoot
     private int numRays = 30;
     //Length of the rays
     private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
-
 
     public PhysicsController(float gravityY,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);

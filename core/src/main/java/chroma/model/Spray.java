@@ -1,6 +1,8 @@
 package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
@@ -10,8 +12,11 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Spray extends ObstacleSprite {
 
+    // A static texture for spray objects, created once.
+    private static Texture sprayTexture = null;
+
     public Spray(float[] points, float units, JsonValue settings) {
-        // 1) Create the physics obstacle in Box2D coordinates
+        // Create the physics obstacle using the provided points.
         obstacle = new PolygonObstacle(points);
         obstacle.setDensity(0);
         obstacle.setFriction(0);
@@ -20,15 +25,30 @@ public class Spray extends ObstacleSprite {
         obstacle.setSensor(true);
         obstacle.setUserData(this);
         obstacle.setName("spray");
-        // 2) Tell the Obstacle how many screen pixels = 1 Box2D unit
+
+        // Set the scale for converting Box2D units to screen pixels.
         obstacle.setPhysicsUnits(units);
-        // 3) Use a separate Poly2 to define the polygon mesh in scaled coordinates
+
+        // Build the mesh from the scaled polygon.
         Poly2 poly = new Poly2(points);
-        poly.scl(units); // multiply all vertex coords by 'units'
-        mesh.set(poly);  // or mesh.set(poly, tile, tile) if you want repeated tiling
+        poly.scl(units);
+        mesh.set(poly);
 
-        // 4) Set debug color (so you can see the shape in debug mode)
-        debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
+        // Set the debug color (used in debug mode).
+        debug = ParserUtils.parseColor(settings.get("debug"), Color.ORANGE);
 
+        // Create a static purple translucent texture if not already created.
+        if (sprayTexture == null) {
+            int texSize = 128; // Texture size in pixels.
+            Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
+            // Purple color with 50% opacity.
+            Color purpleTranslucent = new Color(0.5f, 0f, 0.5f, 0.5f);
+            pixmap.setColor(purpleTranslucent);
+            pixmap.fill();
+            sprayTexture = new Texture(pixmap);
+            pixmap.dispose();
+        }
+        // Assign the texture to this Spray.
+        setTexture(sprayTexture);
     }
 }

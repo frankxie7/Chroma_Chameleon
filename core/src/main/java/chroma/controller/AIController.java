@@ -7,6 +7,9 @@ import chroma.model.Terrain;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
@@ -28,6 +31,7 @@ public class AIController {
     private Enemy enemy;
     private Chameleon player;
     private List<Terrain> walls; // list of walls for pathfindinga
+    private List<Terrain> platforms;
     private State state;
 //    private float detectionRange = 200f; // enemy detection range
 
@@ -50,6 +54,8 @@ public class AIController {
 
     private NavGraph graph = new NavGraph();
 
+    private float scale;
+
     public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
         this.enemy = enemy;
         this.gameplay = gameplayController;
@@ -57,11 +63,21 @@ public class AIController {
         this.level = level;
         this.player = level.getAvatar();
         this.walls = level.getWalls();
+        this.platforms = level.getPlatforms();
         state = State.WANDER;
         pickNewWanderTarget();
 
+        float worldWidth = gameplay.getWorldWidth();
+        float worldHeight = gameplay.getWorldHeight();
+
+        OrthographicCamera camera = gameplay.getCamera();
+        float screenHeight = camera.viewportHeight;
+
+        this.scale = screenHeight / worldHeight;
+        float gridSize = screenHeight / scale / 16;
+
         // Build navigation graph
-        buildGraph(gameplay.getWorldWidth(), gameplay.getWorldHeight());
+        buildGraph(gridSize, worldWidth, worldHeight);
     }
 
     public Enemy getEnemy() {
@@ -86,6 +102,12 @@ public class AIController {
     private boolean isBlocked(Vector2 position) {
         for (Terrain wall : walls) { // Assuming you have a list of obstacles
             if (wall.contains(position)) {
+                return true;
+            }
+        }
+        for (Terrain platform : platforms) { // Assuming you have a list of obstacles
+            if (platform.contains(position)) {
+                System.out.println("Platform");
                 return true;
             }
         }
@@ -166,9 +188,7 @@ public class AIController {
         }
     }
 
-    private void buildGraph(float worldWidth, float worldHeight) {
-        float gridSize = 1f;  // Adjust based on world scale
-
+    private void buildGraph(float gridSize, float worldWidth, float worldHeight) {
         // Create nodes that are not inside obstacles
         for (float x = 0; x < worldWidth; x += gridSize) {
             for (float y = 0; y < worldHeight; y += gridSize) {
@@ -234,22 +254,28 @@ public class AIController {
     }
 
     private Vector2 getNextPathPoint(Vector2 start, Vector2 end) {
-        PathFinder pathFinder = new PathFinder(graph); // Ensure `graph` is initialized
+        PathFinder pathFinder = new PathFinder(graph);
         Array<Vector2> path = pathFinder.findPath(start, end);
 
         if (path.size > 1) {
-            return path.get(1); // The first point is the current position, so take the next step
+            lastPath = path; // Store for debugging
+            lastGoal = end;
+            return path.get(1);
         }
-        return null; // No path found
+        return null;
     }
-
 
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getObstacle().getPosition();
         Vector2 direction = new Vector2(target).sub(enemyPos).nor();
-        if (enemy.getObstacle().getBody() != null) {
-            enemy.getObstacle().getBody().applyForceToCenter(direction.scl(speed), true);
-        }
+
+        // Set movement variables like the player
+        float hmove = direction.x;
+        float vmove = direction.y;
+
+        // Apply movement similar to the player
+        enemy.setMovement(hmove * enemy.getForce());
+        enemy.setVerticalMovement(vmove * enemy.getForce());
     }
 
     // Updated update method: 'playerVisible' is true if the player is visible.
@@ -272,7 +298,6 @@ public class AIController {
             state = State.WANDER;
         }
 
-
         if (state == State.CHASE) {
             if (!isLineBlocked(enemyPos, playerPos)) {
                 moveTowards(playerPos, chaseSpeed);
@@ -294,12 +319,45 @@ public class AIController {
             if (waypoint != null) {
                 moveTowards(waypoint, wanderSpeed);
             } else {
-                if (enemy.getObstacle().getBody() != null) {
-                    enemy.getObstacle().getBody().setLinearVelocity(0, 0);
-                }
+                enemy.setMovement(0);
+                enemy.setVerticalMovement(0);
             }
         }
+        // Ensure the enemy updates its physics forces properly
+        enemy.applyForce();
         enemy.update(delta);
+    }
+
+    private ShapeRenderer shapeRenderer = new ShapeRenderer();
+
+    private Array<Vector2> lastPath = null;
+    private Vector2 lastGoal = null;
+
+    public void debugRender(OrthographicCamera camera) {
+        shapeRenderer.setProjectionMatrix(camera.combined); // Use the same camera projection
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Draw all NavNodes (grid)
+        shapeRenderer.setColor(Color.GRAY);
+        for (NavNode node : graph.nodes) {
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f); // Small dot for grid nodes
+        }
+
+        // Highlight the A* path in yellow
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x * scale - 10f, pathPoint.y * scale - 10f, 10f, 10f);
+            }
+        }
+
+        // Draw the goal in green
+        if (lastGoal != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.rect(lastGoal.x * scale - 20f, lastGoal.y * scale - 20f, 20f, 20f);
+        }
+
+        shapeRenderer.end();
     }
 
     public State getState() { return state; }

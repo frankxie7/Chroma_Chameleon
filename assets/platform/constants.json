@@ -37,7 +37,7 @@
     "inner"     : [0.8, 0.95],
     "size"      : 1.5,
     "force"     : 10.0,
-    "damping"   : 10.0,
+    "damping"   : 40.0,
     "density"   : 0.5,
     "friction"  : 0.0,
     "maxspeed"  : 5.0,
@@ -87,7 +87,7 @@
     "scaleFactor": 1.5
   },
   "bomb": {
-    "size"      : 1.0,
+    "size"      : 2.5,
     "density"   : 0.0,
     "friction"  : 0.0,
     "restitution": 0.0

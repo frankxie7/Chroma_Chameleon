@@ -1,5 +1,6 @@
 package chroma.model;
 
+import chroma.controller.InputController;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
@@ -18,6 +19,7 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.CapsuleObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
+import edu.cornell.gdiac.graphics.shaders.SpriteShader;
 
 public class Chameleon extends ObstacleSprite {
     /** The initializing data (to avoid magic numbers) */
@@ -212,10 +214,9 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
 
-        // Set up debug colors, mesh, etc.
+        // Set up debug colors.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
-
 
         maxspeed = data.getFloat("maxspeed", 0);
         damping = data.getFloat("damping", 0);
@@ -227,10 +228,15 @@ public class Chameleon extends ObstacleSprite {
         faceRight = true;
         shootCooldown = 0;
 
+
+
         // Create a rectangular mesh for the chameleon.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
+//        int count = mesh.vertexCount(); // or however you get the vertex count
+//        for (int i = 0; i < count; i++) {
+//            mesh.setColor(i, Color.PURPLE);
+//        }
     }
-
 
 
     /**
@@ -324,6 +330,16 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void update(float dt) {
+        InputController input = InputController.getInstance();
+
+        // Update player (chameleon) movement based on input
+        float hmove = input.getHorizontal();
+        float vmove = input.getVertical();
+        setMovement(hmove * getForce());
+        setVerticalMovement(vmove * getForce());
+        setShooting(input.didSecondary());
+        applyForce();
+
         // Apply cooldowns
         if (isShooting()) {
             shootCooldown = shotLimit;
@@ -347,12 +363,25 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void draw(SpriteBatch batch) {
-        // Use an affine transform with rotation set to the computed orientation.
-        // Note: Since the mesh is centered at (0,0), rotation occurs about the center.
+        // Save the current color of the batch
+        Color target = isHidden() ? Color.PURPLE : Color.WHITE;
+
+        // Update the mesh vertex colors dynamically.
+        int count = mesh.vertexCount();
+        for (int i = 0; i < count; i++) {
+            mesh.setColor(i, target);
+        }
+
+        // Create an Affine2 transform for rotation
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
+
+        // Call the parent draw method with the transform
         super.draw(batch, transform);
+
     }
+
+
 
     /**
      * Draws the outline of the physics object.
@@ -420,4 +449,3 @@ public class Chameleon extends ObstacleSprite {
         this.hidden = hidden;
     }
 }
-

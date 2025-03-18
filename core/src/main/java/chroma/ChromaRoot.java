@@ -128,10 +128,10 @@ public class ChromaRoot extends Game implements ScreenListener {
             controllers[0] = new GameplayController(directory);
 
             // Initialize them
-            for (int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].setScreenListener(this);
-                controllers[ii].setSpriteBatch(batch);
-                controllers[ii].reset();  // If your class has a 'reset' method
+            for (GameplayController controller : controllers) {
+                controller.setScreenListener(this);
+                controller.setSpriteBatch(batch);
+                controller.reset();  // If your class has a 'reset' method
             }
 
             current = 0;
