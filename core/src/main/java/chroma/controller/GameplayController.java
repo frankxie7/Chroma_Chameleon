@@ -9,6 +9,7 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import chroma.model.Bomb;
 import chroma.model.Enemy;
 import chroma.model.Level;
 import chroma.model.Terrain;
