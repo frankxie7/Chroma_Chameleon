@@ -64,6 +64,10 @@ public class AIController {
         buildGraph(gameplay.getWorldWidth(), gameplay.getWorldHeight());
     }
 
+    public Enemy getEnemy() {
+        return enemy;
+    }
+
     private void pickNewWanderTarget() {
         float minX = margin;
         float maxX = gameplay.getWorldWidth() - margin;
@@ -239,6 +243,7 @@ public class AIController {
         return null; // No path found
     }
 
+
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getObstacle().getPosition();
         Vector2 direction = new Vector2(target).sub(enemyPos).nor();
@@ -254,14 +259,19 @@ public class AIController {
         if (enemyPos == null || playerPos == null) {
             return;
         }
-        float distanceToPlayer = enemyPos.dst(playerPos);
-        playerDetected = distanceToPlayer <= currentDetectionRange; // playerVisible &&
+        if (!player.isHidden()) {
+            float distanceToPlayer = enemyPos.dst(playerPos);
+            playerDetected = distanceToPlayer <= currentDetectionRange;
+        } else {
+            playerDetected = false;
+        }
 
         if (playerDetected) {
             state = State.CHASE;
-        } else {
+        } else if (state == State.CHASE) {
             state = State.WANDER;
         }
+
 
         if (state == State.CHASE) {
             if (!isLineBlocked(enemyPos, playerPos)) {

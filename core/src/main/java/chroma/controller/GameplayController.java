@@ -9,10 +9,7 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
-import chroma.model.Enemy;
-import chroma.model.Level;
-import chroma.model.Terrain;
-import chroma.model.Bomb;
+import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -138,6 +135,8 @@ public class GameplayController implements Screen {
                 aiControllers = new ArrayList<>();
             }
             aiControllers.add(new AIController(enemy, this, physics, level));
+            float enemyMovement = enemy.getMovement();
+            enemy.setMovement(enemyMovement);
         }
             // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
@@ -193,6 +192,8 @@ public class GameplayController implements Screen {
         // Update all AI enemies
         for (AIController ai : aiControllers) {
             ai.update(dt);
+            float enemyMovement = ai.getEnemy().getMovement();
+            ai.getEnemy().setMovement(enemyMovement);
         }
 
         // Update the bomb
@@ -217,7 +218,8 @@ public class GameplayController implements Screen {
 
         if(level.getAvatar().isShooting()){
             physics.shootRays(level.getAvatar(),0);
-            physics.addPaint(level.getAvatar(),constants);
+            float worldScale = camera.viewportWidth / worldWidth;
+            physics.addPaint(level.getAvatar(),constants, 1.75f);
         }
         updateCamera();
     }
