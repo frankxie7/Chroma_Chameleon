@@ -227,7 +227,17 @@ public class GameplayController implements Screen {
 
         // Fire paint spray
         if (level.getAvatar().isShooting()) {
-            physics.shootRays(level.getAvatar(), 0);
+            // Get mouse position in screen space.
+            Vector3 screenMouse = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            // Unproject to obtain world coordinates (in pixel space).
+            camera.unproject(screenMouse);
+            // Convert pixel coordinates to Box2D world units.
+            Vector2 mouseWorld = new Vector2(screenMouse.x / units, screenMouse.y / units);
+            // Get avatar position.
+            Vector2 avatarPos = level.getAvatar().getObstacle().getPosition();
+            // Compute angle (in radians) from avatar to mouse.
+            float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
+            physics.shootRays(level.getAvatar(), sprayAngle);
             physics.addPaint(level.getAvatar(), units, constants);
         }
 
