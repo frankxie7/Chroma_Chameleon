@@ -4,6 +4,7 @@ import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
 import chroma.model.Bomb;
+import chroma.model.Terrain;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -39,9 +40,9 @@ public class PhysicsController implements ContactListener {
     private boolean playerWithBomb = false;
 
     //Number of rays to shoot
-    private int numRays = 3;
+    private int numRays = 30;
     //Length of the rays
-    private float rayLength = 10f;
+    private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
 
@@ -98,7 +99,7 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-
+                endPoint.set(point);
                 return fraction;
             };
             world.rayCast(callback,obstacle.getPosition(),endPoint);
@@ -106,7 +107,7 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    public void addPaint(Chameleon avatar, JsonValue settings) {
+    public void addPaint(Chameleon avatar, float units, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -120,18 +121,68 @@ public class PhysicsController implements ContactListener {
                 float x3 = v3.x;
                 float y3 = v3.y;
                 float[] points = new float[]{x1,y1,x2,y2,x3,y3};
-//                PolygonObstacle triangle = new PolygonObstacle(points);
-//                triangle.setPosition(x1*1.75f,y1*1.75f);
-//                triangle.setBodyType(BodyType.StaticBody);
-//                triangle.setSensor(true);
-//                triangle.setName("spray");
-//                ObstacleSprite sprite = new ObstacleSprite();
-//                sprite.setObstacle(triangle);
-//                sprite.setDebugColor(Color.ORANGE);
-                addObject(new Spray(points,settings));
+                if(!isConcave(points) && isCounterClockwise(points)){
+                    try{
+                        Spray paintTriangle = new Spray(points, units, settings);
+                        addObject(paintTriangle);
+                    }catch(IllegalArgumentException ignored){
 
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Determines whether or not points are CCW or not
+     * @param vertices the vertices to check
+     * @return True if CCW
+     */
+    private static boolean isCounterClockwise(float[] vertices) {
+        float sum = 0;
+        for (int i = 0; i < vertices.length; i += 2) {
+            int next = (i + 2) % vertices.length;
+            sum += (vertices[next] - vertices[i]) * (vertices[i + 1] + vertices[next + 1]);
+        }
+        return sum < 0; // CCW if sum < 0, CW if sum > 0
+    }
+
+    /**
+     * Returns true if points will create a concave shape
+     * @param vertices points to use
+     * @return true if Concave
+     */
+    public static boolean isConcave(float[] vertices) {
+        int numPoints = vertices.length / 2;  // Number of (x, y) pairs
+        boolean sign = false;  // To track the direction of turns
+
+        // Loop through each set of three consecutive vertices
+        for (int i = 0; i < numPoints; i++) {
+            int prev = (i - 1 + numPoints) % numPoints;  // Previous vertex
+            int current = i;  // Current vertex
+            int next = (i + 1) % numPoints;  // Next vertex
+
+            // Get the (x, y) coordinates of the vertices
+            float x1 = vertices[2 * prev], y1 = vertices[2 * prev + 1];
+            float x2 = vertices[2 * current], y2 = vertices[2 * current + 1];
+            float x3 = vertices[2 * next], y3 = vertices[2 * next + 1];
+
+            // Calculate the cross product to determine the direction of the turn
+            float crossProduct = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
+
+            if (crossProduct != 0) {  // Ignore collinear points
+                if (sign == false) {
+                    sign = crossProduct > 0;  // Set the initial direction
+                } else {
+                    // If the sign changes, it's a concave polygon
+                    if (sign != (crossProduct > 0)) {
+                        return true; // Polygon is concave
+                    }
+                }
+            }
+        }
+
+        return false; // All turns are in the same direction; polygon is convex
     }
 
     /**
@@ -179,6 +230,14 @@ public class PhysicsController implements ContactListener {
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
+        //Doesn't work yet
+        if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
+            (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in paint!");
+        }
+
         // Check if the player collides with an enemy
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
@@ -189,9 +248,25 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             playerWithBomb = true;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in bomb!");
         }
     }
-    @Override public void endContact(Contact contact) {}
+    @Override public void endContact(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object userDataA = fixtureA.getBody().getUserData();
+        Object userDataB = fixtureB.getBody().getUserData();
+        if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            playerWithBomb = false;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(false);
+            System.out.println("Player is visible again!");
+        }
+    }
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 

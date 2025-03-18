@@ -19,12 +19,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Rectangle;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.audio.SoundEffectManager;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
@@ -54,12 +54,15 @@ public class GameplayController implements Screen {
     private AssetDirectory directory;
     private JsonValue constants;
 
+    // Dimensions in pixels
     private float width, height;
+    // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
+
+
 
     private OrthographicCamera camera;
 
-    // New modules
     private PhysicsController physics;
     private Level level;
 
@@ -70,9 +73,13 @@ public class GameplayController implements Screen {
     private TextLayout goodMessage;
     private TextLayout badMessage;
 
-    // For input conversion (for syncing mouse and gamepad input)
-    protected Rectangle bounds;
+    //Single scale factor for world→screen
+    private float units;
+    // For input conversion (screen→world).
+    // scale.x = (screenWidth / worldWidth), scale.y = (screenHeight / worldHeight).
     protected Vector2 scale;
+
+    protected Rectangle bounds;
 
     public GameplayController(AssetDirectory directory) {
         this.directory = directory;
@@ -86,31 +93,40 @@ public class GameplayController implements Screen {
 
         // For converting input coordinates
         scale = new Vector2();
-        bounds = new Rectangle(0, 0, worldConf.get("bounds").getFloat(0),
-            worldConf.get("bounds").getFloat(1));
-        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera = new OrthographicCamera();
-        float units = height == 0 ? 1 : height /worldHeight;
+        bounds = new Rectangle(0, 0, worldWidth, worldHeight);
 
-        // Initialize the PhysicsController with gravity
+        // Initialize the camera
+        camera = new OrthographicCamera();
+
+        // Set default values (real values assigned in resize)
+        this.width  = Gdx.graphics.getWidth();
+        this.height = Gdx.graphics.getHeight();
+        this.units  = 1.0f;
+
+        // Initialize the PhysicsController
         physics = new PhysicsController(gravityY, directory);
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
         goodMessage = new TextLayout();
         goodMessage.setText("VICTORY!");
-        goodMessage.setColor(com.badlogic.gdx.graphics.Color.YELLOW);
+        goodMessage.setColor(Color.YELLOW);
         goodMessage.setAlignment(TextAlign.middleCenter);
 
         badMessage = new TextLayout();
         badMessage.setText("FAILURE!");
-        badMessage.setColor(com.badlogic.gdx.graphics.Color.RED);
+        badMessage.setColor(Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
         badMessage.setFont(displayFont);
 
-        reset();
+        // Now that everything is ready, build the level, etc.
+        // (But we will do the final init after calling resize)
+        resize((int)this.width, (int)this.height);
     }
 
+    /**
+     * Rebuilds the world state (physics, level objects, etc.).
+     */
     public void reset() {
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -118,28 +134,26 @@ public class GameplayController implements Screen {
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
         physics = new PhysicsController(gravityY, directory);
+
         complete = false;
         failed = false;
         countdown = -1;
 
-        // Determine units (scale factor for physics objects)
-        float units = (height == 0) ? 1 : (height / worldHeight);
-
-        // Build the level (environment) including walls and platforms
+        // Build the level with the current `units`
         level = new Level(directory, units, constants);
 
         // Add key objects to the physics world
         physics.addObject(level.getGoalDoor());
         physics.addObject(level.getAvatar());
 
+        // Initialize AI
+        aiControllers = new ArrayList<>();
         for (Enemy enemy : level.getEnemies()) {
             physics.addObject(enemy);
-            if (aiControllers == null) {
-                aiControllers = new ArrayList<>();
-            }
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
-            // Add all walls and platforms
+
+        // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
         }
@@ -148,10 +162,15 @@ public class GameplayController implements Screen {
         }
     }
 
-
+    /**
+     * Process input before update.
+     *
+     * @return false if we should end this Screen, true otherwise
+     */
     private boolean preUpdate(float dt) {
         InputController input = InputController.getInstance();
-        input.sync(bounds, scale);  // Update input state
+        // Convert screen→world for mouse, etc.
+        input.sync(bounds, scale);
 
         if (input.didDebug()) {
             debug = !debug;
@@ -162,6 +181,8 @@ public class GameplayController implements Screen {
         if (input.didExit()) {
             return false;
         }
+
+        // Handle the countdown for victory/failure
         if (countdown > 0) {
             countdown--;
             if (countdown == 0) {
@@ -176,58 +197,67 @@ public class GameplayController implements Screen {
         return true;
     }
 
+    /**
+     * Game logic update
+     */
     private void update(float dt) {
         InputController input = InputController.getInstance();
         level.getAvatar().update(dt);
-
-        // Ensure the chameleon's orientation is updated (this call is now redundant
-        // if Chameleon.update() calls updateOrientation(), but is safe to include)
         level.getAvatar().updateOrientation();
 
-        // Update all AI enemies
+        // Update AI enemies
         for (AIController ai : aiControllers) {
             ai.update(dt);
         }
 
-        // Update the bomb
+        // Throw a bomb on left‐click
         if (input.didTertiary()) {
             createBomb();
         }
+        // Remove bombs that have exploded
         for (Bomb b: level.getBombs()) {
             if (b.isExpired()) {
                 removeBomb(b);
             }
         }
 
-        // Check if player collided with an enemy
+        // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy()) {
             setFailure(true);
             physics.resetCollisionFlags();
         }
 
-        if(input.didSecondary()){
-            level.getAvatar().setShooting(true);
+        // Fire paint spray
+        if (level.getAvatar().isShooting()) {
+            // Get mouse position in screen space.
+            Vector3 screenMouse = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            // Unproject to obtain world coordinates (in pixel space).
+            camera.unproject(screenMouse);
+            // Convert pixel coordinates to Box2D world units.
+            Vector2 mouseWorld = new Vector2(screenMouse.x / units, screenMouse.y / units);
+            // Get avatar position.
+            Vector2 avatarPos = level.getAvatar().getObstacle().getPosition();
+            // Compute angle (in radians) from avatar to mouse.
+            float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
+            physics.shootRays(level.getAvatar(), sprayAngle);
+            physics.addPaint(level.getAvatar(), units, constants);
         }
 
-        if(level.getAvatar().isShooting()){
-            physics.shootRays(level.getAvatar(),0);
-            physics.addPaint(level.getAvatar(),constants);
-        }
         updateCamera();
     }
 
-    /**
-     * Adds a new bullet to the world and send it in the right direction.
-     */
     private void createBomb() {
-        InputController input = InputController.getInstance();
-        Vector2 pos = input.getMousePos();
-
-        float units = (height == 0) ? 1 : (height / worldHeight);
+        // Get the mouse position in screen coordinates.
+        Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        // Convert to world coordinates (in pixel space) taking into account camera translation.
+        camera.unproject(screenPos);
+        // Convert pixel coordinates to Box2D world units.
+        Vector2 pos = new Vector2(screenPos.x / units, screenPos.y / units);
 
         Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
         JsonValue bombData = constants.get("bomb");
-        Bomb bomb = new Bomb(units, bombData,pos);
+
+        Bomb bomb = new Bomb(units, bombData, pos);
         bomb.setTexture(bombTex);
         bomb.getObstacle().setName("bomb");
 
@@ -235,27 +265,31 @@ public class GameplayController implements Screen {
         physics.queueObject(bomb);
     }
 
+
     /**
-     * Removes a new bomb from the world.
-     *
-     * @param  bomb   the bomb to remove
+     * Removes a bomb from the physics world.
      */
     public void removeBomb(ObstacleSprite bomb) {
         bomb.getObstacle().markRemoved(true);
     }
 
+    /**
+     * Step physics after update.
+     */
     private void postUpdate(float dt) {
         physics.update(dt);
     }
 
+    /**
+     * Main draw method.
+     */
     private void draw(float dt) {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Draw the background tiles
-        float units = (height == 0) ? 1 : (height / worldHeight);
-        float mapWidth = worldWidth * units;
+        // Draw tiled background
+        float mapWidth  = worldWidth  * units;
         float mapHeight = worldHeight * units;
 
         JsonValue bgConfig = constants.get("background");
@@ -263,11 +297,12 @@ public class GameplayController implements Screen {
         Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
         floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
-        int nativeTileWidth = floorTile.getWidth();
+        int nativeTileWidth  = floorTile.getWidth();
         int nativeTileHeight = floorTile.getHeight();
-        int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
+        int effectiveTileWidth  = (int) (nativeTileWidth  * scaleFactor);
         int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
-        int tilesX = (int) Math.ceil(mapWidth / (float) effectiveTileWidth);
+
+        int tilesX = (int) Math.ceil(mapWidth  / (float) effectiveTileWidth);
         int tilesY = (int) Math.ceil(mapHeight / (float) effectiveTileHeight);
 
         for (int i = 0; i < tilesX; i++) {
@@ -278,11 +313,12 @@ public class GameplayController implements Screen {
             }
         }
 
-        // Draw all game objects
+        // Draw all physics objects
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
         }
 
+        // Debug overlays
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
                 sprite.drawDebug(batch);
@@ -293,6 +329,7 @@ public class GameplayController implements Screen {
             batch.begin(); // Resume SpriteBatch rendering
         }
 
+        // UI messages
         if (complete && !failed) {
             batch.drawText(goodMessage, width / 2, height / 2);
         } else if (failed) {
@@ -302,19 +339,17 @@ public class GameplayController implements Screen {
         batch.end();
     }
 
+    /**
+     * Center the camera on the player and clamp to map bounds.
+     */
     private void updateCamera() {
-        // 1) Convert our world units to pixel coordinates
-        float units = (height == 0) ? 1 : (height / worldHeight);
-        // The map extents in pixel coordinates
         float mapWidth  = worldWidth  * units;
         float mapHeight = worldHeight * units;
 
-        // 2) Center camera on the player’s position (in pixels)
         Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
         float desiredCamX = playerPos.x * units;
         float desiredCamY = playerPos.y * units;
 
-        // 3) Figure out half the camera’s viewport so we can clamp
         float halfViewWidth  = camera.viewportWidth  / 2f;
         float halfViewHeight = camera.viewportHeight / 2f;
 
@@ -324,7 +359,6 @@ public class GameplayController implements Screen {
         } else if (desiredCamX > mapWidth - halfViewWidth) {
             desiredCamX = mapWidth - halfViewWidth;
         }
-
         // Clamp vertically
         if (desiredCamY < halfViewHeight) {
             desiredCamY = halfViewHeight;
@@ -332,53 +366,57 @@ public class GameplayController implements Screen {
             desiredCamY = mapHeight - halfViewHeight;
         }
 
-        // 4) Apply final clamped position to the camera
         camera.position.set(desiredCamX, desiredCamY, 0);
         camera.update();
     }
 
-
-
+    /**
+     * The main render loop.
+     */
     @Override
     public void render(float delta) {
-        if (!active)
-            return;
-        if (!preUpdate(delta))
-            return;
+        if (!active) return;
+        if (!preUpdate(delta)) return;
         update(delta);
         postUpdate(delta);
-
         draw(delta);
     }
 
+    // Screen interface methods
     @Override
-    public void show() {
-        active = true;
-    }
-
+    public void show() { active = true; }
     @Override
-    public void hide() {
-        active = false;
-    }
-
+    public void hide() { active = false; }
     @Override
-    public void pause() {
-    }
-
+    public void pause() { }
     @Override
-    public void resume() {
-    }
+    public void resume() { }
 
+    /**
+     * Handle window resizing.
+     */
     @Override
     public void resize(int width, int height) {
         this.width = width;
         this.height = height;
+
+        // Make sure we have a camera
         if (camera == null) {
             camera = new OrthographicCamera();
         }
         camera.setToOrtho(false, width, height);
-        scale.x = width / bounds.width;
-        scale.y = height / bounds.height;
+
+        // 1) Compute the uniform scale factor from world→screen
+        //    so that worldHeight always fits the new window height
+        units = (this.height == 0) ? 1.0f : (this.height / worldHeight);
+
+        // 2) The InputController scale for screen→world
+        //    scale.x = (float) screenWidth / worldWidth
+        //    scale.y = (float) screenHeight / worldHeight
+        scale.x = (this.width  == 0) ? 1.0f : ( (float)this.width  / worldWidth  );
+        scale.y = (this.height == 0) ? 1.0f : ( (float)this.height / worldHeight );
+
+        // Rebuild the world for the new scale
         reset();
     }
 

@@ -64,35 +64,15 @@ public class Chameleon extends ObstacleSprite {
 
     //Position
     private Vector2 position;
-    //Number of rays to shoot
-    private int numRays = 10;
-    //Length of the rays
-    private float rayLength = 10f;
-    //Endpoints of the rays
-    private Vector2[] endpoints;
-    //Angle of character
-    private float angle;
     // For asset rotation, nothing to do with raycasting.
     private float orientation = 0.0f;
+    private boolean hidden;
 
     /**
      * Returns the posiiton of the Chameleon
      * @return position the position of the chameleon
      */
     public Vector2 getPosition(){return position;}
-
-    /**
-     * Returns the endpoints of a given raycast from the player
-     * @return endpoints the endpoints of the raycast
-     */
-    public Vector2[] getEndpoints(){return endpoints;}
-
-    /**
-     * Returns the number of rays
-     * @return numRays - the numbers of rays
-     */
-    public int getNumRays(){return numRays;}
-
 
     /**
      * Returns the left/right movement of this character.
@@ -233,8 +213,6 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
 
-        endpoints = new Vector2[numRays];
-
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
@@ -311,7 +289,7 @@ public class Chameleon extends ObstacleSprite {
         float vy = obstacle.getVY();
         Body body = obstacle.getBody();
         position = obstacle.getPosition();
-        angle = obstacle.getBody().getAngle();
+
 
         float moveX = getMovement();
         float moveY = getVerticalMovement();
@@ -441,6 +419,14 @@ public class Chameleon extends ObstacleSprite {
             return obstacle.getBody().getFixtureList().first();
         }
         return null;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }
 
