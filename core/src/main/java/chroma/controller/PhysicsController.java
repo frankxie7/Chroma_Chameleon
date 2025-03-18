@@ -42,7 +42,7 @@ public class PhysicsController implements ContactListener {
     //Number of rays to shoot
     private int numRays = 3;
     //Length of the rays
-    private float rayLength = 10f;
+    private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
 
@@ -108,7 +108,7 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    public void addPaint(Chameleon avatar, JsonValue settings) {
+    public void addPaint(Chameleon avatar, float units, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -130,7 +130,8 @@ public class PhysicsController implements ContactListener {
 //                ObstacleSprite sprite = new ObstacleSprite();
 //                sprite.setObstacle(triangle);
 //                sprite.setDebugColor(Color.ORANGE);
-                addObject(new Spray(points,settings));
+                Spray paintTriangle = new Spray(points, units, settings);
+                addObject(paintTriangle);
 
             }
         }

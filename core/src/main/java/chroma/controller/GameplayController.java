@@ -177,6 +177,7 @@ public class GameplayController implements Screen {
     }
 
     private void update(float dt) {
+        float units = (height == 0) ? 1 : (height / worldHeight);
         InputController input = InputController.getInstance();
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
@@ -217,7 +218,7 @@ public class GameplayController implements Screen {
 
         if(level.getAvatar().isShooting()){
             physics.shootRays(level.getAvatar(),0);
-            physics.addPaint(level.getAvatar(),constants);
+            physics.addPaint(level.getAvatar(),units, constants);
         }
         updateCamera();
     }
