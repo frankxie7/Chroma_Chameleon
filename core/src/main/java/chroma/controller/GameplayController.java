@@ -138,6 +138,8 @@ public class GameplayController implements Screen {
                 aiControllers = new ArrayList<>();
             }
             aiControllers.add(new AIController(enemy, this, physics, level));
+            float enemyMovement = enemy.getMovement();
+            enemy.setMovement(enemyMovement);
         }
             // Add all walls and platforms
         for (Terrain wall : level.getWalls()) {
@@ -194,6 +196,8 @@ public class GameplayController implements Screen {
         // Update all AI enemies
         for (AIController ai : aiControllers) {
             ai.update(dt);
+            float enemyMovement = ai.getEnemy().getMovement();
+            ai.getEnemy().setMovement(enemyMovement);
         }
 
         // Update the bomb

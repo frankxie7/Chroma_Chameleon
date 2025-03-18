@@ -182,6 +182,14 @@ public class PhysicsController implements ContactListener {
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
+        //Doesn't work yet
+        if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
+            (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in paint!");
+        }
+
         // Check if the player collides with an enemy
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
@@ -192,9 +200,25 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             playerWithBomb = true;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in bomb!");
         }
     }
-    @Override public void endContact(Contact contact) {}
+    @Override public void endContact(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object userDataA = fixtureA.getBody().getUserData();
+        Object userDataB = fixtureB.getBody().getUserData();
+        if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            playerWithBomb = false;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(false);
+            System.out.println("Player is visible again!");
+        }
+    }
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
