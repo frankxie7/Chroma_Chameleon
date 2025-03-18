@@ -178,13 +178,7 @@ public class GameplayController implements Screen {
 
     private void update(float dt) {
         InputController input = InputController.getInstance();
-        // Update player (chameleon) movement based on input
-        float hmove = input.getHorizontal();
-        float vmove = input.getVertical();
-        level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
-        level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
-        level.getAvatar().setShooting(input.didSecondary());
-        level.getAvatar().applyForce();
+        level.getAvatar().update(dt);
 
         // Ensure the chameleon's orientation is updated (this call is now redundant
         // if Chameleon.update() calls updateOrientation(), but is safe to include)
@@ -221,7 +215,6 @@ public class GameplayController implements Screen {
         }
         updateCamera();
     }
-
 
     /**
      * Adds a new bullet to the world and send it in the right direction.
@@ -260,19 +253,13 @@ public class GameplayController implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-//       Since the background is not a game model its texture is not given by Level.
-        // Handled manually
-
-        // Calculate the conversion factor from world units to screen pixels.
+        // Draw the background tiles
         float units = (height == 0) ? 1 : (height / worldHeight);
-        // Compute the full map dimensions in screen pixels.
         float mapWidth = worldWidth * units;
         float mapHeight = worldHeight * units;
 
-        // Get background configuration.
         JsonValue bgConfig = constants.get("background");
-        float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f); // e.g., 1.2 makes tiles 20% larger
-
+        float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f);
         Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
         floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
@@ -280,12 +267,9 @@ public class GameplayController implements Screen {
         int nativeTileHeight = floorTile.getHeight();
         int effectiveTileWidth = (int) (nativeTileWidth * scaleFactor);
         int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
-
-        // Compute how many tiles we need to cover the entire map area.
         int tilesX = (int) Math.ceil(mapWidth / (float) effectiveTileWidth);
         int tilesY = (int) Math.ceil(mapHeight / (float) effectiveTileHeight);
 
-        // Draw the background tiles so they cover the entire map.
         for (int i = 0; i < tilesX; i++) {
             for (int j = 0; j < tilesY; j++) {
                 float x = i * effectiveTileWidth;
@@ -294,16 +278,19 @@ public class GameplayController implements Screen {
             }
         }
 
-        // Draw all objects managed by the physics controller
+        // Draw all game objects
         for (ObstacleSprite sprite : physics.objects) {
             sprite.draw(batch);
         }
-
 
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
                 sprite.drawDebug(batch);
             }
+
+            batch.end(); // End SpriteBatch before using ShapeRenderer
+            aiControllers.get(0).debugRender(camera); // Call debug grid rendering
+            batch.begin(); // Resume SpriteBatch rendering
         }
 
         if (complete && !failed) {
@@ -311,8 +298,10 @@ public class GameplayController implements Screen {
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
+
         batch.end();
     }
+
     private void updateCamera() {
         // 1) Convert our world units to pixel coordinates
         float units = (height == 0) ? 1 : (height / worldHeight);
@@ -417,6 +406,8 @@ public class GameplayController implements Screen {
         }
         failed = value;
     }
+
+    public OrthographicCamera getCamera() { return camera; }
 
     public float getWorldWidth() { return worldWidth; }
 

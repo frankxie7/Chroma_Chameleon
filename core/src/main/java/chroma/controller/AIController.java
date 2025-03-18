@@ -7,6 +7,9 @@ import chroma.model.Terrain;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
@@ -61,7 +64,7 @@ public class AIController {
         pickNewWanderTarget();
 
         // Build navigation graph
-        buildGraph(gameplay.getWorldWidth(), gameplay.getWorldHeight());
+        buildGraph(gameplay.getCamera(),gameplay.getWorldWidth(), gameplay.getWorldHeight());
     }
 
     private void pickNewWanderTarget() {
@@ -162,8 +165,10 @@ public class AIController {
         }
     }
 
-    private void buildGraph(float worldWidth, float worldHeight) {
-        float gridSize = 1f;  // Adjust based on world scale
+    private void buildGraph(OrthographicCamera camera, float worldWidth, float worldHeight) {
+        float screenHeight = camera.viewportHeight;
+        float scale = screenHeight / worldHeight;
+        float gridSize = screenHeight / scale / 2;  // Adjust based on world scale
 
         // Create nodes that are not inside obstacles
         for (float x = 0; x < worldWidth; x += gridSize) {
@@ -242,9 +247,14 @@ public class AIController {
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getObstacle().getPosition();
         Vector2 direction = new Vector2(target).sub(enemyPos).nor();
-        if (enemy.getObstacle().getBody() != null) {
-            enemy.getObstacle().getBody().applyForceToCenter(direction.scl(speed), true);
-        }
+
+        // Set movement variables like the player
+        float hmove = direction.x;
+        float vmove = direction.y;
+
+        // Apply movement similar to the player
+        enemy.setMovement(hmove * enemy.getForce());
+        enemy.setVerticalMovement(vmove * enemy.getForce());
     }
 
     // Updated update method: 'playerVisible' is true if the player is visible.
@@ -284,13 +294,53 @@ public class AIController {
             if (waypoint != null) {
                 moveTowards(waypoint, wanderSpeed);
             } else {
-                if (enemy.getObstacle().getBody() != null) {
-                    enemy.getObstacle().getBody().setLinearVelocity(0, 0);
-                }
+                enemy.setMovement(0);
+                enemy.setVerticalMovement(0);
             }
         }
+        // Ensure the enemy updates its physics forces properly
+        enemy.applyForce();
         enemy.update(delta);
     }
+
+    private ShapeRenderer shapeRenderer = new ShapeRenderer();
+
+    private Array<Vector2> lastPath = null;
+    private Vector2 lastGoal = null;
+
+    public void debugRender(OrthographicCamera camera) {
+        shapeRenderer.setProjectionMatrix(camera.combined); // Use the same camera projection
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        float screenHeight = camera.viewportHeight;
+        float scale = screenHeight / gameplay.getWorldHeight();
+
+        float gridSize = screenHeight / scale / 2;
+
+        // Draw all NavNodes (grid)
+        shapeRenderer.setColor(Color.GRAY);
+        System.out.println(graph.nodes);
+        for (NavNode node : graph.nodes) {
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 20f); // Small dot for grid nodes
+        }
+
+        // Highlight the A* path in yellow
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x - 0.2f, pathPoint.y - 0.2f, 0.4f, 0.4f);
+            }
+        }
+
+        // Draw the goal in green
+        if (lastGoal != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.rect(lastGoal.x - 0.3f, lastGoal.y - 0.3f, 0.6f, 0.6f);
+        }
+
+        shapeRenderer.end();
+    }
+
 
     public State getState() { return state; }
 

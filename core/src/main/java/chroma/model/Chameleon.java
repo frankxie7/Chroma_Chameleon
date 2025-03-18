@@ -1,5 +1,6 @@
 package chroma.model;
 
+import chroma.controller.InputController;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
@@ -346,6 +347,16 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void update(float dt) {
+        InputController input = InputController.getInstance();
+
+        // Update player (chameleon) movement based on input
+        float hmove = input.getHorizontal();
+        float vmove = input.getVertical();
+        setMovement(hmove * getForce());
+        setVerticalMovement(vmove * getForce());
+        setShooting(input.didSecondary());
+        applyForce();
+
         // Apply cooldowns
         if (isShooting()) {
             shootCooldown = shotLimit;
