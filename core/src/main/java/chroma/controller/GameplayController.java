@@ -287,7 +287,7 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-
+//        batch.setColor(new Color(0.5f, 0f, 0.5f, 1f));
         // Draw tiled background
         float mapWidth  = worldWidth  * units;
         float mapHeight = worldHeight * units;
@@ -329,6 +329,7 @@ public class GameplayController implements Screen {
             batch.begin(); // Resume SpriteBatch rendering
         }
 
+
         // UI messages
         if (complete && !failed) {
             batch.drawText(goodMessage, width / 2, height / 2);
@@ -336,6 +337,7 @@ public class GameplayController implements Screen {
             batch.drawText(badMessage, width / 2, height / 2);
         }
 
+        batch.setColor(Color.WHITE);
         batch.end();
     }
 
