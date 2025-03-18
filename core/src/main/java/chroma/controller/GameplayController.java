@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -226,19 +227,30 @@ public class GameplayController implements Screen {
 
         // Fire paint spray
         if (level.getAvatar().isShooting()) {
-            physics.shootRays(level.getAvatar(), 0);
+            // Get mouse position in screen space.
+            Vector3 screenMouse = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            // Unproject to obtain world coordinates (in pixel space).
+            camera.unproject(screenMouse);
+            // Convert pixel coordinates to Box2D world units.
+            Vector2 mouseWorld = new Vector2(screenMouse.x / units, screenMouse.y / units);
+            // Get avatar position.
+            Vector2 avatarPos = level.getAvatar().getObstacle().getPosition();
+            // Compute angle (in radians) from avatar to mouse.
+            float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
+            physics.shootRays(level.getAvatar(), sprayAngle);
             physics.addPaint(level.getAvatar(), units, constants);
         }
 
         updateCamera();
     }
 
-    /**
-     * Adds a new bomb at the mouse location.
-     */
     private void createBomb() {
-        InputController input = InputController.getInstance();
-        Vector2 pos = input.getMousePos();
+        // Get the mouse position in screen coordinates.
+        Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        // Convert to world coordinates (in pixel space) taking into account camera translation.
+        camera.unproject(screenPos);
+        // Convert pixel coordinates to Box2D world units.
+        Vector2 pos = new Vector2(screenPos.x / units, screenPos.y / units);
 
         Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
         JsonValue bombData = constants.get("bomb");
@@ -250,6 +262,7 @@ public class GameplayController implements Screen {
         level.getBombs().add(bomb);
         physics.queueObject(bomb);
     }
+
 
     /**
      * Removes a bomb from the physics world.
