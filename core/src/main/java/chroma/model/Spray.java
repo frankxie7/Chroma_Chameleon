@@ -28,7 +28,7 @@ public class Spray extends ObstacleSprite {
         mesh.set(poly);  // or mesh.set(poly, tile, tile) if you want repeated tiling
 
         // 4) Set debug color (so you can see the shape in debug mode)
-        debug = ParserUtils.parseColor(settings.get("debug"), Color.ORANGE);
+        debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
     }
 }

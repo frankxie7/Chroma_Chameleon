@@ -173,7 +173,7 @@ public class PhysicsController implements ContactListener {
             float crossProduct = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
 
             if (crossProduct != 0) {  // Ignore collinear points
-                if (sign == false) {
+                if (!sign) {
                     sign = crossProduct > 0;  // Set the initial direction
                 } else {
                     // If the sign changes, it's a concave polygon

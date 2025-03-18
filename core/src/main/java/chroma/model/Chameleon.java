@@ -370,6 +370,7 @@ public class Chameleon extends ObstacleSprite {
 
         if (sensorOutline != null) {
             batch.setTexture( Texture2D.getBlank() );
+            Color original = batch.getColor();
             batch.setColor( sensorColor );
 
             Vector2 p = obstacle.getPosition();
@@ -383,6 +384,7 @@ public class Chameleon extends ObstacleSprite {
 
             //
             batch.outline( sensorOutline, transform );
+            batch.setColor(original);
         }
     }
 
