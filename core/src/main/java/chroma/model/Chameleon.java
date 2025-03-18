@@ -217,7 +217,6 @@ public class Chameleon extends ObstacleSprite {
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
-
         maxspeed = data.getFloat("maxspeed", 0);
         damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
@@ -231,8 +230,6 @@ public class Chameleon extends ObstacleSprite {
         // Create a rectangular mesh for the chameleon.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
     }
-
-
 
     /**
      * Creates the sensor for Traci.
@@ -429,4 +426,3 @@ public class Chameleon extends ObstacleSprite {
         this.hidden = hidden;
     }
 }
-

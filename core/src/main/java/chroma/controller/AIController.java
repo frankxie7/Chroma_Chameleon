@@ -31,6 +31,7 @@ public class AIController {
     private Enemy enemy;
     private Chameleon player;
     private List<Terrain> walls; // list of walls for pathfindinga
+    private List<Terrain> platforms;
     private State state;
 //    private float detectionRange = 200f; // enemy detection range
 
@@ -53,6 +54,8 @@ public class AIController {
 
     private NavGraph graph = new NavGraph();
 
+    private float scale;
+
     public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
         this.enemy = enemy;
         this.gameplay = gameplayController;
@@ -60,11 +63,21 @@ public class AIController {
         this.level = level;
         this.player = level.getAvatar();
         this.walls = level.getWalls();
+        this.platforms = level.getPlatforms();
         state = State.WANDER;
         pickNewWanderTarget();
 
+        float worldWidth = gameplay.getWorldWidth();
+        float worldHeight = gameplay.getWorldHeight();
+
+        OrthographicCamera camera = gameplay.getCamera();
+        float screenHeight = camera.viewportHeight;
+
+        this.scale = screenHeight / worldHeight;
+        float gridSize = screenHeight / scale / 16;
+
         // Build navigation graph
-        buildGraph(gameplay.getCamera(),gameplay.getWorldWidth(), gameplay.getWorldHeight());
+        buildGraph(gridSize, worldWidth, worldHeight);
     }
 
     public Enemy getEnemy() {
@@ -89,6 +102,12 @@ public class AIController {
     private boolean isBlocked(Vector2 position) {
         for (Terrain wall : walls) { // Assuming you have a list of obstacles
             if (wall.contains(position)) {
+                return true;
+            }
+        }
+        for (Terrain platform : platforms) { // Assuming you have a list of obstacles
+            if (platform.contains(position)) {
+                System.out.println("Platform");
                 return true;
             }
         }
@@ -169,11 +188,7 @@ public class AIController {
         }
     }
 
-    private void buildGraph(OrthographicCamera camera, float worldWidth, float worldHeight) {
-        float screenHeight = camera.viewportHeight;
-        float scale = screenHeight / worldHeight;
-        float gridSize = screenHeight / scale / 2;  // Adjust based on world scale
-
+    private void buildGraph(float gridSize, float worldWidth, float worldHeight) {
         // Create nodes that are not inside obstacles
         for (float x = 0; x < worldWidth; x += gridSize) {
             for (float y = 0; y < worldHeight; y += gridSize) {
@@ -239,15 +254,16 @@ public class AIController {
     }
 
     private Vector2 getNextPathPoint(Vector2 start, Vector2 end) {
-        PathFinder pathFinder = new PathFinder(graph); // Ensure `graph` is initialized
+        PathFinder pathFinder = new PathFinder(graph);
         Array<Vector2> path = pathFinder.findPath(start, end);
 
         if (path.size > 1) {
-            return path.get(1); // The first point is the current position, so take the next step
+            lastPath = path; // Store for debugging
+            lastGoal = end;
+            return path.get(1);
         }
-        return null; // No path found
+        return null;
     }
-
 
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getObstacle().getPosition();
@@ -281,7 +297,6 @@ public class AIController {
         } else if (state == State.CHASE) {
             state = State.WANDER;
         }
-
 
         if (state == State.CHASE) {
             if (!isLineBlocked(enemyPos, playerPos)) {
@@ -322,35 +337,28 @@ public class AIController {
         shapeRenderer.setProjectionMatrix(camera.combined); // Use the same camera projection
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        float screenHeight = camera.viewportHeight;
-        float scale = screenHeight / gameplay.getWorldHeight();
-
-        float gridSize = screenHeight / scale / 2;
-
         // Draw all NavNodes (grid)
         shapeRenderer.setColor(Color.GRAY);
-        System.out.println(graph.nodes);
         for (NavNode node : graph.nodes) {
-            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 20f); // Small dot for grid nodes
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f); // Small dot for grid nodes
         }
 
         // Highlight the A* path in yellow
         if (lastPath != null) {
             shapeRenderer.setColor(Color.YELLOW);
             for (Vector2 pathPoint : lastPath) {
-                shapeRenderer.rect(pathPoint.x - 0.2f, pathPoint.y - 0.2f, 0.4f, 0.4f);
+                shapeRenderer.rect(pathPoint.x * scale - 10f, pathPoint.y * scale - 10f, 10f, 10f);
             }
         }
 
         // Draw the goal in green
         if (lastGoal != null) {
             shapeRenderer.setColor(Color.GREEN);
-            shapeRenderer.rect(lastGoal.x - 0.3f, lastGoal.y - 0.3f, 0.6f, 0.6f);
+            shapeRenderer.rect(lastGoal.x * scale - 20f, lastGoal.y * scale - 20f, 20f, 20f);
         }
 
         shapeRenderer.end();
     }
-
 
     public State getState() { return state; }
 

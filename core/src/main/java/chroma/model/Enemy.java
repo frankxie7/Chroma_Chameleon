@@ -131,6 +131,10 @@ public class Enemy extends ObstacleSprite {
 //        this.detectionRange = range;
 //    }
 
+    private Vector2 targetVelocity = new Vector2();
+    private Vector2 currentVelocity = new Vector2();
+    private float turnSmoothing = 0.1f;
+
     public void applyForce() {
         if (!obstacle.isActive()) {
             return;
@@ -141,27 +145,50 @@ public class Enemy extends ObstacleSprite {
         float vy = obstacle.getVY();
         Body body = obstacle.getBody();
 
-        float moveX = getMovement();
-        float moveY = getVerticalMovement();
+//        float moveX = getMovement();
+//        float moveY = getVerticalMovement();
+//
+//        // Don't want to be moving. Damp out player motion
+//        if (moveX == 0f && moveY == 0f) {
+//            forceCache.set(-getDamping()*vx,-getDamping()*vy);
+//            body.applyForce(forceCache,pos,true);
+//        } else {
+//            Vector2 moveForce = new Vector2(moveX, moveY);
+//            if (moveForce.len() > 1) {
+//                moveForce.nor(); // Normalize so diagonal movement isn't faster
+//            }
+//            moveForce.scl(getForce()); // Scale by movement force
+//            body.applyForce(moveForce, pos, true);
+//        }
+//
+//        // Clamp velocity to max speed
+//        Vector2 velocity = obstacle.getBody().getLinearVelocity();
+//        if (velocity.len() > getMaxSpeed()) {
+//            velocity.nor().scl(getMaxSpeed());
+//            obstacle.getBody().setLinearVelocity(velocity);
+//        }
 
-        // Don't want to be moving. Damp out player motion
-        if (moveX == 0f && moveY == 0f) {
-            forceCache.set(-getDamping()*vx,-getDamping()*vy);
-            body.applyForce(forceCache,pos,true);
-        } else {
-            Vector2 moveForce = new Vector2(moveX, moveY);
-            if (moveForce.len() > 1) {
-                moveForce.nor(); // Normalize so diagonal movement isn't faster
-            }
-            moveForce.scl(getForce()); // Scale by movement force
-            body.applyForce(moveForce, pos, true);
+        // Get the current movement direction
+        targetVelocity.set(getMovement(), getVerticalMovement());
+
+        // Normalize if needed
+        if (targetVelocity.len() > 1) {
+            targetVelocity.nor();
         }
 
-        // Clamp velocity to max speed
-        Vector2 velocity = obstacle.getBody().getLinearVelocity();
-        if (velocity.len() > getMaxSpeed()) {
-            velocity.nor().scl(getMaxSpeed());
-            obstacle.getBody().setLinearVelocity(velocity);
+        // Scale by force and apply smoothing
+        targetVelocity.scl(getForce());
+        currentVelocity.lerp(targetVelocity, turnSmoothing); // Smoothly transition
+
+        // Apply the interpolated force
+        body.applyForce(currentVelocity, pos, true);
+
+        // Apply damping to slow down gradually
+        if (currentVelocity.len2() < 0.01f) { // Prevent tiny movements
+            body.setLinearVelocity(0, 0);
+        } else if (currentVelocity.len() > getMaxSpeed()) {
+            currentVelocity.nor().scl(getMaxSpeed());
+            body.setLinearVelocity(currentVelocity);
         }
     }
 
