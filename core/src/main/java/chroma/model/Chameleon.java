@@ -65,6 +65,7 @@ public class Chameleon extends ObstacleSprite {
     private Vector2 position;
     // For asset rotation, nothing to do with raycasting.
     private float orientation = 0.0f;
+    private boolean hidden;
 
     /**
      * Returns the posiiton of the Chameleon
@@ -407,6 +408,14 @@ public class Chameleon extends ObstacleSprite {
             return obstacle.getBody().getFixtureList().first();
         }
         return null;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }
 

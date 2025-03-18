@@ -3,12 +3,19 @@ package chroma.controller;
 import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
-import chroma.model.Terrain;
+import chroma.model.Bomb;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
+import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.Iterator;
 
@@ -35,7 +42,7 @@ public class PhysicsController implements ContactListener {
     //Number of rays to shoot
     private int numRays = 3;
     //Length of the rays
-    private float rayLength = 10f;
+    private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
 
@@ -91,23 +98,17 @@ public class PhysicsController implements ContactListener {
             float angleOffset = (i - numRays / 2f) * angleStep;
             Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
                 (float) Math.sin(angle +angleOffset)).nor();
-            Vector2 pos = new Vector2(obstacle.getPosition().x, obstacle.getPosition().y);
-            Vector2 endPoint = new Vector2(pos).add(direction.scl(rayLength));
+            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                Body body = fixture.getBody();
-                if(body.getUserData() instanceof Terrain){
-                    System.out.println("yo");
-                    endPoint.set(point);
-                    return -1;
-                }
+
                 return fraction;
             };
-            world.rayCast(callback,pos,endPoint);
+            world.rayCast(callback,obstacle.getPosition(),endPoint);
             endpoints[i] = new Vector2(endPoint);
         }
     }
 
-    public void addPaint(Chameleon avatar, JsonValue settings) {
+    public void addPaint(Chameleon avatar, float units, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -121,7 +122,16 @@ public class PhysicsController implements ContactListener {
                 float x3 = v3.x;
                 float y3 = v3.y;
                 float[] points = new float[]{x1,y1,x2,y2,x3,y3};
-                addObject(new Spray(points,settings));
+//                PolygonObstacle triangle = new PolygonObstacle(points);
+//                triangle.setPosition(x1*1.75f,y1*1.75f);
+//                triangle.setBodyType(BodyType.StaticBody);
+//                triangle.setSensor(true);
+//                triangle.setName("spray");
+//                ObstacleSprite sprite = new ObstacleSprite();
+//                sprite.setObstacle(triangle);
+//                sprite.setDebugColor(Color.ORANGE);
+                Spray paintTriangle = new Spray(points, units, settings);
+                addObject(paintTriangle);
 
             }
         }
@@ -172,6 +182,14 @@ public class PhysicsController implements ContactListener {
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
+        //Doesn't work yet
+        if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
+            (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in paint!");
+        }
+
         // Check if the player collides with an enemy
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
@@ -182,9 +200,25 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             playerWithBomb = true;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(true);
+            System.out.println("Player is hidden in bomb!");
         }
     }
-    @Override public void endContact(Contact contact) {}
+    @Override public void endContact(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object userDataA = fixtureA.getBody().getUserData();
+        Object userDataB = fixtureB.getBody().getUserData();
+        if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            playerWithBomb = false;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            player.setHidden(false);
+            System.out.println("Player is visible again!");
+        }
+    }
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
@@ -194,6 +228,14 @@ public class PhysicsController implements ContactListener {
 
     public void resetCollisionFlags() {
         playerCollidedWithEnemy = false;
+    }
+
+    public boolean didPlayerCollideWithBomb() {
+        return playerWithBomb;
+    }
+
+    public void resetBombFlags() {
+        playerWithBomb = false;
     }
 
     public void dispose() {
