@@ -4,6 +4,7 @@ import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
 import chroma.model.Bomb;
+import chroma.model.Terrain;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -40,7 +41,7 @@ public class PhysicsController implements ContactListener {
 
 
     //Number of rays to shoot
-    private int numRays = 3;
+    private int numRays = 30;
     //Length of the rays
     private float rayLength = 3f;
     //Endpoints of the rays
@@ -100,7 +101,11 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-
+                Body body = fixture.getBody();
+                if(body.getUserData() instanceof Terrain){
+                    endPoint.set(point);
+                    return -1;
+                }
                 return fraction;
             };
             world.rayCast(callback,obstacle.getPosition(),endPoint);
