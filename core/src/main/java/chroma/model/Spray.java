@@ -12,11 +12,9 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Spray extends ObstacleSprite {
 
-    // A static texture for spray objects, created once.
-    private static Texture sprayTexture = null;
-
+    Texture sprayTexture = null;
     public Spray(float[] points, float units, JsonValue settings) {
-        // Create the physics obstacle using the provided points.
+        // Create the physics obstacle as before.
         obstacle = new PolygonObstacle(points);
         obstacle.setDensity(0);
         obstacle.setFriction(0);
@@ -25,30 +23,54 @@ public class Spray extends ObstacleSprite {
         obstacle.setSensor(true);
         obstacle.setUserData(this);
         obstacle.setName("spray");
-
-        // Set the scale for converting Box2D units to screen pixels.
         obstacle.setPhysicsUnits(units);
 
-        // Build the mesh from the scaled polygon.
-        Poly2 poly = new Poly2(points);
-        poly.scl(units);
-        mesh.set(poly);
 
-        // Set the debug color (used in debug mode).
-        debug = ParserUtils.parseColor(settings.get("debug"), Color.ORANGE);
+//        float minX = points[0], minY = points[1], maxX = points[0], maxY = points[1];
+//        for (int i = 2; i < points.length; i += 2) {
+//            minX = Math.min(minX, points[i]);
+//            minY = Math.min(minY, points[i + 1]);
+//            maxX = Math.max(maxX, points[i]);
+//            maxY = Math.max(maxY, points[i + 1]);
+//        }
+//        minX *= units;
+//        minY *= units;
+//        maxX *= units;
+//        maxY *= units;
+//        float width = maxX - minX;
+//        float height = maxY - minY;
+//        mesh.set(minX, minY, width+1, height+1);
 
-        // Create a static purple translucent texture if not already created.
+//        float[] scaledPoints = new float[points.length];
+//        for (int i = 0; i < points.length; i++) {
+//            scaledPoints[i] = points[i] * units;
+//        }
+//        mesh.set(scaledPoints);
+
+//        Poly2 poly = new Poly2(points);
+//        poly.scl(units);
+//        mesh.set(poly,1,6);
+
+
+
+        // Optionally, set vertex colors (as Bomb does).
+        int count = mesh.vertexCount();
+        for (int i = 0; i < count; i++) {
+            mesh.setColor(i, ParserUtils.parseColor(settings.get("debug"), Color.ORANGE));
+        }
+
+        // Create the spray texture if it doesn't already exist.
         if (sprayTexture == null) {
-            int texSize = 128; // Texture size in pixels.
+            int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
-            // Purple color with 50% opacity.
-            Color purpleTranslucent = new Color(0.5f, 0f, 0.5f, 0.5f);
+            Color purpleTranslucent = new Color(0.5f, 0f, 0.5f, 0.1f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);
             pixmap.dispose();
+            sprayTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         }
-        // Assign the texture to this Spray.
         setTexture(sprayTexture);
     }
+
 }

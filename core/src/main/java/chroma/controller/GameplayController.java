@@ -202,7 +202,12 @@ public class GameplayController implements Screen {
      */
     private void update(float dt) {
         InputController input = InputController.getInstance();
-        level.getAvatar().update(dt);
+//        float hmove = input.getHorizontal();
+//        float vmove = input.getVertical();
+//        level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
+//        level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
+        level.getAvatar().setShooting(input.didSecondary());
+//        level.getAvatar().applyForce();
         level.getAvatar().updateOrientation();
 
         // Update AI enemies
@@ -324,9 +329,9 @@ public class GameplayController implements Screen {
                 sprite.drawDebug(batch);
             }
 
-            batch.end(); // End SpriteBatch before using ShapeRenderer
-            aiControllers.get(0).debugRender(camera); // Call debug grid rendering
-            batch.begin(); // Resume SpriteBatch rendering
+//            batch.end(); // End SpriteBatch before using ShapeRenderer
+//            aiControllers.get(0).debugRender(camera); // Call debug grid rendering
+//            batch.begin(); // Resume SpriteBatch rendering
         }
 
 

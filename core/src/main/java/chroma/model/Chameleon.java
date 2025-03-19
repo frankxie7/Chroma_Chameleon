@@ -379,6 +379,9 @@ public class Chameleon extends ObstacleSprite {
         // Call the parent draw method with the transform
         super.draw(batch, transform);
 
+//        for (int i = 0; i < count; i++) {
+//            mesh.setColor(i, Color.WHITE);
+//        }
     }
 
 
