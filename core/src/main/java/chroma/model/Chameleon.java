@@ -50,6 +50,8 @@ public class Chameleon extends ObstacleSprite {
     private int shootCooldown;
     /** Whether we are actively shooting */
     private boolean isShooting;
+    private float maxPaint = 50f;
+    private float currentPaint = 50f;
 
     /** The outline of the sensor obstacle */
     private Path2 sensorOutline;
@@ -449,4 +451,21 @@ public class Chameleon extends ObstacleSprite {
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
     }
+
+    public float getPaint() {
+        return currentPaint;
+    }
+
+    public float getMaxPaint() {
+        return maxPaint;
+    }
+
+    public void setPaint(float paint) {
+        this.currentPaint = Math.max(0, Math.min(maxPaint, paint));
+    }
+
+    public boolean hasEnoughPaint(float cost) {
+        return currentPaint >= cost;
+    }
+
 }

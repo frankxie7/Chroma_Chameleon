@@ -9,10 +9,7 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
-import chroma.model.Enemy;
-import chroma.model.Level;
-import chroma.model.Terrain;
-import chroma.model.Bomb;
+import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -58,7 +55,15 @@ public class GameplayController implements Screen {
     private float width, height;
     // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
-
+    private Texture paintBarFrame;
+    private Texture paintBarFill;
+    private float paintBarMaxWidth = 200;
+    private float paintBarHeight = 20;
+    private float paintBarX = 50;
+    private float paintBarY = 50;
+    private Chameleon player;
+    private float splatterCost = 3f;
+    private float bombCost = 2f;
 
 
     private OrthographicCamera camera;
@@ -119,6 +124,7 @@ public class GameplayController implements Screen {
         badMessage.setAlignment(TextAlign.middleCenter);
         badMessage.setFont(displayFont);
 
+
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int)this.width, (int)this.height);
@@ -143,8 +149,10 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, constants);
 
         // Add key objects to the physics world
+        player = level.getAvatar();
+        player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(level.getAvatar());
+        physics.addObject(player);
 
         // Initialize AI
         aiControllers = new ArrayList<>();
@@ -206,9 +214,9 @@ public class GameplayController implements Screen {
 //        float vmove = input.getVertical();
 //        level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
 //        level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
-        level.getAvatar().setShooting(input.didSecondary());
+        player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
-        level.getAvatar().updateOrientation();
+        player.updateOrientation();
 
         // Update AI enemies
         for (AIController ai : aiControllers) {
@@ -216,8 +224,9 @@ public class GameplayController implements Screen {
         }
 
         // Throw a bomb on left‐click
-        if (input.didTertiary()) {
+        if (input.didTertiary() && player.hasEnoughPaint(bombCost)) {
             createBomb();
+            player.setPaint(player.getPaint() - bombCost);
         }
         // Remove bombs that have exploded
         for (Bomb b: level.getBombs()) {
@@ -233,7 +242,7 @@ public class GameplayController implements Screen {
         }
 
         // Fire paint spray
-        if (level.getAvatar().isShooting()) {
+        if (player.isShooting() && player.hasEnoughPaint(splatterCost)) {
             // Get mouse position in screen space.
             Vector3 screenMouse = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             // Unproject to obtain world coordinates (in pixel space).
@@ -246,8 +255,8 @@ public class GameplayController implements Screen {
             float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
             physics.shootRays(level.getAvatar(), sprayAngle);
             physics.addPaint(level.getAvatar(), units, constants);
+            player.setPaint(player.getPaint() - splatterCost);
         }
-
         updateCamera();
     }
 
@@ -286,6 +295,32 @@ public class GameplayController implements Screen {
     }
 
     /**
+     * Draw the paint container UI with a solid color fill.
+     */
+    private void drawPaintContainer() {
+        Chameleon player = level.getAvatar();
+        if (player == null) return;
+
+        float paintPercent = player.getPaint() / player.getMaxPaint();
+        float currentBarWidth = paintPercent * paintBarMaxWidth;
+
+        batch.setColor(Color.WHITE);
+        batch.draw(paintBarFrame, paintBarX - 5, paintBarY - 5, paintBarMaxWidth + 10, paintBarHeight + 10);
+
+        if (paintPercent > 0.5f) {
+            batch.setColor(Color.GREEN);
+        } else if (paintPercent > 0.2f) {
+            batch.setColor(Color.YELLOW);
+        } else {
+            batch.setColor(Color.RED);
+        }
+
+        batch.draw(paintBarFrame, paintBarX, paintBarY, currentBarWidth, paintBarHeight);
+
+        batch.setColor(Color.WHITE);
+    }
+
+    /**
      * Main draw method.
      */
     private void draw(float dt) {
@@ -317,6 +352,8 @@ public class GameplayController implements Screen {
                 batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
             }
         }
+
+        drawPaintContainer();
 
         // Draw all physics objects
         for (ObstacleSprite sprite : physics.objects) {
@@ -422,8 +459,9 @@ public class GameplayController implements Screen {
         //    scale.y = (float) screenHeight / worldHeight
         scale.x = (this.width  == 0) ? 1.0f : ( (float)this.width  / worldWidth  );
         scale.y = (this.height == 0) ? 1.0f : ( (float)this.height / worldHeight );
-
         // Rebuild the world for the new scale
+        paintBarX = width - 250; // 50px margin from the right
+        paintBarY = height - 100;
         reset();
     }
 

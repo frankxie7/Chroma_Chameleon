@@ -11,7 +11,6 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Spray extends ObstacleSprite {
-
     Texture sprayTexture = null;
     public Spray(float[] points, float units, JsonValue settings) {
         // Create the physics obstacle as before.
@@ -24,7 +23,6 @@ public class Spray extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("spray");
         obstacle.setPhysicsUnits(units);
-
 
 //        float minX = points[0], minY = points[1], maxX = points[0], maxY = points[1];
 //        for (int i = 2; i < points.length; i += 2) {
@@ -72,5 +70,4 @@ public class Spray extends ObstacleSprite {
         }
         setTexture(sprayTexture);
     }
-
 }
