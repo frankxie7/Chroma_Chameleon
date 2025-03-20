@@ -6,6 +6,7 @@
 4. Goal Region Implementation -- Alex, Frank
 5. Paint tank -- Frank
 6. Expand the map vertically and test boundary camera -- Beilin
+7. Put the creation of Spray and Bomb both in either PhysicsController or GameplayController (currently in separate classes) . 
 
 # Potential New Features DUE Saturday March 22:
 1. Paint dissipation over time -- Frank
