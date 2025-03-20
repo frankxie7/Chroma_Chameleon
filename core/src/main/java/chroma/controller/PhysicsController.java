@@ -40,6 +40,10 @@ public class PhysicsController implements ContactListener {
 
     private boolean playerWithBomb = false;
 
+    private int sprayContactCount = 0;
+
+
+
     //Number of rays to shoot
     private int numRays = 30;
     //Length of the rays
@@ -230,30 +234,22 @@ public class PhysicsController implements ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        // You can process global collision events here.
-        // For example, if the player collides with the goal door,
-        // you might notify a higher-level controller.
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
-        //Doesn't work yet
+        // Handle spray contacts
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
+            sprayContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-            System.out.println("Player is hidden in paint!");
+            System.out.println("Player entered spray; count = " + sprayContactCount);
         }
 
-        // Check if the player collides with an enemy
-        if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
-            (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
-            playerCollidedWithEnemy = true;
-        }
-
-        // Check if the player collides with the bomb
+        // Handle bomb contacts (unchanged or similar counter logic if needed)
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             playerWithBomb = true;
@@ -261,7 +257,14 @@ public class PhysicsController implements ContactListener {
             player.setHidden(true);
             System.out.println("Player is hidden in bomb!");
         }
+
+        // Check enemy collisions, etc.
+        if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
+            (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
+            playerCollidedWithEnemy = true;
+        }
     }
+
 
     @Override
     public void endContact(Contact contact) {
@@ -270,17 +273,34 @@ public class PhysicsController implements ContactListener {
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
+
+        // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
-            (userDataA instanceof Bomb && userDataB instanceof Chameleon) || (
-            userDataA instanceof Spray && userDataB instanceof Chameleon) || (
-            userDataA instanceof Chameleon && userDataB instanceof Spray)) {
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             playerWithBomb = false;
-            Chameleon player =
-                userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-            player.setHidden(false);
-            System.out.println("Player is visible again!");
+            // Only set visible if no spray contact remains.
+            if (sprayContactCount <= 0) {
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+                player.setHidden(false);
+                System.out.println("Player is visible again (bomb ended)!");
+            }
+        }
+
+        // Handle spray contacts ending
+        if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
+            (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
+            sprayContactCount--;
+            if (sprayContactCount <= 0 && !playerWithBomb) {
+                sprayContactCount = 0; // Ensure counter doesn't go negative
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+                player.setHidden(false);
+                System.out.println("Player is visible again (spray ended)!");
+            } else {
+                System.out.println("Remaining spray contacts: " + sprayContactCount);
+            }
         }
     }
+
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
