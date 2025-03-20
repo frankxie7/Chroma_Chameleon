@@ -45,12 +45,15 @@ public class PhysicsController implements ContactListener {
     private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
+    //Points
+    private float[] points;
 
     public PhysicsController(float gravityY,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
         objects = new PooledList<>();
         addQueue = new PooledList<>();
+        points = new float[6];
         this.directory = directory;
         endpoints = new Vector2[numRays];
     }
@@ -120,7 +123,12 @@ public class PhysicsController implements ContactListener {
                 float y2 = v2.y;
                 float x3 = v3.x;
                 float y3 = v3.y;
-                float[] points = new float[]{x1,y1,x2,y2,x3,y3};
+                points[0] = x1;
+                points[1] = y1;
+                points[2] = x2;
+                points[3] = y2;
+                points[4] = x3;
+                points[5] = y3;
                 if(!isConcave(points) && isCounterClockwise(points)){
                     try{
                         Spray paintTriangle = new Spray(points, units, settings);
@@ -171,7 +179,7 @@ public class PhysicsController implements ContactListener {
             float crossProduct = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
 
             if (crossProduct != 0) {  // Ignore collinear points
-                if (sign == false) {
+                if (!sign) {
                     sign = crossProduct > 0;  // Set the initial direction
                 } else {
                     // If the sign changes, it's a concave polygon
