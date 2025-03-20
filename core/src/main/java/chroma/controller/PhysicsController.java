@@ -40,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private boolean playerWithBomb = false;
 
     //Number of rays to shoot
-    private int numRays = 500;
+    private int numRays = 30;
     //Length of the rays
     private float rayLength = 3f;
     //Endpoints of the rays
