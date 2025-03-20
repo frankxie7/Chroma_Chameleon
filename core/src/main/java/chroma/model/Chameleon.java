@@ -50,6 +50,9 @@ public class Chameleon extends ObstacleSprite {
     private int shootCooldown;
     /** Whether we are actively shooting */
     private boolean isShooting;
+    /** Whether we are actively aiming */
+    private boolean isAiming;
+
     private float maxPaint = 50f;
     private float currentPaint = 50f;
 
@@ -128,6 +131,16 @@ public class Chameleon extends ObstacleSprite {
     public void setShooting(boolean value) {
         isShooting = value;
     }
+
+    /**
+     * Returns true if the player is aiming
+     * */
+    public boolean isAiming() {return isAiming;}
+
+    /**
+     * Sets whether the player is aiming
+     * */
+    public void setAiming(boolean value) { isAiming = value;}
 
     /**
      * Returns how much force to apply to get Traci moving
@@ -227,6 +240,7 @@ public class Chameleon extends ObstacleSprite {
         shotLimit = data.getInt("shot_cool", 0);
 
         isShooting = false;
+        isAiming = false;
         faceRight = true;
         shootCooldown = 0;
 

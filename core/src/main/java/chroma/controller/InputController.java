@@ -75,6 +75,8 @@ public class InputController {
     /** Whether the exit button was pressed. */
     private boolean exitPressed;
     private boolean exitPrevious;
+    /** Whether the left shift button was pressed */
+    private boolean shiftPressed;
 
     /** How much did we move horizontally? */
     private float horizontal;
@@ -218,6 +220,13 @@ public class InputController {
     }
 
     /**
+     * Returns true if the left shift button was pressed.
+     * */
+    public boolean didAim() {
+        return shiftPressed;
+    }
+
+    /**
      * Creates a new input controller
      *
      * The input controller attempts to connect to the X-Box controller at
@@ -324,6 +333,7 @@ public class InputController {
         prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
+        shiftPressed = (secondary && shiftPressed) || (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT));
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);

@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -23,6 +24,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.Obstacle;
@@ -223,8 +225,15 @@ public class GameplayController implements Screen {
             ai.update(dt);
         }
 
+        // Update the state of aiming
+        if (input.didAim() && player.hasEnoughPaint(bombCost)) {
+            player.setAiming(true);
+        } else {
+            player.setAiming(false);
+        }
+
         // Throw a bomb on left‐click
-        if (input.didTertiary() && player.hasEnoughPaint(bombCost)) {
+        if (input.didTertiary() && player.hasEnoughPaint(bombCost) && input.didAim()) {
             createBomb();
             player.setPaint(player.getPaint() - bombCost);
         }
@@ -260,13 +269,45 @@ public class GameplayController implements Screen {
         updateCamera();
     }
 
+    /**
+     * Helper for clamping the bomb position in aiming range
+     * */
+    private Vector2 clampBombPos(Vector3 screenPos) {
+        float startX = player.getPosition().x * units;
+        float startY = player.getPosition().y * units;
+
+        float aimRange = constants.get("bomb").getFloat("aimRange") * units;
+
+        // Calculate the unclamped bomb position
+        float bombX = screenPos.x;
+        float bombY = screenPos.y;
+
+        // Calculate the distance from the player to the bomb position
+        float dx = bombX - startX;
+        float dy = bombY - startY;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+
+        // If the distance exceeds the allowed range, clamp it
+        if (distance > aimRange / 2) {
+            float scale = (aimRange / 2) / distance;  // Ratio to scale the vector down
+            bombX = startX + dx * scale;
+            bombY = startY + dy * scale;
+        }
+         return new Vector2(bombX, bombY);
+    }
+
+    /**
+     * Helper for creating the bomb
+     * */
     private void createBomb() {
         // Get the mouse position in screen coordinates.
         Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         // Convert to world coordinates (in pixel space) taking into account camera translation.
         camera.unproject(screenPos);
+
+        Vector2 clampedBombPos = clampBombPos(screenPos);
         // Convert pixel coordinates to Box2D world units.
-        Vector2 pos = new Vector2(screenPos.x / units, screenPos.y / units);
+        Vector2 pos = new Vector2(clampedBombPos.x/ units, clampedBombPos.y/ units);
 
         Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
         JsonValue bombData = constants.get("bomb");
@@ -321,6 +362,34 @@ public class GameplayController implements Screen {
     }
 
     /**
+     * Helper for drawing the aiming range
+     * */
+    private void drawAimRange(Texture aimTex) {
+        if (player == null) return;
+
+        // Get the mouse position in screen coordinates.
+        Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        // Convert to world coordinates (in pixel space) taking into account camera translation.
+        camera.unproject(screenPos);
+
+        float startX = player.getPosition().x;
+        float startY = player.getPosition().y;
+
+        float s = constants.get("bomb").getFloat( "size" );
+        float radius = s * units;
+        float aimRange = constants.get("bomb").getFloat("aimRange") * units;
+
+        Vector2 aimPos = clampBombPos(screenPos);
+
+        // Draw the aiming circle
+        batch.draw(aimTex, aimPos.x- radius/2, aimPos.y - radius/2, radius, radius);
+
+        // Draw the aiming range
+        batch.draw(aimTex, startX*units - aimRange/2, startY*units - aimRange/2, aimRange, aimRange);
+
+    }
+
+    /**
      * Main draw method.
      */
     private void draw(float dt) {
@@ -353,11 +422,25 @@ public class GameplayController implements Screen {
             }
         }
 
-        drawPaintContainer();
+        // Draw the aiming
+        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
+        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        if (player.isAiming()) {
+            drawAimRange(aimTex);
+        }
 
-        // Draw all physics objects
+        // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
-            sprite.draw(batch);
+            if (sprite.getName() != null && sprite.getName().equals("bomb")) {
+                sprite.draw(batch);
+            }
+        }
+
+        // Draw all physics objects other than bombs
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb"))) {
+                sprite.draw(batch);
+            }
         }
 
         // Debug overlays
@@ -371,6 +454,8 @@ public class GameplayController implements Screen {
 //            batch.begin(); // Resume SpriteBatch rendering
         }
 
+        // Draw the paint container (UI) after objects
+        drawPaintContainer();
 
         // UI messages
         if (complete && !failed) {
