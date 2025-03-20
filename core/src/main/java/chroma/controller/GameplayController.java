@@ -449,8 +449,12 @@ public class GameplayController implements Screen {
                 sprite.drawDebug(batch);
             }
 
-//            batch.end(); // End SpriteBatch before using ShapeRenderer
-//            aiControllers.get(0).debugRender(camera); // Call debug grid rendering
+            // Uncomment to see ai debugging (from AIController)
+
+//            batch.end();
+//            for (AIController aiController : aiControllers) {
+//                aiController.debugRender(camera); // Call debug grid rendering
+//            }
 //            batch.begin(); // Resume SpriteBatch rendering
         }
 

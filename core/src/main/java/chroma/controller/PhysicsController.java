@@ -42,8 +42,6 @@ public class PhysicsController implements ContactListener {
 
     private int sprayContactCount = 0;
 
-
-
     //Number of rays to shoot
     private int numRays = 30;
     //Length of the rays
@@ -139,7 +137,6 @@ public class PhysicsController implements ContactListener {
                         Spray paintTriangle = new Spray(points, units, settings);
                         addObject(paintTriangle);
                     }catch(IllegalArgumentException ignored){
-
                     }
                 }
             }
@@ -194,7 +191,6 @@ public class PhysicsController implements ContactListener {
                 }
             }
         }
-
         return false; // All turns are in the same direction; polygon is convex
     }
 
@@ -265,7 +261,6 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-
     @Override
     public void endContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
@@ -332,4 +327,3 @@ public class PhysicsController implements ContactListener {
         world = null;
     }
 }
-

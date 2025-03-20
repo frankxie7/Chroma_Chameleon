@@ -15,10 +15,8 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 public class Enemy extends ObstacleSprite {
     /** The initializing data (to avoid magic numbers) */
     private final JsonValue data;
-    /** The width of Chameleon's avatar */
-    private float width;
-    /** The height of Traci's avatar */
-    private float height;
+    private float detectionRange;
+    private float fov;
 
     /** The factor to multiply by the input */
     private float force;
@@ -43,16 +41,12 @@ public class Enemy extends ObstacleSprite {
     private final Vector2 forceCache = new Vector2();
     private final Affine2 flipCache = new Affine2();
 
-    private Color color;
-    private float detectionRange;
-
-    public Enemy(float[] position, String name, float units, JsonValue data) {
-//        this.color = Color.MAGENTA; // enemy's body color
-//        this.detectionRange = 200f;
-
+    public Enemy(float[] position, String name, float detectionRange, float fov, float units, JsonValue data) {
         this.data = data;
-        JsonValue debugInfo = data.get("debug");
+        this.detectionRange = detectionRange;
+        this.fov = fov;
 
+        JsonValue debugInfo = data.get("debug");
         float s = data.getFloat("size");
         float size = s * units;
 
@@ -69,7 +63,6 @@ public class Enemy extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         obstacle.setName(name);
-
 
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
@@ -98,38 +91,27 @@ public class Enemy extends ObstacleSprite {
     }
 
     public float getVerticalMovement() { return verticalMovement; }
-
     public void setVerticalMovement(float value) {
         verticalMovement = value;
     }
-
     public float getForce() {
         return force;
     }
-
-    public float getDamping() {
-        return damping;
-    }
-
     public float getMaxSpeed() {
         return maxspeed;
     }
+    public float getDetectionRange() { return detectionRange; }
+    public float getFov() { return fov; }
 
-    public boolean isFacingRight() {
-        return faceRight;
+    public float getFacingAngle() {
+        Vector2 velocity = obstacle.getBody().getLinearVelocity();
+
+        // If the enemy is stationary, return the last known facing angle
+        if (velocity.len2() < 0.01f) {  // len2() is more efficient than len()
+            return faceRight ? 0 : (float) Math.PI; // Default direction (right or left)
+        }
+        return (float) Math.atan2(velocity.y, velocity.x);
     }
-
-    public Color getColor() {
-        return color;
-    }
-
-//    public float getDetectionRange() {
-//        return detectionRange;
-//    }
-//
-//    public void setDetectionRange(float range) {
-//        this.detectionRange = range;
-//    }
 
     private Vector2 targetVelocity = new Vector2();
     private Vector2 currentVelocity = new Vector2();

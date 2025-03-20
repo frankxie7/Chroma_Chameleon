@@ -17,6 +17,7 @@
  package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -47,6 +48,7 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
  * to that shape.
  */
 public class Terrain extends ObstacleSprite {
+    private Polygon polygon;
 
     /**
      * Creates a surface from the given set of points and physics units
@@ -81,6 +83,10 @@ public class Terrain extends ObstacleSprite {
         // Scale the polygon and create the mesh.
         poly.scl(units);
         mesh.set(poly, tile, tile);
+
+        // Create a Polygon for point containment checks
+        this.polygon = new Polygon(points);
+        this.polygon.setScale(units, units);
     }
     /**
      * Returns the primary fixture associated with this terrain object.
@@ -95,7 +101,27 @@ public class Terrain extends ObstacleSprite {
     }
 
     public boolean contains(Vector2 point) {
-        Fixture fixture = getFixture();
-        return fixture != null && fixture.testPoint(point);
+        if (polygon.contains(point.x, point.y)) {
+            return true;
+        }
+
+        float[] vertices = polygon.getTransformedVertices();
+        int numVertices = vertices.length / 2;
+
+        for (int i = 0; i < numVertices; i++) {
+            int next = (i + 1) % numVertices;
+            float x1 = vertices[i * 2], y1 = vertices[i * 2 + 1];
+            float x2 = vertices[next * 2], y2 = vertices[next * 2 + 1];
+
+            // Check if point is on the right or top edge
+            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
+                return true;
+            }
+            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
+                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -34,6 +34,8 @@
   "enemies" : {
     "names"     : ["enemy1", "enemy2"],
     "positions" : [[12.0, 12.0], [10, 2]],
+    "detection-range" : [3, 6],
+    "fov"       : [90, 180],
     "inner"     : [0.8, 0.95],
     "size"      : 1.5,
     "force"     : 10.0,
