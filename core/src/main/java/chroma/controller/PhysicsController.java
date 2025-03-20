@@ -40,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private boolean playerWithBomb = false;
 
     //Number of rays to shoot
-    private int numRays = 30;
+    private int numRays = 500;
     //Length of the rays
     private float rayLength = 3f;
     //Endpoints of the rays
@@ -99,7 +99,10 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                endPoint.set(point);
+                if(!(fixture.getBody().getUserData() instanceof Spray)){
+                    endPoint.set(point);
+                }
+
                 return fraction;
             };
             world.rayCast(callback,obstacle.getPosition(),endPoint);
