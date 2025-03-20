@@ -5,69 +5,62 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
-import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 
+/**
+ * A class representing a "spray" paint effect in the game.
+ * It creates a translucent polygon mesh with a repeating texture.
+ */
 public class Spray extends ObstacleSprite {
-    Texture sprayTexture = null;
+    /**
+     * A single static reference to the spray texture.
+     * (Reused by all Spray objects so we only create it once.)
+     */
+    private static Texture sprayTexture = null;
+
+    /**
+     * Creates a new Spray object from the given points and world unit scale.
+     *
+     * @param points   The polygon vertices in local coordinates.
+     * @param units    The physics scale factor (pixels per world unit).
+     * @param settings Additional settings from a JSON config (unused here).
+     */
     public Spray(float[] points, float units, JsonValue settings) {
-        // Create the physics obstacle as before.
+        // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
         obstacle.setDensity(0);
         obstacle.setFriction(0);
         obstacle.setRestitution(0);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
-        obstacle.setSensor(true);
+        obstacle.setSensor(true);       // No physical collisions; only sensor hits
         obstacle.setUserData(this);
         obstacle.setName("spray");
         obstacle.setPhysicsUnits(units);
 
-//        float minX = points[0], minY = points[1], maxX = points[0], maxY = points[1];
-//        for (int i = 2; i < points.length; i += 2) {
-//            minX = Math.min(minX, points[i]);
-//            minY = Math.min(minY, points[i + 1]);
-//            maxX = Math.max(maxX, points[i]);
-//            maxY = Math.max(maxY, points[i + 1]);
-//        }
-//        minX *= units;
-//        minY *= units;
-//        maxX *= units;
-//        maxY *= units;
-//        float width = maxX - minX;
-//        float height = maxY - minY;
-//        mesh.set(minX, minY, width+1, height+1);
+        // Create the polygon for the mesh (rendering).
 
-//        float[] scaledPoints = new float[points.length];
-//        for (int i = 0; i < points.length; i++) {
-//            scaledPoints[i] = points[i] * units;
-//        }
-//        mesh.set(scaledPoints);
+        short[] indices = { 0, 1, 2 };
+        Poly2 poly = new Poly2(points, indices);
 
-//        Poly2 poly = new Poly2(points);
-//        poly.scl(units);
-//        mesh.set(poly,1,6);
+        poly.scl(units);
 
-
-
-        // Optionally, set vertex colors (as Bomb does).
-        int count = mesh.vertexCount();
-        for (int i = 0; i < count; i++) {
-            mesh.setColor(i, ParserUtils.parseColor(settings.get("debug"), Color.ORANGE));
-        }
-
-        // Create the spray texture if it doesn't already exist.
+        // If the shared texture is not created yet, make it now.
         if (sprayTexture == null) {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
-            Color purpleTranslucent = new Color(0.5f, 0f, 0.5f, 0.1f);
+            // Fill with a translucent purple color
+            Color purpleTranslucent = new Color(0.5f, 0f, 0.5f, 0.5f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);
             pixmap.dispose();
+
+            // Make the texture repeat when UV coords exceed [0..1].
             sprayTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         }
+        mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());
         setTexture(sprayTexture);
     }
 }

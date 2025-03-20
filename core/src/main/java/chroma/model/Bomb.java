@@ -30,12 +30,12 @@ public class Bomb extends ObstacleSprite{
         obstacle.setUserData( this );
         obstacle.setName( "bomb" );
         debug = ParserUtils.parseColor( settings.get( "debug" ), Color.WHITE );
-
         mesh.set( -radius, -radius, 2 * radius, 2 * radius );
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
             mesh.setColor(i, new Color(0.5f,0.0f,1.0f,0.5f));
         }
+
         timeAlive = 0;
     }
 

@@ -8,6 +8,7 @@ import chroma.model.Terrain;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.BSpline;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -261,16 +262,21 @@ public class PhysicsController implements ContactListener {
             System.out.println("Player is hidden in bomb!");
         }
     }
-    @Override public void endContact(Contact contact) {
+
+    @Override
+    public void endContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
-            (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            (userDataA instanceof Bomb && userDataB instanceof Chameleon) || (
+            userDataA instanceof Spray && userDataB instanceof Chameleon) || (
+            userDataA instanceof Chameleon && userDataB instanceof Spray)) {
             playerWithBomb = false;
-            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            Chameleon player =
+                userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(false);
             System.out.println("Player is visible again!");
         }
