@@ -99,10 +99,7 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                if(!(fixture.getBody().getUserData() instanceof Spray)){
-                    endPoint.set(point);
-                }
-
+                endPoint.set(point);
                 return fraction;
             };
             world.rayCast(callback,obstacle.getPosition(),endPoint);
