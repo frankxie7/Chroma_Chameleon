@@ -14,7 +14,9 @@
         "background": "platform/floortile.png",
         "platform-white": "platform/white_texture.png",
         "floor-tiles": "platform/floortile.png",
-        "aiming-range": "platform/circle.png"
+        "aiming-range": "platform/circle.png",
+        "paintBar": "platform/bar.png",
+        "paintBar-overlay": "platform/paintbaroverlay.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"

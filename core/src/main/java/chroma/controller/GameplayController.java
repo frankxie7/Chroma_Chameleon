@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -57,12 +58,15 @@ public class GameplayController implements Screen {
     private float width, height;
     // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
+
+    // Paint Bar constants, unused
     private Texture paintBarFrame;
     private Texture paintBarFill;
     private float paintBarMaxWidth = 200;
     private float paintBarHeight = 20;
     private float paintBarX = 50;
     private float paintBarY = 50;
+
     private Chameleon player;
     private float splatterCost = 3f;
     private float bombCost = 2f;
@@ -70,6 +74,7 @@ public class GameplayController implements Screen {
 
 
     private OrthographicCamera camera;
+    private OrthographicCamera uiCamera;
 
     private PhysicsController physics;
     private Level level;
@@ -105,6 +110,8 @@ public class GameplayController implements Screen {
 
         // Initialize the camera
         camera = new OrthographicCamera();
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // Set default values (real values assigned in resize)
         this.width  = Gdx.graphics.getWidth();
@@ -350,27 +357,38 @@ public class GameplayController implements Screen {
     /**
      * Draw the paint container UI with a solid color fill.
      */
-    private void drawPaintContainer() {
-        Chameleon player = level.getAvatar();
+    private void drawPaintContainer(Texture bar, Texture barOverlay) {
         if (player == null) return;
 
-        float paintPercent = player.getPaint() / player.getMaxPaint();
-        float currentBarWidth = paintPercent * paintBarMaxWidth;
+        batch.setProjectionMatrix(uiCamera.combined);
 
-        batch.setColor(Color.WHITE);
-        batch.draw(paintBarFrame, paintBarX - 5, paintBarY - 5, paintBarMaxWidth + 10, paintBarHeight + 10);
+        float heightRatio = constants.get("paintBar").getFloat("height");
+        float widthRatio = constants.get("paintBar").getFloat("width");
+        float posXRatio = constants.get("paintBar").getFloat("posX");
+        float posYRatio = constants.get("paintBar").getFloat("posY");
+        float textRatio = constants.get("paintBar").getFloat("textRatio");
+        float textOffset = constants.get("paintBar").getFloat("textOffset");
+        float paintPercent = player.getPaint() / player.getMaxPaint();
+        float currentBarHeight = paintPercent * heightRatio;
+
+        batch.draw(barOverlay, width*posXRatio, height*posYRatio, width*widthRatio, height*heightRatio);
 
         if (paintPercent > 0.5f) {
-            batch.setColor(Color.GREEN);
+            batch.setColor(Color.WHITE);
         } else if (paintPercent > 0.2f) {
             batch.setColor(Color.YELLOW);
         } else {
             batch.setColor(Color.RED);
         }
 
-        batch.draw(paintBarFrame, paintBarX, paintBarY, currentBarWidth, paintBarHeight);
+        batch.draw(bar, width*posXRatio, height*posYRatio, width*widthRatio, height*currentBarHeight);
+
+        displayFont.getData().setScale(width*widthRatio / textRatio);
+        String paintText = String.format("%.0f%%", paintPercent * 100);
+        batch.drawText(paintText, displayFont, width*posXRatio, height*(posYRatio-textOffset));
 
         batch.setColor(Color.WHITE);
+        batch.setProjectionMatrix(camera.combined);
     }
 
     /**
@@ -471,7 +489,11 @@ public class GameplayController implements Screen {
         }
 
         // Draw the paint container (UI) after objects
-        drawPaintContainer();
+        Texture barTex = directory.getEntry("paintBar", Texture.class);
+        Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
+        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        drawPaintContainer(barTex, barOverlayTex);
 
         // UI messages
         if (complete && !failed) {
@@ -550,6 +572,10 @@ public class GameplayController implements Screen {
             camera = new OrthographicCamera();
         }
         camera.setToOrtho(false, width, height);
+        if (uiCamera == null) {
+            uiCamera = new OrthographicCamera();
+        }
+        uiCamera.setToOrtho(false, width, height);
 
         // 1) Compute the uniform scale factor from world→screen
         //    so that worldHeight always fits the new window height

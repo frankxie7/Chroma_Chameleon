@@ -94,5 +94,13 @@
     "friction"  : 0.0,
     "restitution": 0.0,
     "aimRange": 7
+  },
+  "paintBar": {
+    "width": 0.02,
+    "height": 0.18,
+    "posX": 0.94,
+    "posY": 0.1,
+    "textRatio": 110,
+    "textOffset": 0.01
   }
 }
