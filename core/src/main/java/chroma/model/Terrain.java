@@ -14,7 +14,7 @@
  * Author:  Walker M. White
  * Version: 2/8/2025
  */
- package chroma.model;
+package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Polygon;

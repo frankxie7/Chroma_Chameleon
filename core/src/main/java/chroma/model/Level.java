@@ -25,6 +25,7 @@ public class Level {
     private List<Terrain> walls;
     private List<Terrain> platforms;
     private List<Bomb> bombs;
+    private List<Spray> sprays;
 
     public Level(AssetDirectory directory, float units, JsonValue constants) {
         // Create the goal door
@@ -89,6 +90,7 @@ public class Level {
         }
 
         bombs = new ArrayList<>();
+        sprays = new ArrayList<>();
     }
 
     public Door getGoalDoor() {
@@ -113,5 +115,9 @@ public class Level {
 
     public List<Bomb> getBombs() {
         return bombs;
+    }
+
+    public List<Spray> getSprays() {
+        return sprays;
     }
 }

@@ -68,6 +68,7 @@ public class GameplayController implements Screen {
     private float bombCost = 2f;
 
 
+
     private OrthographicCamera camera;
 
     private PhysicsController physics;
@@ -259,13 +260,24 @@ public class GameplayController implements Screen {
             // Convert pixel coordinates to Box2D world units.
             Vector2 mouseWorld = new Vector2(screenMouse.x / units, screenMouse.y / units);
             // Get avatar position.
-            Vector2 avatarPos = level.getAvatar().getObstacle().getPosition();
+            Vector2 avatarPos = player.getObstacle().getPosition();
             // Compute angle (in radians) from avatar to mouse.
             float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
-            physics.shootRays(level.getAvatar(), sprayAngle);
-            physics.addPaint(level.getAvatar(), units, constants);
+            physics.shootRays(player, sprayAngle);
+            physics.addPaint(player, units, constants);
             player.setPaint(player.getPaint() - splatterCost);
         }
+
+        List<ObstacleSprite> toRemove = new ArrayList<>();
+        for (ObstacleSprite obj : physics.objects) {
+            if (obj instanceof Spray) {
+                ((Spray) obj).update(dt);
+                if (((Spray) obj).isExpired()) {
+                    toRemove.add(obj);
+                }
+            }
+        }
+        physics.objects.removeAll(toRemove);
         updateCamera();
     }
 

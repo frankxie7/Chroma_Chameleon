@@ -19,7 +19,8 @@ public class Spray extends ObstacleSprite {
      * (Reused by all Spray objects so we only create it once.)
      */
     private static Texture sprayTexture = null;
-
+    private static final float LIFETIME = 5f;
+    private float timeAlive;
     /**
      * Creates a new Spray object from the given points and world unit scale.
      *
@@ -62,5 +63,17 @@ public class Spray extends ObstacleSprite {
         }
         mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());
         setTexture(sprayTexture);
+    }
+
+    public void update(float dt) {
+        // Calculate time existing
+        timeAlive += dt;
+
+        // Then call the superclass update
+        super.update(dt);
+    }
+
+    public boolean isExpired() {
+        return timeAlive >= LIFETIME;
     }
 }

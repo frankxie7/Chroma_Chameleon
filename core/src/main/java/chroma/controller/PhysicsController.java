@@ -105,6 +105,10 @@ public class PhysicsController implements ContactListener {
                 (float) Math.sin(angle +angleOffset)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
+                Object userData = fixture.getBody().getUserData();
+                if (userData instanceof Spray && ((Spray) userData).isExpired()) {
+                    return -1f; 
+                }
                 endPoint.set(point);
                 return fraction;
             };
@@ -213,19 +217,6 @@ public class PhysicsController implements ContactListener {
             return fraction;
         }, start, end);
         return hitFixture[0];
-    }
-
-    public void castVisionCone(Vector2 start, float angle, float coneWidth, int numRays) {
-        float stepAngle = coneWidth / (numRays - 1);
-        for (int i = 0; i < numRays; i++) {
-            float rayAngle = angle - coneWidth / 2 + stepAngle * i;
-            Vector2 direction = new Vector2(1, 0).rotateRad(rayAngle);
-            direction.scl(100);
-            Fixture hitFixture = raycast(start, start.cpy().add(direction));
-            if (hitFixture != null) {
-                // Handle the collision (if any)
-            }
-        }
     }
 
     @Override
