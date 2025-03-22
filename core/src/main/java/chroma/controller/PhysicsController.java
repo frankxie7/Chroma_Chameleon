@@ -4,6 +4,7 @@ import chroma.model.Chameleon;
 import chroma.model.Enemy;
 import chroma.model.Spray;
 import chroma.model.Bomb;
+import chroma.model.Door;
 import chroma.model.Terrain;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -39,6 +40,9 @@ public class PhysicsController implements ContactListener {
     private boolean playerCollidedWithEnemy = false;
 
     private boolean playerWithBomb = false;
+
+    // Whether the player reaches the door
+    private boolean playerWithDoor = false;
 
     private int sprayContactCount = 0;
 
@@ -240,7 +244,7 @@ public class PhysicsController implements ContactListener {
             sprayContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-            System.out.println("Player entered spray; count = " + sprayContactCount);
+//            System.out.println("Player entered spray; count = " + sprayContactCount);
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)
@@ -249,13 +253,19 @@ public class PhysicsController implements ContactListener {
             playerWithBomb = true;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-            System.out.println("Player is hidden in bomb!");
+//            System.out.println("Player is hidden in bomb!");
         }
 
         // Check enemy collisions, etc.
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
             playerCollidedWithEnemy = true;
+        }
+
+        // Check for win condition
+        if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
+            (userDataA instanceof Door && userDataB instanceof Chameleon)) {
+            playerWithDoor = true;
         }
     }
 
@@ -275,7 +285,7 @@ public class PhysicsController implements ContactListener {
             if (sprayContactCount <= 0) {
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-                System.out.println("Player is visible again (bomb ended)!");
+//                System.out.println("Player is visible again (bomb ended)!");
             }
         }
 
@@ -287,9 +297,9 @@ public class PhysicsController implements ContactListener {
                 sprayContactCount = 0; // Ensure counter doesn't go negative
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-                System.out.println("Player is visible again (spray ended)!");
+//                System.out.println("Player is visible again (spray ended)!");
             } else {
-                System.out.println("Remaining spray contacts: " + sprayContactCount);
+//                System.out.println("Remaining spray contacts: " + sprayContactCount);
             }
         }
     }
@@ -300,6 +310,8 @@ public class PhysicsController implements ContactListener {
     public boolean didPlayerCollideWithEnemy() {
         return playerCollidedWithEnemy;
     }
+
+    public boolean didWin() {return playerWithDoor;}
 
     public void resetCollisionFlags() {
         playerCollidedWithEnemy = false;

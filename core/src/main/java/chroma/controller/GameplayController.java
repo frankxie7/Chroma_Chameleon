@@ -127,6 +127,7 @@ public class GameplayController implements Screen {
         goodMessage.setText("VICTORY!");
         goodMessage.setColor(Color.YELLOW);
         goodMessage.setAlignment(TextAlign.middleCenter);
+        goodMessage.setFont(displayFont);
 
         badMessage = new TextLayout();
         badMessage.setText("FAILURE!");
@@ -255,6 +256,12 @@ public class GameplayController implements Screen {
         // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy()) {
             setFailure(true);
+            physics.resetCollisionFlags();
+        }
+
+        // Check winning
+        if (!failed && physics.didWin()) {
+            setVictory();
             physics.resetCollisionFlags();
         }
 
@@ -393,7 +400,6 @@ public class GameplayController implements Screen {
         batch.drawText(paintText, displayFont, width*posXRatio, height*(posYRatio-textOffset));
 
         batch.setColor(Color.WHITE);
-        batch.setProjectionMatrix(camera.combined);
     }
 
     /**
