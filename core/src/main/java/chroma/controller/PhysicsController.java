@@ -70,6 +70,13 @@ public class PhysicsController implements ContactListener {
         obj.getObstacle().activatePhysics(world);
     }
 
+    public void removeObject(ObstacleSprite obj) {
+        if (obj != null) {
+            obj.getObstacle().deactivatePhysics(world);
+            objects.remove(obj);
+        }
+    }
+
     public void queueObject(ObstacleSprite obj) {
         addQueue.add(obj);
     }
@@ -107,7 +114,7 @@ public class PhysicsController implements ContactListener {
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
                 if (userData instanceof Spray && ((Spray) userData).isExpired()) {
-                    return -1f; 
+                    return -1f;
                 }
                 endPoint.set(point);
                 return fraction;

@@ -278,11 +278,16 @@ public class GameplayController implements Screen {
         List<ObstacleSprite> toRemove = new ArrayList<>();
         for (ObstacleSprite obj : physics.objects) {
             if (obj instanceof Spray) {
-                ((Spray) obj).update(dt);
-                if (((Spray) obj).isExpired()) {
-                    toRemove.add(obj);
+                Spray spray = (Spray) obj;
+                spray.update(dt);
+                if (spray.isExpired()) {
+                    toRemove.add(spray);
                 }
             }
+        }
+
+        for (ObstacleSprite obj : toRemove) {
+            physics.removeObject(obj);
         }
         physics.objects.removeAll(toRemove);
         updateCamera();
