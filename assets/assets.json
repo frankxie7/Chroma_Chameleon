@@ -1,32 +1,32 @@
 {
-	"textures": {
-        "shared-earth" : {
-            "file":  "shared/earthtile.png",
-            "wrapU": "repeated",
-            "wrapV": "repeated"
-        },
-        "shared-goal":   "shared/goaldoor.png",
-        "platform-traci"    : "platform/traci.png",
-        "platform-chameleon": "platform/idle.png",
-        "platform-rope"     : "platform/ropebridge.png",
-        "platform-barrier"  : "platform/barrier.png",
-        "platform-bullet"   : "platform/bullet.png",
-        "background": "platform/floortile.png",
-        "platform-white": "platform/white_texture.png",
-        "floor-tiles": "platform/floortile.png",
-        "aiming-range": "platform/circle.png",
-        "paintBar": "platform/bar.png",
-        "paintBar-overlay": "platform/paintbaroverlay.png"
+  "textures": {
+    "shared-earth" : {
+      "file":  "shared/earthtile.png",
+      "wrapU": "repeated",
+      "wrapV": "repeated"
     },
-    "jsons"  : {
-        "platform-constants": "platform/constants.json"
-    },
-    "soundfx" : {
-    },
-    "fonts": {
-        "shared-retro": {
-            "file": "shared/RetroGame.ttf",
-            "size": 64
-        }
+    "shared-goal":   "shared/goaldoor.png",
+    "platform-traci"    : "platform/traci.png",
+    "platform-chameleon": "platform/idle.png",
+    "platform-rope"     : "platform/ropebridge.png",
+    "platform-barrier"  : "platform/barrier.png",
+    "platform-bullet"   : "platform/bullet.png",
+    "background": "platform/floortile.png",
+    "platform-white": "platform/white_texture.png",
+    "floor-tiles": "platform/floortile.png",
+    "aiming-range": "platform/circle.png",
+    "paintBar": "platform/bar.png",
+    "paintBar-overlay": "platform/paintbaroverlay.png"
+  },
+  "jsons"  : {
+    "platform-constants": "platform/constants.json"
+  },
+  "soundfx" : {
+  },
+  "fonts": {
+    "shared-retro": {
+      "file": "shared/RetroGame.ttf",
+      "size": 64
     }
+  }
 }

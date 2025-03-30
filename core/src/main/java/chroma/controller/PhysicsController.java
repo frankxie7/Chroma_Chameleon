@@ -117,7 +117,7 @@ public class PhysicsController implements ContactListener {
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
-                if (userData instanceof Spray && ((Spray) userData).isExpired()) {
+                if (userData instanceof Spray || userData instanceof Bomb) {
                     return -1f;
                 }
                 endPoint.set(point);

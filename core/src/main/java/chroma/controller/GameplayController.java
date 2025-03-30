@@ -324,7 +324,7 @@ public class GameplayController implements Screen {
             bombX = startX + dx * scale;
             bombY = startY + dy * scale;
         }
-         return new Vector2(bombX, bombY);
+        return new Vector2(bombX, bombY);
     }
 
     /**

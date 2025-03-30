@@ -395,10 +395,10 @@ public class AIController {
 
         // Draw enemy vision cone
         shapeRenderer.triangle(enemyPos.x, enemyPos.y,
-                enemyPos.x + visionRange * (float) Math.cos(angleToLook - halfFOV),
-                enemyPos.y + visionRange * (float) Math.sin(angleToLook - halfFOV),
-                enemyPos.x + visionRange * (float) Math.cos(angleToLook + halfFOV),
-                enemyPos.y + visionRange * (float) Math.sin(angleToLook + halfFOV));
+            enemyPos.x + visionRange * (float) Math.cos(angleToLook - halfFOV),
+            enemyPos.y + visionRange * (float) Math.sin(angleToLook - halfFOV),
+            enemyPos.x + visionRange * (float) Math.cos(angleToLook + halfFOV),
+            enemyPos.y + visionRange * (float) Math.sin(angleToLook + halfFOV));
 
         // Draw enemy casted rays
         shapeRenderer.setColor(Color.RED);

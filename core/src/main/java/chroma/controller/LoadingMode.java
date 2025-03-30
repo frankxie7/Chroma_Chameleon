@@ -237,7 +237,7 @@ public class LoadingMode implements Screen, InputProcessor {
             texture = internal.getEntry("play",Texture.class);
 
             SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-                                          cx, cy, 0, s, s );
+                cx, cy, 0, s, s );
 
             batch.setColor( tint );
             batch.draw( texture, affine );
@@ -265,12 +265,12 @@ public class LoadingMode implements Screen, InputProcessor {
 
         region2 = internal.getEntry( "progress.backright", TextureRegion.class );
         batch.draw(region2,cx+w/2-scale*region2.getRegionWidth(), cy,
-                scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
+            scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
 
         region3 = internal.getEntry( "progress.background", TextureRegion.class );
         batch.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
-                w-scale*(region2.getRegionWidth()+region1.getRegionWidth()),
-                scale*region3.getRegionHeight());
+            w-scale*(region2.getRegionWidth()+region1.getRegionWidth()),
+            scale*region3.getRegionHeight());
 
         // "3-patch" the foreground
         region1 = internal.getEntry( "progress.foreleft", TextureRegion.class );
@@ -281,15 +281,15 @@ public class LoadingMode implements Screen, InputProcessor {
             float span = progress*(w-scale*(region1.getRegionWidth()+region2.getRegionWidth()));
 
             batch.draw( region2,cx-w/2+scale*region1.getRegionWidth()+span, cy,
-                    scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
+                scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
 
             region3 = internal.getEntry( "progress.foreground", TextureRegion.class );
             batch.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
-                        span, scale*region3.getRegionHeight());
+                span, scale*region3.getRegionHeight());
         } else {
             region2 = internal.getEntry( "progress.foreright", TextureRegion.class );
             batch.draw(region2, cx-w/2+scale*region1.getRegionWidth(), cy,
-                    scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
+                scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
         }
 
     }
@@ -332,7 +332,7 @@ public class LoadingMode implements Screen, InputProcessor {
         this.height = height;
         if (camera == null) {
             camera = new OrthographicCamera(width,height);
-         } else {
+        } else {
             camera.setToOrtho( false, width, height  );
         }
     }
