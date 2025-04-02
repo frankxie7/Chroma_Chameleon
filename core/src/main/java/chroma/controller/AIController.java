@@ -2,6 +2,7 @@ package chroma.controller;
 
 import chroma.model.Chameleon;
 import chroma.model.Enemy;
+import chroma.model.Enemy.Type;
 import chroma.model.Level;
 import chroma.model.Terrain;
 import com.badlogic.gdx.ai.pfa.Heuristic;
@@ -17,8 +18,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
-
-
 import java.util.List;
 
 public class AIController {
@@ -28,40 +27,48 @@ public class AIController {
 
     private GameplayController gameplay;
     private PhysicsController physics;
-    private Level level;
     private Enemy enemy;
+    private Type type;
     private Chameleon player;
     private List<Terrain> walls; // list of walls for pathfindinga
     private List<Terrain> platforms;
     private State state;
-//    private float detectionRange = 200f; // enemy detection range
 
     // Base detection range and dynamic detection range.
     private float detectionRange;
     private float fov;
-//    private float detectionIncrease = 1f; // increase amount after losing player
-//    private float maxDetectionRange = 8f;
+    private float rotationSpeedWander = 1f; // Degrees per second
+    private float rotationSpeedAlert = 10f;
+    private boolean rotatingClockwise = true;
 
+    // GOAL:
+    private Vector2 target;
+
+    // ENEMY SPEED:
     private float wanderSpeed = 2f;
     private float chaseSpeed = 4f;
 
-    // For Wander behavior:
-    private Vector2 target;
+    // ALERT:
+    private float alertLength = 3f;
+    private float alertTimer = alertLength;
+
+    // WANDER:
     private float timeToChangeTarget = 2f;
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries
 
     private boolean playerDetected = false;
+    private boolean wasChasingOrAlert = false;
 
     private NavGraph graph = new NavGraph();
 
     private float scale;
 
     public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
-        this.enemy = enemy;
         this.gameplay = gameplayController;
         this.physics = physicsController;
-        this.level = level;
+        this.enemy = enemy;
+        this.type = enemy.getType();
         this.player = level.getAvatar();
         this.walls = level.getWalls();
         this.platforms = level.getPlatforms();
@@ -80,10 +87,6 @@ public class AIController {
 
         // Build navigation graph
         buildGraph(worldWidth, worldHeight);
-    }
-
-    public Enemy getEnemy() {
-        return enemy;
     }
 
     private void pickNewWanderTarget() {
@@ -310,40 +313,137 @@ public class AIController {
             }
         }
 
-        if (playerDetected) {
+        if (enemy.getType() == Type.CAMERA) {
+            handleCamera(delta);
+            return;
+        }
+
+        if (playerDetected || gameplay.isGlobalChase()) {
+            System.out.println("Player detected: " + playerDetected + ", GlobalChase: " + gameplay.isGlobalChase());
+            Vector2 lastSpotted = new Vector2(playerPos);
+            player.setLastSeen(lastSpotted);
+            wasChasingOrAlert = true;
             state = State.CHASE;
-        } else if (state == State.CHASE) {
+        } else if (alertTimer < alertLength) {
+            state = State.ALERT;
+        } else {
             state = State.WANDER;
         }
 
         if (state == State.CHASE) {
-            if (!isLineBlocked(enemyPos, playerPos)) {
-                moveTowards(playerPos, chaseSpeed);
-            } else {
-                Vector2 waypoint = getNextPathPoint(enemyPos, playerPos);
-                if (waypoint != null) {
-                    moveTowards(waypoint, chaseSpeed);
-                } else {
-                    state = State.WANDER;
-                }
-            }
+            chaseState(delta, enemyPos, playerPos);
+        } else if (state == State.ALERT) {
+            alertState(delta, enemyPos);
         } else {
-            wanderTimer += delta;
-            if (wanderTimer >= timeToChangeTarget || enemyPos.dst(target) < 10f) {
-                wanderTimer = 0f;
-                pickNewWanderTarget();
-            }
-            Vector2 waypoint = getNextPathPoint(enemyPos, target);
-            if (waypoint != null) {
-                moveTowards(waypoint, wanderSpeed);
-            } else {
-                enemy.setMovement(0);
-                enemy.setVerticalMovement(0);
-            }
+            wanderState(delta, enemyPos);
         }
         // Ensure the enemy updates its physics forces properly
         enemy.applyForce();
         enemy.update(delta);
+    }
+
+    private void handleCamera(float delta) {
+        float rotationSpeed = getRotationSpeed();
+        float newRotation = (enemy.getRotation() + 360) % 360; // Keep rotation within [0,360]
+
+        float minRotation = enemy.getStartRotation() - fov / 2;
+        float maxRotation = enemy.getStartRotation() + fov / 2;
+
+        boolean wrapsAround = minRotation > maxRotation; // Does range cross 0°?
+
+        System.out.println("Rotation speed: " + delta);
+
+        if (rotatingClockwise) {
+            newRotation += rotationSpeed * delta;
+
+            if (wrapsAround) {
+                // If we are in the wrapped region but exceed maxRotation
+                if (newRotation >= maxRotation && newRotation < minRotation) {
+                    newRotation = maxRotation;
+                    rotatingClockwise = false;
+                }
+            } else {
+                if (newRotation >= maxRotation) {
+                    newRotation = maxRotation;
+                    rotatingClockwise = false;
+                }
+            }
+        } else { // Rotating counter-clockwise
+            newRotation -= rotationSpeed * delta;
+
+            if (wrapsAround) {
+                // If we drop below minRotation but are still in the wrapped region
+                if (newRotation <= minRotation && newRotation > maxRotation) {
+                    newRotation = minRotation;
+                    rotatingClockwise = true;
+                }
+            } else {
+                if (newRotation <= minRotation) {
+                    newRotation = minRotation;
+                    rotatingClockwise = true;
+                }
+            }
+        }
+        enemy.setRotation(newRotation);
+
+        if (playerDetected) {
+            state = State.CHASE;
+        } else {
+            state = State.WANDER;
+        }
+    }
+
+    private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
+        alertTimer = 0;
+        if (!isLineBlocked(enemyPos, playerPos)) {
+            moveTowards(playerPos, chaseSpeed);
+        } else {
+            Vector2 waypoint = getNextPathPoint(enemyPos, playerPos);
+            if (waypoint != null) {
+                moveTowards(waypoint, chaseSpeed);
+            } else {
+                state = State.ALERT;
+            }
+        }
+    }
+
+    private void alertState(float delta, Vector2 enemyPos) {
+        alertTimer += delta;
+        if (!isLineBlocked(enemyPos, player.getLastSeen())) {
+            moveTowards(player.getLastSeen(), chaseSpeed);
+        } else {
+            Vector2 waypoint = getNextPathPoint(enemyPos, player.getLastSeen());
+            if (waypoint != null) {
+                moveTowards(waypoint, chaseSpeed);
+            } else {
+                state = State.WANDER;
+            }
+        }
+    }
+
+    private void wanderState(float delta, Vector2 enemyPos) {
+        wanderTimer += delta;
+        if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
+            wanderTimer = 0f;
+            pickNewWanderTarget();
+        }
+        Vector2 waypoint = getNextPathPoint(enemyPos, target);
+        if (waypoint != null) {
+            moveTowards(waypoint, wanderSpeed);
+        } else {
+            enemy.setMovement(0);
+            enemy.setVerticalMovement(0);
+        }
+    }
+
+    private float getRotationSpeed() {
+        switch (state) {
+            case ALERT:
+                return rotationSpeedAlert;
+            case WANDER:
+            default:
+                return rotationSpeedWander;
+        }
     }
 
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
@@ -357,25 +457,25 @@ public class AIController {
 
         // Uncomment to see ai debugging for pathfinding
 
-//        // Draw all NavNodes (grid)
-//        shapeRenderer.setColor(Color.GRAY);
-//        for (NavNode node : graph.nodes) {
-//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
-//        }
-//
-//        // Highlight the A* path in yellow
-//        if (lastPath != null) {
-//            shapeRenderer.setColor(Color.YELLOW);
-//            for (Vector2 pathPoint : lastPath) {
-//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 5f, 10f, 10f);
-//            }
-//        }
-//
-//        // Draw the goal in green
-//        if (lastGoal != null) {
-//            shapeRenderer.setColor(Color.GREEN);
-//            shapeRenderer.rect(lastGoal.x * scale - 10f, lastGoal.y * scale - 10f, 20f, 20f);
-//        }
+        // Draw all NavNodes (grid)
+        shapeRenderer.setColor(Color.GRAY);
+        for (NavNode node : graph.nodes) {
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+        }
+
+        // Highlight the A* path in yellow
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 5f, 10f, 10f);
+            }
+        }
+
+        // Draw the goal in green
+        if (lastGoal != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.rect(lastGoal.x * scale - 10f, lastGoal.y * scale - 10f, 20f, 20f);
+        }
 
         // Draw enemy FOV and rays
         shapeRenderer.setColor(new Color(1, 0, 0, 0.3f)); // Transparent red for vision cone
@@ -391,7 +491,7 @@ public class AIController {
         float angleStep = (halfFOV * 2) / (numRays - 1);
         float visionRange = detectionRange * scale;
 
-        float angleToLook = enemy.getFacingAngle();
+        float angleToLook = enemy.getRotation();
 
         // Draw enemy vision cone
         shapeRenderer.triangle(enemyPos.x, enemyPos.y,
@@ -415,4 +515,8 @@ public class AIController {
             shapeRenderer.line(enemyPos, endPoint);
         }
     }
+
+    public State getState() { return state; }
+    public void setState(State value) { state = value; }
+    public boolean getPlayerDetected() { return playerDetected; }
 }

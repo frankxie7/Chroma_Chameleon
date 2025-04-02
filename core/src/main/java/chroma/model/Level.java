@@ -48,14 +48,18 @@ public class Level {
             Texture enemyTex = directory.getEntry("platform-traci", Texture.class);
             JsonValue enemyPositions = enemiesData.get("positions");
             JsonValue enemyNames = enemiesData.get("names");
+            JsonValue enemyType = enemiesData.get("types");
             JsonValue enemyDetectionRange = enemiesData.get("detection-range");
             JsonValue enemyFOV = enemiesData.get("fov");
+            JsonValue enemyRotation = enemiesData.get("rotation");
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords = enemyPositions.get(i).asFloatArray();
                 String name = enemyNames.get(i).asString();
+                String type = enemyType.get(i).asString();
                 float detectionRange = enemyDetectionRange.get(i).asFloat();
                 float fov = enemyFOV.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, name, detectionRange, fov, units, enemiesData);
+                float rotation = enemyRotation.get(i).asFloat();
+                Enemy enemy = new Enemy(coords, name, type, detectionRange, fov, rotation, units, enemiesData);
                 enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }

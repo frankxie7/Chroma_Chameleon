@@ -80,6 +80,7 @@ public class GameplayController implements Screen {
     private Level level;
 
     private List<AIController> aiControllers;
+    private boolean globalChase = false;
 
     // For UI messages
     private BitmapFont displayFont;
@@ -229,9 +230,19 @@ public class GameplayController implements Screen {
         player.updateOrientation();
 
         // Update AI enemies
+        boolean anyChasing = false;
         for (AIController ai : aiControllers) {
             ai.update(dt);
+            if (ai.getPlayerDetected()) {
+                anyChasing = true;
+            }
         }
+        if (anyChasing) {
+            for (AIController ai : aiControllers) {
+                ai.setState(AIController.State.CHASE);
+            }
+        }
+        globalChase = anyChasing;
 
         // Update the state of aiming
         if (input.didAim() && player.hasEnoughPaint(bombCost)) {
@@ -481,11 +492,11 @@ public class GameplayController implements Screen {
 
             // Uncomment to see ai debugging (from AIController)
 
-//            batch.end();
-//            for (AIController aiController : aiControllers) {
-//                aiController.debugRender(camera); // Call debug grid rendering
-//            }
-//            batch.begin(); // Resume SpriteBatch rendering
+            batch.end();
+            for (AIController aiController : aiControllers) {
+                aiController.debugRender(camera); // Call debug grid rendering
+            }
+            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects
@@ -618,8 +629,7 @@ public class GameplayController implements Screen {
     }
 
     public OrthographicCamera getCamera() { return camera; }
-
     public float getWorldWidth() { return worldWidth; }
-
     public float getWorldHeight() { return worldHeight; }
+    public boolean isGlobalChase() { return globalChase; }
 }

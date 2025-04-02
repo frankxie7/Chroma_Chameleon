@@ -107,7 +107,7 @@ public class PhysicsController implements ContactListener {
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
                 if (userData instanceof Spray && ((Spray) userData).isExpired()) {
-                    return -1f; 
+                    return -1f;
                 }
                 endPoint.set(point);
                 return fraction;
@@ -233,7 +233,7 @@ public class PhysicsController implements ContactListener {
             sprayContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-            System.out.println("Player entered spray; count = " + sprayContactCount);
+            //System.out.println("Player entered spray; count = " + sprayContactCount);
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)
@@ -242,7 +242,7 @@ public class PhysicsController implements ContactListener {
             playerWithBomb = true;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-            System.out.println("Player is hidden in bomb!");
+            //System.out.println("Player is hidden in bomb!");
         }
 
         // Check enemy collisions, etc.
@@ -268,7 +268,7 @@ public class PhysicsController implements ContactListener {
             if (sprayContactCount <= 0) {
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-                System.out.println("Player is visible again (bomb ended)!");
+                //System.out.println("Player is visible again (bomb ended)!");
             }
         }
 
@@ -280,9 +280,9 @@ public class PhysicsController implements ContactListener {
                 sprayContactCount = 0; // Ensure counter doesn't go negative
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-                System.out.println("Player is visible again (spray ended)!");
+                //System.out.println("Player is visible again (spray ended)!");
             } else {
-                System.out.println("Remaining spray contacts: " + sprayContactCount);
+                //System.out.println("Remaining spray contacts: " + sprayContactCount);
             }
         }
     }

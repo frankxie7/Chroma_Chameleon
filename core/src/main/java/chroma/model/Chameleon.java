@@ -73,6 +73,7 @@ public class Chameleon extends ObstacleSprite {
     // For asset rotation, nothing to do with raycasting.
     private float orientation = 0.0f;
     private boolean hidden;
+    private Vector2 lastSeen;
 
     /**
      * Returns the posiiton of the Chameleon
@@ -211,6 +212,7 @@ public class Chameleon extends ObstacleSprite {
 
         float x = data.get("pos").getFloat(0);
         float y = data.get("pos").getFloat(1);
+        this.lastSeen = new Vector2(x, y);
 
         float s = data.getFloat("size");
         float size = s * units;
@@ -483,5 +485,9 @@ public class Chameleon extends ObstacleSprite {
     public boolean hasEnoughPaint(float cost) {
         return currentPaint >= cost;
     }
+
+    public Vector2 getLastSeen() { return lastSeen; }
+    public void setLastSeen(Vector2 pos) { this.lastSeen = pos; }
+
 
 }
