@@ -2,6 +2,7 @@ package chroma.controller;
 
 import chroma.model.Chameleon;
 import chroma.model.Enemy;
+import chroma.model.Goal;
 import chroma.model.Spray;
 import chroma.model.Bomb;
 import chroma.model.Door;
@@ -54,6 +55,10 @@ public class PhysicsController implements ContactListener {
     private Vector2[] endpoints;
     //Points
     private float[] points;
+    //Goal Tile Points
+    private float[] goalPoints;
+    //List of Goal Tiles
+    private Goal[] goalList;
 
     public PhysicsController(float gravityY,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
@@ -61,6 +66,8 @@ public class PhysicsController implements ContactListener {
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         points = new float[6];
+        goalPoints = new float[8];
+        goalList = new Goal[100];
         this.directory = directory;
         endpoints = new Vector2[numRays];
     }
@@ -68,6 +75,8 @@ public class PhysicsController implements ContactListener {
     public World getWorld() {
         return world;
     }
+
+    public Goal[] getGoalList(){ return goalList; }
 
     public void addObject(ObstacleSprite obj) {
         objects.add(obj);
@@ -108,6 +117,11 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    /**
+     * Shoots rays from the chameleon outward in a fan
+     * @param obstacle the Chameleon
+     * @param angle the angle to shoot the rays
+     */
     public void shootRays(Chameleon obstacle,float angle) {
         float angleStep = (float) Math.PI/2f / (float) numRays;
         for (int i = 0; i < numRays; i++) {
@@ -120,6 +134,12 @@ public class PhysicsController implements ContactListener {
                 if (userData instanceof Spray || userData instanceof Bomb) {
                     return -1f;
                 }
+                if(userData instanceof Goal){
+                    Goal tile = (Goal) userData;
+                    tile.setFull();
+                    return -1f;
+                }
+
                 endPoint.set(point);
                 return fraction;
             };
@@ -128,6 +148,12 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    /**
+     * Adds the Spray objects created by the raycasting code
+     * @param avatar the Chameleon
+     * @param units the scaled physics units
+     * @param settings the Json settings
+     */
     public void addPaint(Chameleon avatar, float units, JsonValue settings) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
@@ -156,6 +182,58 @@ public class PhysicsController implements ContactListener {
                 }
             }
         }
+    }
+
+    /**
+     * Creates a grid of goals from a given center
+     * @param center the where the goals should created out of
+     * @param units the scaled physics units
+     * @param settings the Json settings
+     */
+    public void createGoal(Vector2 center, float units, JsonValue settings){
+        int gridSize = 10;
+        float boxRad = 0.2f;
+        int index = 0;
+        for(int row = 0; row < gridSize; row++){
+            for(int col = 0; col < gridSize; col++){
+                float x = center.x + row *  boxRad;
+                float y = center.y + col * boxRad;
+                boolean edge = row == gridSize - 1 || col == gridSize - 1;
+                Goal tile = createTile(x, y,boxRad,edge, units, settings);
+                goalList[index] = tile;
+                addObject(tile);
+                index+=1;
+            }
+        }
+    }
+
+    /**
+     * Creates a single goal tile from a given x y
+     * @param x The x value
+     * @param y The y value
+     * @param boxRad the radius of the box
+     * @param units the scaled physics units
+     * @param settings the Json settings
+     * @return the created Goal Tile
+     */
+    public Goal createTile(float x, float y,float boxRad,boolean edge, float units, JsonValue settings){
+        float x1 = x + boxRad;
+        float y1 = y - boxRad;
+        float x2 = x + boxRad;
+        float y2 = y + boxRad;
+        float x3 = x - boxRad;
+        float y3 = y + boxRad;
+        float x4 = x - boxRad;
+        float y4 = y - boxRad;
+        goalPoints[0] = x1;
+        goalPoints[1] = y1;
+        goalPoints[2] = x2;
+        goalPoints[3] = y2;
+        goalPoints[4] = x3;
+        goalPoints[5] = y3;
+        goalPoints[6] = x4;
+        goalPoints[7] = y4;
+        return new Goal(goalPoints,edge, units, settings);
     }
 
     /**
@@ -234,6 +312,7 @@ public class PhysicsController implements ContactListener {
     public void beginContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
+
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
