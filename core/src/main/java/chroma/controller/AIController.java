@@ -57,6 +57,11 @@ public class AIController {
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries
 
+    // PATROL:
+    private boolean patrol;
+    private List<float[]> patrolPath;
+    private int patrolIndex = 0; // Track the current waypoint index
+
     private boolean playerDetected = false;
     private boolean wasChasingOrAlert = false;
 
@@ -68,6 +73,8 @@ public class AIController {
         this.gameplay = gameplayController;
         this.physics = physicsController;
         this.enemy = enemy;
+        this.patrol = enemy.getPatrol();
+        this.patrolPath = enemy.getPatrolPath();
         this.type = enemy.getType();
         this.player = level.getAvatar();
         this.walls = level.getWalls();
@@ -270,7 +277,7 @@ public class AIController {
     }
 
     private void moveTowards(Vector2 target, float speed) {
-        Vector2 enemyPos = enemy.getObstacle().getPosition();
+        Vector2 enemyPos = enemy.getPosition();
         Vector2 direction = new Vector2(target).sub(enemyPos).nor();
 
         // Set movement variables like the player
@@ -284,7 +291,7 @@ public class AIController {
 
     // Updated update method: 'playerVisible' is true if the player is visible.
     public void update(float delta) {
-        Vector2 enemyPos = enemy.getObstacle().getPosition();
+        Vector2 enemyPos = enemy.getPosition();
         Vector2 playerPos = player.getPosition();
         if (enemyPos == null || playerPos == null) {
             return;
@@ -319,7 +326,7 @@ public class AIController {
         }
 
         if (playerDetected || gameplay.isGlobalChase()) {
-            System.out.println("Player detected: " + playerDetected + ", GlobalChase: " + gameplay.isGlobalChase());
+//            System.out.println("Player detected: " + playerDetected + ", GlobalChase: " + gameplay.isGlobalChase());
             Vector2 lastSpotted = new Vector2(playerPos);
             player.setLastSeen(lastSpotted);
             wasChasingOrAlert = true;
@@ -327,13 +334,15 @@ public class AIController {
         } else if (alertTimer < alertLength) {
             state = State.ALERT;
         } else {
-            state = State.WANDER;
+            state = patrol ? State.PATROL : State.WANDER;
         }
 
         if (state == State.CHASE) {
             chaseState(delta, enemyPos, playerPos);
         } else if (state == State.ALERT) {
             alertState(delta, enemyPos);
+        } else if (state == State.PATROL) {
+            patrolState(delta, enemyPos);
         } else {
             wanderState(delta, enemyPos);
         }
@@ -350,8 +359,6 @@ public class AIController {
         float maxRotation = enemy.getStartRotation() + fov / 2;
 
         boolean wrapsAround = minRotation > maxRotation; // Does range cross 0°?
-
-        System.out.println("Rotation speed: " + delta);
 
         if (rotatingClockwise) {
             newRotation += rotationSpeed * delta;
@@ -392,7 +399,6 @@ public class AIController {
             state = State.WANDER;
         }
     }
-
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
         alertTimer = 0;
         if (!isLineBlocked(enemyPos, playerPos)) {
@@ -406,7 +412,6 @@ public class AIController {
             }
         }
     }
-
     private void alertState(float delta, Vector2 enemyPos) {
         alertTimer += delta;
         if (!isLineBlocked(enemyPos, player.getLastSeen())) {
@@ -416,11 +421,21 @@ public class AIController {
             if (waypoint != null) {
                 moveTowards(waypoint, chaseSpeed);
             } else {
-                state = State.WANDER;
+                state = patrol ? State.PATROL : State.WANDER;
             }
         }
     }
-
+    private void patrolState(float delta, Vector2 enemyPos) {
+        Vector2 currentTarget = new Vector2(patrolPath.get(patrolIndex)[0], patrolPath.get(patrolIndex)[1]);
+        Vector2 waypoint = getNextPathPoint(enemyPos, currentTarget);
+        if (waypoint != null) {
+            moveTowards(waypoint, wanderSpeed);
+        }
+        // Check if the enemy has reached the waypoint
+        if (enemyPos.dst(currentTarget) < 1f) { // Adjust threshold as needed
+            patrolIndex = (patrolIndex + 1) % patrolPath.size(); // Move to the next, looping back if needed
+        }
+    }
     private void wanderState(float delta, Vector2 enemyPos) {
         wanderTimer += delta;
         if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
@@ -485,9 +500,9 @@ public class AIController {
     }
 
     private void drawEnemyVision() {
-        Vector2 enemyPos = new Vector2(enemy.getObstacle().getPosition().x*scale, enemy.getObstacle().getPosition().y*scale);
+        Vector2 enemyPos = new Vector2(enemy.getPosition().x*scale, enemy.getPosition().y*scale);
         float halfFOV = (float) Math.toRadians(fov/2);
-        int numRays = 30;
+        int numRays = (int) (fov / 5);
         float angleStep = (halfFOV * 2) / (numRays - 1);
         float visionRange = detectionRange * scale;
 
@@ -495,10 +510,10 @@ public class AIController {
 
         // Draw enemy vision cone
         shapeRenderer.triangle(enemyPos.x, enemyPos.y,
-                enemyPos.x + visionRange * (float) Math.cos(angleToLook - halfFOV),
-                enemyPos.y + visionRange * (float) Math.sin(angleToLook - halfFOV),
-                enemyPos.x + visionRange * (float) Math.cos(angleToLook + halfFOV),
-                enemyPos.y + visionRange * (float) Math.sin(angleToLook + halfFOV));
+            enemyPos.x + visionRange * (float) Math.cos(angleToLook - halfFOV),
+            enemyPos.y + visionRange * (float) Math.sin(angleToLook - halfFOV),
+            enemyPos.x + visionRange * (float) Math.cos(angleToLook + halfFOV),
+            enemyPos.y + visionRange * (float) Math.sin(angleToLook + halfFOV));
 
         // Draw enemy casted rays
         shapeRenderer.setColor(Color.RED);

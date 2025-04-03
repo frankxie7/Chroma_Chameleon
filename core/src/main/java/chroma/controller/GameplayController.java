@@ -128,6 +128,7 @@ public class GameplayController implements Screen {
         goodMessage.setText("VICTORY!");
         goodMessage.setColor(Color.YELLOW);
         goodMessage.setAlignment(TextAlign.middleCenter);
+        goodMessage.setFont(displayFont);
 
         badMessage = new TextLayout();
         badMessage.setText("FAILURE!");
@@ -168,7 +169,9 @@ public class GameplayController implements Screen {
         // Initialize AI
         aiControllers = new ArrayList<>();
         for (Enemy enemy : level.getEnemies()) {
-            physics.addObject(enemy);
+            if (enemy.getType() != Enemy.Type.CAMERA) { // Only add physical enemies
+                physics.addObject(enemy);
+            }
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
@@ -245,11 +248,7 @@ public class GameplayController implements Screen {
         globalChase = anyChasing;
 
         // Update the state of aiming
-        if (input.didAim() && player.hasEnoughPaint(bombCost)) {
-            player.setAiming(true);
-        } else {
-            player.setAiming(false);
-        }
+        player.setAiming(input.didAim() && player.hasEnoughPaint(bombCost));
 
         // Throw a bomb on left‐click
         if (input.didTertiary() && player.hasEnoughPaint(bombCost) && input.didAim()) {
@@ -266,6 +265,12 @@ public class GameplayController implements Screen {
         // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy()) {
             setFailure(true);
+            physics.resetCollisionFlags();
+        }
+
+        // Check winning
+        if (!failed && physics.didWin()) {
+            setVictory();
             physics.resetCollisionFlags();
         }
 
@@ -289,11 +294,16 @@ public class GameplayController implements Screen {
         List<ObstacleSprite> toRemove = new ArrayList<>();
         for (ObstacleSprite obj : physics.objects) {
             if (obj instanceof Spray) {
-                ((Spray) obj).update(dt);
-                if (((Spray) obj).isExpired()) {
-                    toRemove.add(obj);
+                Spray spray = (Spray) obj;
+                spray.update(dt);
+                if (spray.isExpired()) {
+                    toRemove.add(spray);
                 }
             }
+        }
+
+        for (ObstacleSprite obj : toRemove) {
+            physics.removeObject(obj);
         }
         physics.objects.removeAll(toRemove);
         updateCamera();
@@ -323,7 +333,7 @@ public class GameplayController implements Screen {
             bombX = startX + dx * scale;
             bombY = startY + dy * scale;
         }
-         return new Vector2(bombX, bombY);
+        return new Vector2(bombX, bombY);
     }
 
     /**
@@ -399,7 +409,6 @@ public class GameplayController implements Screen {
         batch.drawText(paintText, displayFont, width*posXRatio, height*(posYRatio-textOffset));
 
         batch.setColor(Color.WHITE);
-        batch.setProjectionMatrix(camera.combined);
     }
 
     /**
@@ -427,7 +436,25 @@ public class GameplayController implements Screen {
 
         // Draw the aiming range
         batch.draw(aimTex, startX*units - aimRange/2, startY*units - aimRange/2, aimRange, aimRange);
+    }
 
+    /**
+     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in 'draw' method to view.
+     */
+    private void drawMapCoords(SpriteBatch batch) {
+        BitmapFont font = new BitmapFont(); // Default font
+        font.setColor(Color.WHITE); // Set color to white for visibility
+        font.getData().setScale(0.5f); // Scale down text if needed
+
+        for (int x = 0; x < worldWidth; x++) {
+            for (int y = 0; y < worldHeight; y++) {
+                float tileX = x * units;
+                float tileY = y * units;
+                String coordText = "(" + x + "," + y + ")";
+
+                font.draw(batch, coordText, tileX + units / 4f, tileY + units / 2f);
+            }
+        }
     }
 
     /**
@@ -490,13 +517,14 @@ public class GameplayController implements Screen {
                 sprite.drawDebug(batch);
             }
 
-            // Uncomment to see ai debugging (from AIController)
+            // Uncomment to see AI Enemy debugging (from AIController)
+//            drawMapCoords(batch);
 
-            batch.end();
-            for (AIController aiController : aiControllers) {
-                aiController.debugRender(camera); // Call debug grid rendering
-            }
-            batch.begin(); // Resume SpriteBatch rendering
+//            batch.end();
+//            for (AIController aiController : aiControllers) {
+//                aiController.debugRender(camera); // Call debug grid rendering
+//            }
+//            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects

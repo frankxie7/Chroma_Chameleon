@@ -34,6 +34,8 @@
   "enemies" : {
     "names"     : ["enemy1", "enemy2", "camera1"],
     "types"     : ["GUARD", "GUARD", "CAMERA"],
+    "patrols"   : [true, true, true],
+    "patrol_paths": [[[11.0, 16.0], [5.0, 16.0], [29.0, 12.0]],[[11.0, 16.0], [5.0, 16.0], [29.0, 12.0]],[]],
     "positions" : [[12.0, 12.0], [10, 2], [21.0,6.0]],
     "detection-range" : [3, 6, 5],
     "fov"       : [90, 180, 45],

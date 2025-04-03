@@ -1,6 +1,5 @@
 package chroma.model;
 
-import chroma.controller.AIController;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2; import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -14,15 +13,20 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.physics2.CapsuleObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
+import java.util.List;
+
 public class Enemy extends ObstacleSprite {
     public enum Type {
         GUARD, JANITOR, CAMERA
     }
 
-    /** The initializing data (to avoid magic numbers) */
-    private final JsonValue data;
     private float detectionRange;
     private float fov;
+    private Vector2 position;
+
+    /** Whether the guard wanders or patrols as neutral state */
+    private boolean patrol;
+    private List<float[]> patrolPath;
 
     /** The factor to multiply by the input */
     private float force;
@@ -44,7 +48,6 @@ public class Enemy extends ObstacleSprite {
     /** Sensor */
     private Path2 sensorOutline;
     private Color sensorColor;
-    private String sensorName;
 
     /** Cache for internal force calculations */
     private final Vector2 forceCache = new Vector2();
@@ -52,9 +55,10 @@ public class Enemy extends ObstacleSprite {
 
     private Enemy.Type type;
 
-    public Enemy(float[] position, String name, String type, float detectionRange, float fov, float startRotation, float units, JsonValue data) {
-        this.data = data;
+    public Enemy(float[] position, String name, String type, boolean patrol, List<float[]> patrolPath, float detectionRange, float fov, float startRotation, float units, JsonValue data) {
         this.type = Type.valueOf(type);
+        this.patrol = patrol;
+        this.patrolPath = patrolPath;
         this.detectionRange = detectionRange;
         this.fov = fov;
         this.startRotation = startRotation;
@@ -64,24 +68,28 @@ public class Enemy extends ObstacleSprite {
         float s = data.getFloat("size");
         float size = s * units;
 
-        // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
-        ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
+        if (this.type == Type.CAMERA) {
+            this.position = new Vector2(position[0], position[1]);
+            obstacle = null;
+        } else {
+            obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
+            obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
+        }
+        if (obstacle != null) {
+            ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
+            obstacle.setDensity(data.getFloat("density", 0));
+            obstacle.setFriction(data.getFloat("friction", 0));
+            obstacle.setRestitution(data.getFloat("restitution", 0));
+            obstacle.setFixedRotation(true);
+            obstacle.setPhysicsUnits(units);
+            obstacle.setUserData(this);
+            obstacle.setName(name);
 
-        obstacle.setDensity(data.getFloat("density", 0));
-        obstacle.setFriction(data.getFloat("friction", 0));
-        obstacle.setRestitution(data.getFloat("restitution", 0));
-        // Ensure the body is dynamic so it can move.
-        obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
-        obstacle.setFixedRotation(true);
-        obstacle.setPhysicsUnits(units);
-        obstacle.setUserData(this);
-        obstacle.setName(name);
-
-        // Filter allows collisions with everything except other enemies
-        Filter enemyFilter = new Filter();
-        enemyFilter.groupIndex = -1;
-        obstacle.setFilterData(enemyFilter);
+            // Filter allows collisions with everything except other enemies
+            Filter enemyFilter = new Filter();
+            enemyFilter.groupIndex = -1;
+            obstacle.setFilterData(enemyFilter);
+        }
 
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
@@ -95,7 +103,7 @@ public class Enemy extends ObstacleSprite {
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
-    }
+}
 
     public float getMovement() { return movement; }
 
@@ -117,6 +125,9 @@ public class Enemy extends ObstacleSprite {
     public float getFov() { return fov; }
     public Type getType() { return type; }
     public float getStartRotation() { return startRotation; }
+    public Vector2 getPosition() { return (type == Type.CAMERA) ? position : obstacle.getPosition(); }
+    public boolean getPatrol() { return patrol; }
+    public List<float[]> getPatrolPath() { return patrolPath; }
 
     public float getRotation() {
         if (type == Type.CAMERA) {
@@ -140,7 +151,7 @@ public class Enemy extends ObstacleSprite {
     private float turnSmoothing = 0.1f;
 
     public void applyForce() {
-        if (!obstacle.isActive()) {
+        if (type == Type.CAMERA || obstacle == null || !obstacle.isActive()) {
             return;
         }
 

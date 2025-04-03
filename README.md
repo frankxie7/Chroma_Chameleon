@@ -6,7 +6,7 @@
 4. Goal Region Implementation -- Alex, Frank
 5. Paint tank -- Frank
 6. Expand the map vertically and test boundary camera -- Beilin
-7. Put the creation of Spray and Bomb both in either PhysicsController or GameplayController (currently in separate classes) . 
+ 
 
 # Potential New Features DUE Saturday March 22:
 1. Paint dissipation over time -- Frank
@@ -14,4 +14,5 @@
 3. Add a paint refill station -- Frank
 5. Add a progress bar for filling in goal areas -- Alex
 6. Add a percentage to tell how much paint is left, increase paint bar size -- Beilin
-7. Integrate avaliable art assets
+7. Improvement on class organization, Put the creation of Spray and Bomb both in either PhysicsController or GameplayController (currently in separate classes). -- Brian
+8. Integrate avaliable art assets
