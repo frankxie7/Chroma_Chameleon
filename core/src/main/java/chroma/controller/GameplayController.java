@@ -165,6 +165,7 @@ public class GameplayController implements Screen {
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
+        physics.createGoal(new Vector2(3,14.5f),units, constants);
 
         // Initialize AI
         aiControllers = new ArrayList<>();
@@ -231,6 +232,15 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
+        boolean win = true;
+        for(Goal goal : physics.getGoalList()){
+            if(!goal.isFull()){
+                win = false;
+            }
+        }
+        if(win){
+            System.out.println("The player has filled the goal tiles");
+        }
 
         // Update AI enemies
         boolean anyChasing = false;
@@ -409,6 +419,7 @@ public class GameplayController implements Screen {
         batch.drawText(paintText, displayFont, width*posXRatio, height*(posYRatio-textOffset));
 
         batch.setColor(Color.WHITE);
+
     }
 
     /**
