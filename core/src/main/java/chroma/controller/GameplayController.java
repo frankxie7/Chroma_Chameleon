@@ -159,6 +159,13 @@ public class GameplayController implements Screen {
         // Build the level with the current `units`
         level = new Level(directory, units, constants);
 
+        for (WallDepth walldepth : level.getWalldepths()) {
+            physics.addObject(walldepth);
+        }
+        // Add all walls
+        for (Terrain wall : level.getWalls()) {
+            physics.addObject(wall);
+        }
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
@@ -173,13 +180,7 @@ public class GameplayController implements Screen {
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
-        for (WallDepth walldepth : level.getWalldepths()) {
-            physics.addObject(walldepth);
-        }
-        // Add all walls
-        for (Terrain wall : level.getWalls()) {
-            physics.addObject(wall);
-        }
+
 
 
 
