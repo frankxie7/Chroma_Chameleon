@@ -107,11 +107,6 @@ public class AIController {
                 return true;
             }
         }
-        for (Terrain platform : platforms) {
-            if (platform.contains(position)) {
-                return true;
-            }
-        }
         return false;
     }
 

@@ -173,13 +173,16 @@ public class GameplayController implements Screen {
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
-        // Add all walls and platforms
+        for (WallDepth walldepth : level.getWalldepths()) {
+            physics.addObject(walldepth);
+        }
+        // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
         }
-        for (Terrain platform : level.getPlatforms()) {
-            physics.addObject(platform);
-        }
+
+
+
     }
 
     /**
