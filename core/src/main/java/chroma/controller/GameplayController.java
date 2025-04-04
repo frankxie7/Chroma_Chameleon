@@ -535,33 +535,22 @@ public class GameplayController implements Screen {
     /**
      * Center the camera on the player and clamp to map bounds.
      */
+    /**
+     * Center the camera on the player at all times (no boundaries).
+     */
     private void updateCamera() {
-        float mapWidth  = worldWidth  * units;
-        float mapHeight = worldHeight * units;
-
+        // Get the player's position in Box2D world units
         Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
+
+        // Multiply by 'units' to convert to screen/pixel space
         float desiredCamX = playerPos.x * units;
         float desiredCamY = playerPos.y * units;
 
-        float halfViewWidth  = camera.viewportWidth  / 2f;
-        float halfViewHeight = camera.viewportHeight / 2f;
-
-        // Clamp horizontally
-        if (desiredCamX < halfViewWidth) {
-            desiredCamX = halfViewWidth;
-        } else if (desiredCamX > mapWidth - halfViewWidth) {
-            desiredCamX = mapWidth - halfViewWidth;
-        }
-        // Clamp vertically
-        if (desiredCamY < halfViewHeight) {
-            desiredCamY = halfViewHeight;
-        } else if (desiredCamY > mapHeight - halfViewHeight) {
-            desiredCamY = mapHeight - halfViewHeight;
-        }
-
+        // Simply set the camera position to the player's position
         camera.position.set(desiredCamX, desiredCamY, 0);
         camera.update();
     }
+
 
     /**
      * The main render loop.
