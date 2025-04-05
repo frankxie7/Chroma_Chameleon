@@ -3,6 +3,8 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Filter;
@@ -26,9 +28,7 @@ public class Goal extends ObstacleSprite {
     private static Texture sprayTextureFull = null;
     float units;
     float[] points;
-
-
-
+    private Poly2 poly;
 
     /**
      * Creates a new Spray object from the given points and world unit scale.
@@ -51,12 +51,10 @@ public class Goal extends ObstacleSprite {
         this.points = points;
 
 
-
         short[] indices = { 0, 1, 2, 0, 2, 3};
         // Create the polygon for the mesh (rendering).
-        Poly2 poly = new Poly2(points,indices);
-
-        poly.scl(units);
+        this.poly = new Poly2(points,indices);
+        this.poly.scl(units);
 
         // If the shared texture is not created yet, make it now.
         if (sprayTexture == null) {
@@ -91,12 +89,55 @@ public class Goal extends ObstacleSprite {
     public float getX(){
         return obstacle.getX();
     }
-
     public float getY(){
         return obstacle.getY();
     }
-
     public boolean isFull(){
         return full;
+    }
+
+    public boolean contains(Vector2 point) {
+        // Get transformed vertices from Poly2 (already scaled correctly)
+        Vector2[] polyVertices = poly.getVertices();
+        float[] vertices = new float[polyVertices.length * 2];
+
+        // Convert Vector2 array to float array for Polygon
+        for (int i = 0; i < polyVertices.length; i++) {
+            vertices[i * 2] = polyVertices[i].x; // No need to apply units again, already done in Poly2
+            vertices[i * 2 + 1] = polyVertices[i].y;
+        }
+
+        // Create the polygon (no need to scale, Poly2 is already transformed)
+        Polygon polygon = new Polygon(vertices);
+
+        // Check if the point is inside the polygon
+        if (polygon.contains(point.x, point.y)) {
+            return true;
+        }
+
+        // Check if the point is on any of the edges
+        float[] transformedVertices = polygon.getTransformedVertices();
+        int numVertices = transformedVertices.length / 2;
+
+        for (int i = 0; i < numVertices; i++) {
+            int next = (i + 1) % numVertices;
+            float x1 = transformedVertices[i * 2], y1 = transformedVertices[i * 2 + 1];
+            float x2 = transformedVertices[next * 2], y2 = transformedVertices[next * 2 + 1];
+
+            // Check if the point is exactly on an edge
+            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
+                return true;
+            }
+            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
+                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void update(float dt) {
+        // Then call the superclass update
+        super.update(dt);
     }
 }

@@ -390,7 +390,8 @@ public class PhysicsController implements ContactListener {
         // Check enemy collisions, etc.
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
-            playerCollidedWithEnemy = true;
+            Enemy enemy = (userDataA instanceof Enemy) ? (Enemy) userDataA : (Enemy) userDataB;
+            playerCollidedWithEnemy = enemy.getType() != Enemy.Type.CAMERA;
         }
 
         // Check for win condition

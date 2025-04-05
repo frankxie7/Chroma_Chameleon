@@ -1,9 +1,7 @@
 package chroma.controller;
 
-import chroma.model.Chameleon;
-import chroma.model.Enemy;
-import chroma.model.Level;
-import chroma.model.Terrain;
+import chroma.model.*;
+import chroma.model.Enemy.Type;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
@@ -13,12 +11,14 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.RayCastCallback;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class AIController {
@@ -28,43 +28,61 @@ public class AIController {
 
     private GameplayController gameplay;
     private PhysicsController physics;
-    private Level level;
     private Enemy enemy;
+    private Type type;
     private Chameleon player;
     private List<Terrain> walls; // list of walls for pathfindinga
     private List<Terrain> platforms;
+    private Goal[] goals;
     private State state;
-//    private float detectionRange = 200f; // enemy detection range
 
     // Base detection range and dynamic detection range.
     private float detectionRange;
     private float fov;
-//    private float detectionIncrease = 1f; // increase amount after losing player
-//    private float maxDetectionRange = 8f;
+    private float rotationSpeedWander = 45f; // Degrees per second
+    private float rotationSpeedAlert = 90f;
+    private float rotationSpeedChase = 240f;
+    private boolean rotatingClockwise = true;
 
-    private float wanderSpeed = 2f;
+    // GOAL:
+    private Vector2 target;
+
+    // ENEMY SPEED:
+    private float wanderSpeed = 1f;
     private float chaseSpeed = 4f;
 
-    // For Wander behavior:
-    private Vector2 target;
+    // ALERT:
+    private float alertLength = 3f;
+    private float alertTimer = alertLength;
+
+    // WANDER:
     private float timeToChangeTarget = 2f;
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries
 
+    // PATROL:
+    private boolean patrol;
+    private List<float[]> patrolPath;
+    private int patrolIndex = 0; // Track the current waypoint index
+
     private boolean playerDetected = false;
+    private boolean wasChasingOrAlert = false;
 
     private NavGraph graph = new NavGraph();
 
     private float scale;
 
     public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
-        this.enemy = enemy;
         this.gameplay = gameplayController;
         this.physics = physicsController;
-        this.level = level;
+        this.enemy = enemy;
+        this.patrol = enemy.getPatrol();
+        this.patrolPath = enemy.getPatrolPath();
+        this.type = enemy.getType();
         this.player = level.getAvatar();
         this.walls = level.getWalls();
         this.platforms = level.getPlatforms();
+        this.goals = physics.getGoalList();
         this.detectionRange = enemy.getDetectionRange();
         this.fov = enemy.getFov();
         state = State.WANDER;
@@ -82,10 +100,6 @@ public class AIController {
         buildGraph(worldWidth, worldHeight);
     }
 
-    public Enemy getEnemy() {
-        return enemy;
-    }
-
     private void pickNewWanderTarget() {
         float minX = margin;
         float maxX = gameplay.getWorldWidth() - margin;
@@ -98,12 +112,30 @@ public class AIController {
 
     // Checks if a straight line from start to end is blocked by any wall.
     private boolean isLineBlocked(Vector2 start, Vector2 end) {
-        return physics.raycast(start, end) != null;
+        Fixture hitFixture = physics.raycast(start, end);
+
+        // If nothing is hit, return false (line is not blocked)
+        if (hitFixture == null) {
+            return false;
+        }
+
+        // If the fixture is a goal, ignore it
+        return !(hitFixture.getUserData() instanceof Goal);
     }
 
     private boolean isBlocked(Vector2 position) {
         for (Terrain wall : walls) {
             if (wall.contains(position)) {
+                return true;
+            }
+        }
+//        for (Terrain platform : platforms) {
+//            if (platform.contains(position)) {
+//                return true;
+//            }
+//        }
+        for (Goal goal : goals) {
+            if (goal.contains(position)) {
                 return true;
             }
         }
@@ -175,6 +207,19 @@ public class AIController {
         public void addNode(NavNode node) {
             nodes.add(node);
         }
+
+        public Vector2 getNearestWalkableNode(Vector2 point) {
+            NavNode closest = null;
+            float minDist = Float.MAX_VALUE;
+            for (NavNode node : graph.nodes) {
+                float dist = node.position.dst2(point); // dst2 is faster than dst
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = node;
+                }
+            }
+            return closest != null ? closest.position : point; // Default to original if no match
+        }
     }
 
     public class EuclideanHeuristic implements Heuristic<NavNode> {
@@ -201,7 +246,7 @@ public class AIController {
         // Connect adjacent nodes if no wall is blocking them
         for (NavNode node : graph.nodes) {
             for (NavNode other : nodeCopy) {
-                if (!node.equals(other) && node.position.dst2(other.position) == 1f) {
+                if (!node.equals(other) && node.position.dst2(other.position) < 2f) {
                     if (!isLineBlocked(node.position, other.position)) {
                         node.addConnection(new NavConnection(node, other));
                     }
@@ -262,114 +307,255 @@ public class AIController {
     }
 
     private void moveTowards(Vector2 target, float speed) {
-        Vector2 enemyPos = enemy.getObstacle().getPosition();
-        Vector2 direction = new Vector2(target).sub(enemyPos).nor();
+        Vector2 enemyPos = enemy.getPosition();
+        Vector2 direction = new Vector2(target).sub(enemyPos);
+
+        if (direction.len() > 0.1f) { // Prevent division by zero
+            direction.nor();
+        }
 
         // Set movement variables like the player
         float hmove = direction.x;
         float vmove = direction.y;
 
         // Apply movement similar to the player
-        enemy.setMovement(hmove * enemy.getForce());
-        enemy.setVerticalMovement(vmove * enemy.getForce());
+        enemy.setMovement(hmove * speed);
+        enemy.setVerticalMovement(vmove * speed);
     }
 
-    // Updated update method: 'playerVisible' is true if the player is visible.
     public void update(float delta) {
-        Vector2 enemyPos = enemy.getObstacle().getPosition();
+//        System.out.println(enemy.getName() + " current goal: " + target);
+//        System.out.println("State: " + state);
+        Vector2 enemyPos = enemy.getPosition();
         Vector2 playerPos = player.getPosition();
         if (enemyPos == null || playerPos == null) {
             return;
         }
         playerDetected = false;
-        if (!player.isHidden()) {
-            float distanceToPlayer = enemyPos.dst(playerPos);
-            if (distanceToPlayer <= detectionRange) {
-                float angleToPlayer = playerPos.cpy().sub(enemyPos).angleRad();
-                float halfFOV = (float) Math.toRadians(fov/2);
+        float distanceToPlayer = enemyPos.dst(playerPos);
+        if (!player.isHidden() && distanceToPlayer <= detectionRange) {
 
-                // Cast multiple rays in the FOV
-                int numRays = 10;
-                float angleStep = (halfFOV * 2) / (numRays - 1);
-                for (int i = 0; i < numRays; i++) {
-                    float rayAngle = angleToPlayer - halfFOV + (i * angleStep);
-                    Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-                    Vector2 endPoint = enemyPos.cpy().add(direction.scl(detectionRange));
+            float angleLooking = enemy.getRotation();
+//            System.out.println(enemy.getName() + ": " + angleLooking);
+            float halfFOV = (float) Math.toRadians(fov / 2);
+            int numRays = (int) (fov / 5);
+            float angleStep = (halfFOV * 2) / (numRays - 1);
 
-                    Fixture hit = physics.raycast(enemyPos, endPoint);
-                    if (hit != null && hit.getBody().getUserData() == player) {
-                        playerDetected = true;
-                        break;
+            for (int i = 0; i < numRays; i++) {
+                float rayAngle = angleLooking - halfFOV + (i * angleStep);
+                Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
+                Vector2 rayEnd = enemyPos.cpy().add(direction.scl(detectionRange));
+
+                final boolean[] hitPlayer = {false};
+
+                RayCastCallback callback = (fixture, point, normal, fraction) -> {
+                    Object userData = fixture.getBody().getUserData();
+
+                    if (userData instanceof Spray || userData instanceof Bomb) {
+                        return -1f; // Keep going
                     }
+
+                    if (userData == player) {
+                        hitPlayer[0] = true;
+                        return 0; // Stop ray
+                    }
+
+                    return fraction; // Stop at first solid object
+                };
+
+                physics.getWorld().rayCast(callback, enemyPos, rayEnd);
+
+                if (hitPlayer[0]) {
+                    playerDetected = true;
+                    break;
                 }
             }
         }
 
-        if (playerDetected) {
+        if (type == Type.CAMERA) {
+            handleCamera(delta);
+            return;
+        }
+
+        if (playerDetected || gameplay.isGlobalChase()) {
+//            System.out.println("Player detected: " + playerDetected + ", GlobalChase: " + gameplay.isGlobalChase());
+            Vector2 lastSpotted = new Vector2(playerPos);
+            player.setLastSeen(lastSpotted);
+            wasChasingOrAlert = true;
             state = State.CHASE;
-        } else if (state == State.CHASE) {
-            state = State.WANDER;
+        } else if (alertTimer < alertLength) {
+            state = State.ALERT;
+        } else {
+            state = patrol ? State.PATROL : State.WANDER;
         }
 
         if (state == State.CHASE) {
-            if (!isLineBlocked(enemyPos, playerPos)) {
-                moveTowards(playerPos, chaseSpeed);
-            } else {
-                Vector2 waypoint = getNextPathPoint(enemyPos, playerPos);
-                if (waypoint != null) {
-                    moveTowards(waypoint, chaseSpeed);
-                } else {
-                    state = State.WANDER;
-                }
-            }
+            chaseState(delta, enemyPos, playerPos);
+        } else if (state == State.ALERT) {
+            alertState(delta, enemyPos);
+        } else if (state == State.PATROL) {
+            patrolState(delta, enemyPos);
         } else {
-            wanderTimer += delta;
-            if (wanderTimer >= timeToChangeTarget || enemyPos.dst(target) < 10f) {
-                wanderTimer = 0f;
-                pickNewWanderTarget();
-            }
-            Vector2 waypoint = getNextPathPoint(enemyPos, target);
-            if (waypoint != null) {
-                moveTowards(waypoint, wanderSpeed);
-            } else {
-                enemy.setMovement(0);
-                enemy.setVerticalMovement(0);
-            }
+            wanderState(delta, enemyPos);
         }
         // Ensure the enemy updates its physics forces properly
         enemy.applyForce();
         enemy.update(delta);
     }
 
+    private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
+        alertTimer = 0;
+        target = playerPos;
+        if (!isLineBlocked(enemyPos, target)) {
+            moveTowards(target, chaseSpeed);
+        } else {
+            Vector2 waypoint = getNextPathPoint(enemyPos, target);
+            if (waypoint != null) {
+                moveTowards(waypoint, chaseSpeed);
+            } else {
+                state = State.ALERT;
+            }
+        }
+    }
+    private void alertState(float delta, Vector2 enemyPos) {
+        alertTimer += delta;
+        target = player.getLastSeen();
+        if (!isLineBlocked(enemyPos, target)) {
+            moveTowards(target, chaseSpeed);
+        } else {
+            Vector2 waypoint = getNextPathPoint(enemyPos, target);
+            if (waypoint != null) {
+                moveTowards(waypoint, chaseSpeed);
+            } else {
+                state = patrol ? State.PATROL : State.WANDER;
+            }
+        }
+    }
+    private void patrolState(float delta, Vector2 enemyPos) {
+        target = graph.getNearestWalkableNode(new Vector2(patrolPath.get(patrolIndex)[0], patrolPath.get(patrolIndex)[1]));
+
+        if (!isLineBlocked(enemyPos, target)) {
+            moveTowards(target, chaseSpeed);
+        } else {
+            Vector2 waypoint = getNextPathPoint(enemyPos, target);
+            if (waypoint != null) {
+                moveTowards(waypoint, wanderSpeed);
+            }
+        }
+        // Check if the enemy has reached the waypoint
+        if (enemyPos.dst2(target) < 0.5f) {
+            patrolIndex = (patrolIndex + 1) % patrolPath.size(); // Move to next patrol point
+        }
+    }
+    private void wanderState(float delta, Vector2 enemyPos) {
+        wanderTimer += delta;
+        if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
+            wanderTimer = 0f;
+            pickNewWanderTarget();
+        }
+        Vector2 waypoint = getNextPathPoint(enemyPos, target);
+        if (waypoint != null) {
+            moveTowards(waypoint, wanderSpeed);
+        } else {
+            enemy.setMovement(0);
+            enemy.setVerticalMovement(0);
+        }
+    }
+    private void handleCamera(float delta) {
+        float rotationSpeed = getRotationSpeed();
+        float minRotation = enemy.getMinRotation();
+        float maxRotation = enemy.getMaxRotation();
+        float newRotation = (enemy.getRotation() + (float)Math.toRadians(360)) % ((float)Math.toRadians(360)); // Keep rotation within [0,360]
+        boolean wrapsAround = minRotation > maxRotation; // Does range cross 0°?
+
+        if (rotatingClockwise) {
+            newRotation += rotationSpeed * delta;
+            if (wrapsAround) {
+                // If we are in the wrapped region but exceed maxRotation
+                if (newRotation >= maxRotation && newRotation < minRotation) {
+                    newRotation = maxRotation;
+                    rotatingClockwise = false;
+                }
+            } else {
+                if (newRotation >= maxRotation) {
+                    newRotation = maxRotation;
+                    rotatingClockwise = false;
+                }
+            }
+        } else { // Rotating counter-clockwise
+            newRotation -= rotationSpeed * delta;
+
+            if (wrapsAround) {
+                // If we drop below minRotation but are still in the wrapped region
+                if (newRotation <= minRotation && newRotation > maxRotation) {
+                    newRotation = minRotation;
+                    rotatingClockwise = true;
+                }
+            } else {
+                if (newRotation <= minRotation) {
+                    newRotation = minRotation;
+                    rotatingClockwise = true;
+                }
+            }
+        }
+        newRotation = (newRotation + (float)Math.toRadians(360)) % ((float)Math.toRadians(360)); // Keep rotation within [0,360]
+        enemy.setRotation(newRotation);
+
+        if (playerDetected) {
+            state = State.CHASE;
+        } else if (alertTimer < alertLength) {
+            state = State.ALERT;
+        } else {
+            state = State.WANDER;
+        }
+
+        if (state == State.CHASE) {
+            alertTimer = 0f;
+        } else if (state == State.ALERT) {
+            alertTimer += delta;
+        }
+    }
+
+    private float getRotationSpeed() {
+        switch (state) {
+            case CHASE:
+                return (float)Math.toRadians(rotationSpeedChase);
+            case ALERT:
+                return (float)Math.toRadians(rotationSpeedAlert);
+            case WANDER:
+            default:
+                return (float)Math.toRadians(rotationSpeedWander);
+        }
+    }
+
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
 
-    private Array<Vector2> lastPath = null;
-    private Vector2 lastGoal = null;
+    private Array<Vector2> lastPath;
+    private Vector2 lastGoal;
 
     public void debugRender(OrthographicCamera camera) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Uncomment to see ai debugging for pathfinding
+//        // Draw the goal in green
+//        if (lastGoal != null) {
+//            shapeRenderer.setColor(Color.GREEN);
+//            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
+//        }
+
+        // Highlight the A* path in yellow
+//        if (lastPath != null) {
+//            System.out.println(enemy.getName() + ": " + lastPath);
+//            shapeRenderer.setColor(Color.YELLOW);
+//            for (Vector2 pathPoint : lastPath) {
+//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+//            }
+//        }
 
 //        // Draw all NavNodes (grid)
 //        shapeRenderer.setColor(Color.GRAY);
 //        for (NavNode node : graph.nodes) {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
-//        }
-//
-//        // Highlight the A* path in yellow
-//        if (lastPath != null) {
-//            shapeRenderer.setColor(Color.YELLOW);
-//            for (Vector2 pathPoint : lastPath) {
-//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 5f, 10f, 10f);
-//            }
-//        }
-//
-//        // Draw the goal in green
-//        if (lastGoal != null) {
-//            shapeRenderer.setColor(Color.GREEN);
-//            shapeRenderer.rect(lastGoal.x * scale - 10f, lastGoal.y * scale - 10f, 20f, 20f);
 //        }
 
         // Draw enemy FOV and rays
@@ -378,36 +564,49 @@ public class AIController {
 
         shapeRenderer.end();
     }
-
     private void drawEnemyVision() {
-        Vector2 enemyPos = new Vector2(enemy.getObstacle().getPosition().x*scale, enemy.getObstacle().getPosition().y*scale);
-        float halfFOV = (float) Math.toRadians(fov/2);
-        int numRays = 30;
+        // UNscale for physics calculations
+        Vector2 enemyWorldPos = new Vector2(enemy.getPosition().x, enemy.getPosition().y);
+        Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
+
+        float halfFOV = (float) Math.toRadians(fov / 2);
+        int numRays = (int) (fov / 5);
         float angleStep = (halfFOV * 2) / (numRays - 1);
-        float visionRange = detectionRange * scale;
 
-        float angleToLook = enemy.getFacingAngle();
+        float angleToLook = enemy.getRotation();
 
-        // Draw enemy vision cone
-        shapeRenderer.triangle(enemyPos.x, enemyPos.y,
-            enemyPos.x + visionRange * (float) Math.cos(angleToLook - halfFOV),
-            enemyPos.y + visionRange * (float) Math.sin(angleToLook - halfFOV),
-            enemyPos.x + visionRange * (float) Math.cos(angleToLook + halfFOV),
-            enemyPos.y + visionRange * (float) Math.sin(angleToLook + halfFOV));
-
-        // Draw enemy casted rays
         shapeRenderer.setColor(Color.RED);
         for (int i = 0; i < numRays; i++) {
-            float rayAngle = angleToLook - halfFOV + (i * angleStep);
+            float rayAngle = angleToLook - halfFOV + i * angleStep;
+
             Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-            Vector2 endPoint = enemyPos.cpy().add(direction.scl(visionRange));
+            Vector2 rayEndWorld = type == Type.CAMERA
+                    ? enemyWorldPos.cpy().add(direction.scl(9999)) // Very long in world units
+                    : enemyWorldPos.cpy().add(direction.scl(detectionRange));
 
-            Fixture hit = physics.raycast(enemyPos, endPoint);
-            if (hit != null) {
-                endPoint = new Vector2(hit.getBody().getPosition().x, hit.getBody().getPosition().y); // Stop at the first hit
-            }
+            Vector2 rayHitWorld = rayEndWorld.cpy();  // Will update on hit
 
-            shapeRenderer.line(enemyPos, endPoint);
+            RayCastCallback callback = (fixture, point, normal, fraction) -> {
+                Object userData = fixture.getBody().getUserData();
+
+                if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal) {
+                    return -1f; // Skip transparent
+                }
+
+                rayHitWorld.set(point);  // Save where we actually hit
+                return fraction;
+            };
+
+            physics.getWorld().rayCast(callback, enemyWorldPos, rayEndWorld);
+
+            // SCALE back up to draw on screen
+            Vector2 screenHit = new Vector2(rayHitWorld.x * scale, rayHitWorld.y * scale);
+            shapeRenderer.line(enemyScreenPos, screenHit);
         }
     }
+
+    public State getState() { return state; }
+    public void setState(State value) { state = value; }
+    public boolean getPlayerDetected() { return playerDetected; }
+//    public NavGraph getGraph() { return graph; }
 }

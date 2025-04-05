@@ -50,14 +50,30 @@ public class Level {
             Texture enemyTex = directory.getEntry("platform-traci", Texture.class);
             JsonValue enemyPositions = enemiesData.get("positions");
             JsonValue enemyNames = enemiesData.get("names");
+            JsonValue enemyType = enemiesData.get("types");
+            JsonValue enemyPatrol = enemiesData.get("patrols");
+            JsonValue enemyPatrolPath = enemiesData.get("patrol_paths");
             JsonValue enemyDetectionRange = enemiesData.get("detection-range");
             JsonValue enemyFOV = enemiesData.get("fov");
+            JsonValue enemyStartRotation = enemiesData.get("startRotation");
+            JsonValue enemyRotateAngles = enemiesData.get("rotateAngle");
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords = enemyPositions.get(i).asFloatArray();
                 String name = enemyNames.get(i).asString();
+                String type = enemyType.get(i).asString();
+
+                boolean patrol = enemyPatrol.get(i).asBoolean();
+                JsonValue patrolPath = enemyPatrolPath.get(i); // Get the JSON array for this enemy
+                List<float[]> patrolPathList = new ArrayList<>();
+                for (JsonValue point : patrolPath) {
+                    patrolPathList.add(point.asFloatArray()); // Convert each sub-array to float[]
+                }
+
                 float detectionRange = enemyDetectionRange.get(i).asFloat();
                 float fov = enemyFOV.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, name, detectionRange, fov, units, enemiesData);
+                float startRotation = enemyStartRotation.get(i).asFloat();
+                float rotateAngle = enemyRotateAngles.get(i).asFloat();
+                Enemy enemy = new Enemy(coords, name, type, patrol, patrolPathList, detectionRange, fov, startRotation, rotateAngle, units, enemiesData);
                 enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }

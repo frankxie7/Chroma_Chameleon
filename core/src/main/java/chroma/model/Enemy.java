@@ -13,11 +13,20 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.physics2.CapsuleObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
+import java.util.List;
+
 public class Enemy extends ObstacleSprite {
-    /** The initializing data (to avoid magic numbers) */
-    private final JsonValue data;
+    public enum Type {
+        GUARD, JANITOR, CAMERA
+    }
+
     private float detectionRange;
     private float fov;
+    private Vector2 position;
+
+    /** Whether the guard wanders or patrols as neutral state */
+    private boolean patrol;
+    private List<float[]> patrolPath;
 
     /** The factor to multiply by the input */
     private float force;
@@ -33,42 +42,59 @@ public class Enemy extends ObstacleSprite {
     /** Which direction is the character facing */
     private boolean faceRight;
 
+    private float rotation;
+    private float startRotation;
+    /** Min and Max angles for camera rotation */
+    private float minRotation;
+    private float maxRotation;
+
     /** Sensor */
     private Path2 sensorOutline;
     private Color sensorColor;
-    private String sensorName;
 
     /** Cache for internal force calculations */
     private final Vector2 forceCache = new Vector2();
     private final Affine2 flipCache = new Affine2();
 
-    public Enemy(float[] position, String name, float detectionRange, float fov, float units, JsonValue data) {
-        this.data = data;
+    private Enemy.Type type;
+
+    public Enemy(float[] position, String name, String type, boolean patrol, List<float[]> patrolPath, float detectionRange, float fov, float startRotation, float rotateAngle, float units, JsonValue data) {
+        this.type = Type.valueOf(type);
+        this.patrol = patrol;
+        this.patrolPath = patrolPath;
         this.detectionRange = detectionRange;
         this.fov = fov;
+        this.startRotation = startRotation;
+        this.rotation = startRotation;
+        this.minRotation = startRotation - rotateAngle % 360;
+        this.maxRotation = startRotation + rotateAngle % 360;
 
         JsonValue debugInfo = data.get("debug");
         float s = data.getFloat("size");
         float size = s * units;
 
-        // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
-        ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
+        if (this.type == Type.CAMERA) {
+            this.position = new Vector2(position[0], position[1]);
+            obstacle = null;
+        } else {
+            obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
+            obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
+        }
+        if (obstacle != null) {
+            ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
+            obstacle.setDensity(data.getFloat("density", 0));
+            obstacle.setFriction(data.getFloat("friction", 0));
+            obstacle.setRestitution(data.getFloat("restitution", 0));
+            obstacle.setFixedRotation(true);
+            obstacle.setPhysicsUnits(units);
+            obstacle.setUserData(this);
+            obstacle.setName(name);
 
-        obstacle.setDensity(data.getFloat("density", 0));
-        obstacle.setFriction(data.getFloat("friction", 0));
-        obstacle.setRestitution(data.getFloat("restitution", 0));
-        // Ensure the body is dynamic so it can move.
-        obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
-        obstacle.setFixedRotation(true);
-        obstacle.setPhysicsUnits(units);
-        obstacle.setUserData(this);
-        obstacle.setName(name);
-
-        // Filter allows collisions with everything except other enemies
-        Filter enemyFilter = new Filter();
-        enemyFilter.groupIndex = -1;
-        obstacle.setFilterData(enemyFilter);
+            // Filter allows collisions with everything except other enemies
+            Filter enemyFilter = new Filter();
+            enemyFilter.groupIndex = -1;
+            obstacle.setFilterData(enemyFilter);
+        }
 
         // Set up debug colors, mesh, etc.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
@@ -82,7 +108,7 @@ public class Enemy extends ObstacleSprite {
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
-    }
+}
 
     public float getMovement() { return movement; }
 
@@ -97,64 +123,49 @@ public class Enemy extends ObstacleSprite {
     }
 
     public float getVerticalMovement() { return verticalMovement; }
-    public void setVerticalMovement(float value) {
-        verticalMovement = value;
-    }
-    public float getForce() {
-        return force;
-    }
-    public float getMaxSpeed() {
-        return maxspeed;
-    }
+    public void setVerticalMovement(float value) { verticalMovement = value; }
+    public float getForce() { return force; }
+    public float getMaxSpeed() { return maxspeed; }
     public float getDetectionRange() { return detectionRange; }
     public float getFov() { return fov; }
+    public Type getType() { return type; }
+    public float getStartRotation() { return startRotation; }
+    public Vector2 getPosition() { return (type == Type.CAMERA) ? position : obstacle.getPosition(); }
+    public boolean getPatrol() { return patrol; }
+    public List<float[]> getPatrolPath() { return patrolPath; }
 
-    public float getFacingAngle() {
+    public float getRotation() {
+        if (type == Type.CAMERA) {
+            return (float) Math.toRadians(rotation); // Cameras use their own stored rotation
+        }
+
         Vector2 velocity = obstacle.getBody().getLinearVelocity();
 
         // If the enemy is stationary, return the last known facing angle
-        if (velocity.len2() < 0.01f) {  // len2() is more efficient than len()
-            return faceRight ? 0 : (float) Math.PI; // Default direction (right or left)
+        if (velocity.len2() < 0.01f) {
+            return faceRight ? 0 : (float) Math.PI;
         }
+
         return (float) Math.atan2(velocity.y, velocity.x);
     }
+    public void setRotation(float angle) {
+        this.rotation = ((float) Math.toDegrees(angle)) % 360f;
+        if (this.rotation < 0) this.rotation += 360f; // Keep it in [0, 360)
+    }
+    public float getMinRotation() { return (float) Math.toRadians(minRotation); }
+    public float getMaxRotation() { return (float) Math.toRadians(maxRotation); }
 
     private Vector2 targetVelocity = new Vector2();
     private Vector2 currentVelocity = new Vector2();
     private float turnSmoothing = 0.1f;
 
     public void applyForce() {
-        if (!obstacle.isActive()) {
+        if (type == Type.CAMERA || obstacle == null || !obstacle.isActive()) {
             return;
         }
 
         Vector2 pos = obstacle.getPosition();
-        float vx = obstacle.getVX();
-        float vy = obstacle.getVY();
         Body body = obstacle.getBody();
-
-//        float moveX = getMovement();
-//        float moveY = getVerticalMovement();
-//
-//        // Don't want to be moving. Damp out player motion
-//        if (moveX == 0f && moveY == 0f) {
-//            forceCache.set(-getDamping()*vx,-getDamping()*vy);
-//            body.applyForce(forceCache,pos,true);
-//        } else {
-//            Vector2 moveForce = new Vector2(moveX, moveY);
-//            if (moveForce.len() > 1) {
-//                moveForce.nor(); // Normalize so diagonal movement isn't faster
-//            }
-//            moveForce.scl(getForce()); // Scale by movement force
-//            body.applyForce(moveForce, pos, true);
-//        }
-//
-//        // Clamp velocity to max speed
-//        Vector2 velocity = obstacle.getBody().getLinearVelocity();
-//        if (velocity.len() > getMaxSpeed()) {
-//            velocity.nor().scl(getMaxSpeed());
-//            obstacle.getBody().setLinearVelocity(velocity);
-//        }
 
         // Get the current movement direction
         targetVelocity.set(getMovement(), getVerticalMovement());
@@ -167,6 +178,8 @@ public class Enemy extends ObstacleSprite {
         // Scale by force and apply smoothing
         targetVelocity.scl(getForce());
         currentVelocity.lerp(targetVelocity, turnSmoothing); // Smoothly transition
+
+//        System.out.println(getName() + ": " + currentVelocity);
 
         // Apply the interpolated force
         body.applyForce(currentVelocity, pos, true);
