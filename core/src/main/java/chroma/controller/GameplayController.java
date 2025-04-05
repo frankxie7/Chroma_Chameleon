@@ -489,12 +489,7 @@ public class GameplayController implements Screen {
             }
         }
 
-        // Draw the aiming
-        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
-        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        if (player.isAiming()) {
-            drawAimRange(aimTex);
-        }
+
 
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
@@ -506,9 +501,15 @@ public class GameplayController implements Screen {
             }
         }
 
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("spray")) {
+                sprite.draw(batch);
+            }
+        }
+
         // Draw all physics objects other than bombs
         for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb"))) {
+            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb")  && !sprite.getName().equals("spray"))) {
                 sprite.draw(batch);
             }
         }
@@ -518,6 +519,17 @@ public class GameplayController implements Screen {
                 if (bomb != null && bomb.isFlying()) {
                     bomb.draw(batch);
                 }
+            }
+        }
+        // Draw the aiming
+        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
+        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        if (player.isAiming()) {
+            drawAimRange(aimTex);
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
+                sprite.draw(batch);
             }
         }
         // Debug overlays
