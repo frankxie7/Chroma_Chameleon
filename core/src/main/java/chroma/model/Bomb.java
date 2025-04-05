@@ -40,7 +40,7 @@ public class Bomb extends ObstacleSprite {
         obstacle = new WheelObstacle(startPos.x, startPos.y, s/2);
         obstacle.setPhysicsUnits(units);
         // For manual movement, a Kinematic body is often best:
-        obstacle.setBodyType(BodyType.KinematicBody);
+        obstacle.setBodyType(BodyType.DynamicBody);
 
         obstacle.setSensor(true);
         obstacle.setUserData(this);
