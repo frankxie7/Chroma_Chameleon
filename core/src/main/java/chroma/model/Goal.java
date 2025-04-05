@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.Poly2;
@@ -35,19 +37,19 @@ public class Goal extends ObstacleSprite {
      * @param units    The physics scale factor (pixels per world unit).
      * @param settings Additional settings from a JSON config (unused here).
      */
-    public Goal(float[] points,boolean edge, float units, JsonValue settings) {
+    public Goal(float[] points, float units, JsonValue settings) {
         // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
         obstacle.setDensity(0);
         obstacle.setFriction(0);
         obstacle.setRestitution(0);
-        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
+        obstacle.setBodyType(BodyType.StaticBody);
         obstacle.setUserData(this);
-        obstacle.setSensor(true);
         obstacle.setName("goal");
+        obstacle.setPhysicsUnits(units);
         this.units = units;
         this.points = points;
-        obstacle.setPhysicsUnits(units);
+
 
 
         short[] indices = { 0, 1, 2, 0, 2, 3};
@@ -96,10 +98,5 @@ public class Goal extends ObstacleSprite {
 
     public boolean isFull(){
         return full;
-    }
-
-    public void update(float dt) {
-        // Then call the superclass update
-        super.update(dt);
     }
 }

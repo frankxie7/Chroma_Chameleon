@@ -199,7 +199,7 @@ public class PhysicsController implements ContactListener {
                 float x = center.x + row *  boxRad;
                 float y = center.y + col * boxRad;
                 boolean edge = row == gridSize - 1 || col == gridSize - 1;
-                Goal tile = createTile(x, y,boxRad,edge, units, settings);
+                Goal tile = createTile(x, y,boxRad, units, settings);
                 goalList[index] = tile;
                 addObject(tile);
                 index+=1;
@@ -216,7 +216,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad,boolean edge, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -233,7 +233,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints,edge, units, settings);
+        return new Goal(goalPoints, units, settings);
     }
 
     /**
@@ -313,7 +313,6 @@ public class PhysicsController implements ContactListener {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
-
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
@@ -324,6 +323,13 @@ public class PhysicsController implements ContactListener {
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
 //            System.out.println("Player entered spray; count = " + sprayContactCount);
+        }
+        // Handle bomb and goal collisons
+        if ((userDataA instanceof Goal && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Goal)) {
+            Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
+            goal.setFull();
+            System.out.println("A goal tile has been hit");
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)
@@ -383,7 +389,16 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
+
+
+    @Override public void preSolve(Contact contact, Manifold oldManifold) {
+        Object a = contact.getFixtureA().getBody().getUserData();
+        Object b = contact.getFixtureB().getBody().getUserData();
+
+        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
+            contact.setEnabled(false);  // disables physical collision response
+        }
+    }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
     public boolean didPlayerCollideWithEnemy() {

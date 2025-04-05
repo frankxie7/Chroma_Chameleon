@@ -358,7 +358,7 @@ public class GameplayController implements Screen {
         bomb.getObstacle().setName("bomb");
 
         level.getBombs().add(bomb);
-        physics.queueObject(bomb);
+        physics.addObject(bomb);
     }
 
 

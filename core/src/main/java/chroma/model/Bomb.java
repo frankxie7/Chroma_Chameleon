@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -25,10 +26,11 @@ public class Bomb extends ObstacleSprite{
         obstacle.setFriction( settings.getFloat( "friction", 0 ) );
         obstacle.setRestitution( settings.getFloat( "restitution", 0 ) );
         obstacle.setPhysicsUnits( units );
-        obstacle.setBodyType( BodyType.StaticBody);
+        obstacle.setBodyType( BodyType.DynamicBody);
         obstacle.setSensor(true);
         obstacle.setUserData( this );
         obstacle.setName( "bomb" );
+
         debug = ParserUtils.parseColor( settings.get( "debug" ), Color.WHITE );
         mesh.set( -radius, -radius, 2 * radius, 2 * radius );
         int count = mesh.vertexCount();
