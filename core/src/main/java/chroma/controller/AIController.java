@@ -129,11 +129,11 @@ public class AIController {
                 return true;
             }
         }
-        for (Terrain platform : platforms) {
-            if (platform.contains(position)) {
-                return true;
-            }
-        }
+//        for (Terrain platform : platforms) {
+//            if (platform.contains(position)) {
+//                return true;
+//            }
+//        }
         for (Goal goal : goals) {
             if (goal.contains(position)) {
                 return true;
@@ -317,7 +317,6 @@ public class AIController {
         // Set movement variables like the player
         float hmove = direction.x;
         float vmove = direction.y;
-//        System.out.println("Enemy: " + enemy.getName() + "Moving with hmove: "+ hmove +" and vmove: " + vmove);
 
         // Apply movement similar to the player
         enemy.setMovement(hmove * speed);

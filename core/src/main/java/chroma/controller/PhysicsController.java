@@ -48,9 +48,9 @@ public class PhysicsController implements ContactListener {
     private int sprayContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 30;
+    private int numRays = 20;
     //Length of the rays
-    private float rayLength = 3f;
+    private float rayLength = 4f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -59,15 +59,18 @@ public class PhysicsController implements ContactListener {
     private float[] goalPoints;
     //List of Goal Tiles
     private Goal[] goalList;
+    //Index
+    private int index;
 
-    public PhysicsController(float gravityY,AssetDirectory directory) {
+    public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         points = new float[6];
         goalPoints = new float[8];
-        goalList = new Goal[100];
+        goalList = new Goal[numGoals];
+        index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
     }
@@ -122,32 +125,77 @@ public class PhysicsController implements ContactListener {
      * @param obstacle the Chameleon
      * @param angle the angle to shoot the rays
      */
-    public void shootRays(Chameleon obstacle,float angle) {
-        float angleStep = (float) Math.PI/2f / (float) numRays;
+//    public void shootRays(Chameleon obstacle,float angle) {
+//        float angleStep = (float) Math.PI/2f / (float) numRays;
+//        for (int i = 0; i < numRays; i++) {
+//            float angleOffset = (i - numRays / 2f) * angleStep;
+//            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
+//                (float) Math.sin(angle +angleOffset)).nor();
+//            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
+//            RayCastCallback callback = (fixture, point, normal, fraction) -> {
+//                Object userData = fixture.getBody().getUserData();
+//                if (userData instanceof Spray || userData instanceof Bomb) {
+//                    return -1f;
+//                }
+//                if(userData instanceof Goal){
+//                    Goal tile = (Goal) userData;
+//                    tile.setFull();
+//                    return -1f;
+//                }
+//
+//                endPoint.set(point);
+//                return fraction;
+//            };
+//            world.rayCast(callback,obstacle.getPosition(),endPoint);
+//            endpoints[i] = new Vector2(endPoint);
+//        }
+//    }
+    public void shootRays(Chameleon obstacle, float angle) {
+        float angleStep = (float)(Math.PI / 2.0) / numRays;
         for (int i = 0; i < numRays; i++) {
-            float angleOffset = (i - numRays / 2f) * angleStep;
-            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
-                (float) Math.sin(angle +angleOffset)).nor();
-            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
-            RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                Object userData = fixture.getBody().getUserData();
-                if (userData instanceof Spray || userData instanceof Bomb) {
-                    return -1f;
+            float angleOffset = (i - numRays / 2.0f) * angleStep;
+            float currentAngle = angle + angleOffset;
+            float customRadius = computeRadiusForAngle(angleOffset);
+            Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
+            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            RayCastCallback callback = new RayCastCallback() {
+                @Override
+                public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
+                    Object userData = fixture.getBody().getUserData();
+                    if (userData instanceof Spray || userData instanceof Bomb) {
+                        return -1f;
+                    }
+                    if (userData instanceof Goal) {
+                        Goal tile = (Goal) userData;
+                        tile.setFull();
+                        return -1f;
+                    }
+                    endPoint.set(point);
+                    return fraction;
                 }
-                if(userData instanceof Goal){
-                    Goal tile = (Goal) userData;
-                    tile.setFull();
-                    return -1f;
-                }
-
-                endPoint.set(point);
-                return fraction;
             };
-            world.rayCast(callback,obstacle.getPosition(),endPoint);
+            world.rayCast(callback, obstacle.getPosition(), endPoint);
             endpoints[i] = new Vector2(endPoint);
         }
     }
 
+
+//    private float computeRadiusForAngle(float angleOffset) {
+//        float halfFanAngle = (float) (Math.PI / 4.0);
+//        float normalized = angleOffset / halfFanAngle;
+//        float alpha = 0.6f;
+//        float factor = 1 - alpha * normalized * normalized;
+//        return rayLength * factor;
+//    }
+
+    private float computeRadiusForAngle(float angleOffset) {
+        float halfFanAngle = (float)(Math.PI / 4.0);
+        float normalized = angleOffset / halfFanAngle;
+        float centerFactor = 1.2f;
+        float tailFactor = 0.1f;
+        float factor = tailFactor + (centerFactor - tailFactor) * (float)Math.cos(normalized * Math.PI / 2);
+        return rayLength * factor;
+    }
     /**
      * Adds the Spray objects created by the raycasting code
      * @param avatar the Chameleon
@@ -190,16 +238,14 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center, float units, JsonValue settings){
-        int gridSize = 10;
+    public void createGoal(Vector2 center,int gridSize, float units, JsonValue settings){
         float boxRad = 0.2f;
-        int index = 0;
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
                 float x = center.x + row *  boxRad;
                 float y = center.y + col * boxRad;
                 boolean edge = row == gridSize - 1 || col == gridSize - 1;
-                Goal tile = createTile(x, y,boxRad,edge, units, settings);
+                Goal tile = createTile(x, y,boxRad, units, settings);
                 goalList[index] = tile;
                 addObject(tile);
                 index+=1;
@@ -216,7 +262,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad,boolean edge, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -233,7 +279,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints,edge, units, settings);
+        return new Goal(goalPoints, units, settings);
     }
 
     /**
@@ -313,7 +359,6 @@ public class PhysicsController implements ContactListener {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
-
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
@@ -324,6 +369,13 @@ public class PhysicsController implements ContactListener {
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
 //            System.out.println("Player entered spray; count = " + sprayContactCount);
+        }
+        // Handle bomb and goal collisons
+        if ((userDataA instanceof Goal && userDataB instanceof Bomb) ||
+            (userDataA instanceof Bomb && userDataB instanceof Goal)) {
+            Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
+            Bomb bomb = userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB;
+            goal.setFull();
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)
@@ -345,7 +397,9 @@ public class PhysicsController implements ContactListener {
         // Check for win condition
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
-            playerWithDoor = true;
+            if(goalsFull()){
+                playerWithDoor = true;
+            }
         }
     }
 
@@ -384,7 +438,16 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
+
+
+    @Override public void preSolve(Contact contact, Manifold oldManifold) {
+        Object a = contact.getFixtureA().getBody().getUserData();
+        Object b = contact.getFixtureB().getBody().getUserData();
+
+        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
+            contact.setEnabled(false);  // disables physical collision response
+        }
+    }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
     public boolean didPlayerCollideWithEnemy() {
@@ -395,6 +458,16 @@ public class PhysicsController implements ContactListener {
 
     public void resetCollisionFlags() {
         playerCollidedWithEnemy = false;
+    }
+
+    public boolean goalsFull(){
+        boolean win = true;
+        for(Goal goal : goalList){
+            if(!goal.isFull()){
+                win = false;
+            }
+        }
+        return win;
     }
 
     public boolean didPlayerCollideWithBomb() {

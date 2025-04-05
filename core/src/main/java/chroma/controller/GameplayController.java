@@ -48,6 +48,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
+    private int numGoals = 500;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -120,7 +121,7 @@ public class GameplayController implements Screen {
         this.units  = 1.0f;
 
         // Initialize the PhysicsController
-        physics = new PhysicsController(gravityY, directory);
+        physics = new PhysicsController(gravityY,numGoals, directory);
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
@@ -151,7 +152,7 @@ public class GameplayController implements Screen {
             physics.dispose();
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
-        physics = new PhysicsController(gravityY, directory);
+        physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
         failed = false;
@@ -160,12 +161,20 @@ public class GameplayController implements Screen {
         // Build the level with the current `units`
         level = new Level(directory, units, constants);
 
+        for (WallDepth walldepth : level.getWalldepths()) {
+            physics.addObject(walldepth);
+        }
+        // Add all walls
+        for (Terrain wall : level.getWalls()) {
+            physics.addObject(wall);
+        }
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
-        physics.createGoal(new Vector2(3,14.5f),units, constants);
+        physics.createGoal(new Vector2(3f,14.5f),10,units, constants);
+        physics.createGoal(new Vector2(15.5f,1.5f),20,units, constants);
 
         // Initialize AI
         aiControllers = new ArrayList<>();
@@ -176,13 +185,10 @@ public class GameplayController implements Screen {
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
-        // Add all walls and platforms
-        for (Terrain wall : level.getWalls()) {
-            physics.addObject(wall);
-        }
-        for (Terrain platform : level.getPlatforms()) {
-            physics.addObject(platform);
-        }
+
+
+
+
     }
 
     /**
@@ -232,12 +238,7 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
-        boolean win = true;
-        for(Goal goal : physics.getGoalList()){
-            if(!goal.isFull()){
-                win = false;
-            }
-        }
+        boolean win = physics.goalsFull();
         if(win){
             System.out.println("The player has filled the goal tiles");
         }
@@ -271,7 +272,14 @@ public class GameplayController implements Screen {
                 removeBomb(b);
             }
         }
-
+        for (Bomb b : level.getBombs()) {
+            b.update(dt);
+            // If you want to check collisions or do "landing" logic, do it here:
+            if (b.isExpired()) {
+                removeBomb(b);
+            }
+            // Or if b hits a certain target or distance, b.setFlying(false);
+        }
         // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy()) {
             setFailure(true);
@@ -350,25 +358,32 @@ public class GameplayController implements Screen {
      * Helper for creating the bomb
      * */
     private void createBomb() {
-        // Get the mouse position in screen coordinates.
+        // 1) Mouse → world position
         Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-        // Convert to world coordinates (in pixel space) taking into account camera translation.
         camera.unproject(screenPos);
+        Vector2 targetPos = new Vector2(screenPos.x / units, screenPos.y / units);
 
-        Vector2 clampedBombPos = clampBombPos(screenPos);
-        // Convert pixel coordinates to Box2D world units.
-        Vector2 pos = new Vector2(clampedBombPos.x/ units, clampedBombPos.y/ units);
+        // 2) Player position
+        Vector2 playerPos = player.getObstacle().getPosition();
 
-        Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
-        JsonValue bombData = constants.get("bomb");
+        // 3) Straight‐line velocity from player -> target
+        float speed = 10f; // or get from JSON
+        Vector2 velocity = new Vector2(targetPos).sub(playerPos).nor().scl(speed);
 
-        Bomb bomb = new Bomb(units, bombData, pos);
+        // 4) Build the Bomb
+        Texture bombTex   = directory.getEntry("platform-bullet", Texture.class);
+        JsonValue bombData= constants.get("bomb");
+
+        Bomb bomb = new Bomb(units, bombData, playerPos, velocity, targetPos);
         bomb.setTexture(bombTex);
         bomb.getObstacle().setName("bomb");
 
+        // 5) Add to the game
         level.getBombs().add(bomb);
-        physics.queueObject(bomb);
+        physics.addObject(bomb);
     }
+
+
 
 
     /**
@@ -511,7 +526,10 @@ public class GameplayController implements Screen {
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {
-                sprite.draw(batch);
+                Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
+                if (bomb != null && !bomb.isFlying()) {
+                    bomb.draw(batch);
+                }
             }
         }
 
@@ -521,7 +539,14 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
-
+        for (ObstacleSprite sprite : physics.objects) {
+            if ("bomb".equals(sprite.getName())) {
+                Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
+                if (bomb != null && bomb.isFlying()) {
+                    bomb.draw(batch);
+                }
+            }
+        }
         // Debug overlays
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
@@ -559,33 +584,22 @@ public class GameplayController implements Screen {
     /**
      * Center the camera on the player and clamp to map bounds.
      */
+    /**
+     * Center the camera on the player at all times (no boundaries).
+     */
     private void updateCamera() {
-        float mapWidth  = worldWidth  * units;
-        float mapHeight = worldHeight * units;
-
+        // Get the player's position in Box2D world units
         Vector2 playerPos = level.getAvatar().getObstacle().getPosition();
+
+        // Multiply by 'units' to convert to screen/pixel space
         float desiredCamX = playerPos.x * units;
         float desiredCamY = playerPos.y * units;
 
-        float halfViewWidth  = camera.viewportWidth  / 2f;
-        float halfViewHeight = camera.viewportHeight / 2f;
-
-        // Clamp horizontally
-        if (desiredCamX < halfViewWidth) {
-            desiredCamX = halfViewWidth;
-        } else if (desiredCamX > mapWidth - halfViewWidth) {
-            desiredCamX = mapWidth - halfViewWidth;
-        }
-        // Clamp vertically
-        if (desiredCamY < halfViewHeight) {
-            desiredCamY = halfViewHeight;
-        } else if (desiredCamY > mapHeight - halfViewHeight) {
-            desiredCamY = mapHeight - halfViewHeight;
-        }
-
+        // Simply set the camera position to the player's position
         camera.position.set(desiredCamX, desiredCamY, 0);
         camera.update();
     }
+
 
     /**
      * The main render loop.
