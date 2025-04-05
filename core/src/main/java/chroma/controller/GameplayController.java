@@ -235,12 +235,7 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
-        boolean win = true;
-        for(Goal goal : physics.getGoalList()){
-            if(!goal.isFull()){
-                win = false;
-            }
-        }
+        boolean win = physics.goalsFull();
         if(win){
             System.out.println("The player has filled the goal tiles");
         }

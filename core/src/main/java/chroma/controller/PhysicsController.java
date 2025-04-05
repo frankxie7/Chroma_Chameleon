@@ -396,7 +396,9 @@ public class PhysicsController implements ContactListener {
         // Check for win condition
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
-            playerWithDoor = true;
+            if(goalsFull()){
+                playerWithDoor = true;
+            }
         }
     }
 
@@ -455,6 +457,16 @@ public class PhysicsController implements ContactListener {
 
     public void resetCollisionFlags() {
         playerCollidedWithEnemy = false;
+    }
+
+    public boolean goalsFull(){
+        boolean win = true;
+        for(Goal goal : goalList){
+            if(!goal.isFull()){
+                win = false;
+            }
+        }
+        return win;
     }
 
     public boolean didPlayerCollideWithBomb() {
