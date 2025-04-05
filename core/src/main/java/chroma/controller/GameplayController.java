@@ -48,6 +48,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
+    private int numGoals = 500;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -119,7 +120,7 @@ public class GameplayController implements Screen {
         this.units  = 1.0f;
 
         // Initialize the PhysicsController
-        physics = new PhysicsController(gravityY, directory);
+        physics = new PhysicsController(gravityY,numGoals, directory);
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
@@ -150,7 +151,7 @@ public class GameplayController implements Screen {
             physics.dispose();
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
-        physics = new PhysicsController(gravityY, directory);
+        physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
         failed = false;
@@ -171,7 +172,8 @@ public class GameplayController implements Screen {
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
-        physics.createGoal(new Vector2(3,14.5f),units, constants);
+        physics.createGoal(new Vector2(3f,14.5f),10,units, constants);
+        physics.createGoal(new Vector2(15.5f,1.5f),20,units, constants);
 
         // Initialize AI
         aiControllers = new ArrayList<>();

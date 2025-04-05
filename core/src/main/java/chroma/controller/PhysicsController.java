@@ -59,15 +59,18 @@ public class PhysicsController implements ContactListener {
     private float[] goalPoints;
     //List of Goal Tiles
     private Goal[] goalList;
+    //Index
+    private int index;
 
-    public PhysicsController(float gravityY,AssetDirectory directory) {
+    public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
         objects = new PooledList<>();
         addQueue = new PooledList<>();
         points = new float[6];
         goalPoints = new float[8];
-        goalList = new Goal[100];
+        goalList = new Goal[numGoals];
+        index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
     }
@@ -235,10 +238,8 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center, float units, JsonValue settings){
-        int gridSize = 10;
+    public void createGoal(Vector2 center,int gridSize, float units, JsonValue settings){
         float boxRad = 0.2f;
-        int index = 0;
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
                 float x = center.x + row *  boxRad;
