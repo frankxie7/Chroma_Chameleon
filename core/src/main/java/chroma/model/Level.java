@@ -98,7 +98,7 @@ public class Level {
                 }
 
                 // 2) Get the "depth" from JSON or define a default
-                float depth = depthsdata.getFloat("depth", 0.8f);
+                float depth = depthsdata.getFloat("depth", 1.5f);
 
                 // 3) Create new coordinates for the depth rectangle
                 float[] depthCoords = makeDepthRectangle(x1, y1, x2, y2, depth);
