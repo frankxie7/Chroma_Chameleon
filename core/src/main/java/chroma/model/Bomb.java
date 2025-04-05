@@ -12,7 +12,7 @@ import edu.cornell.gdiac.graphics.SpriteBatch;
 public class Bomb extends ObstacleSprite {
     // For the bomb to appear “in flight” visually
     private static final float GRAVITY  = 30f; // tune as needed for arc
-    private static final float LIFETIME = 3f;
+    private static final float LIFETIME = 4f;
 
     /** Horizontal velocity in physics units (straight line) */
     private Vector2 velocity;
@@ -46,7 +46,6 @@ public class Bomb extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("bomb");
 
-        // If needed from JSON:
         obstacle.setDensity(settings.getFloat("density", 0));
         obstacle.setFriction(settings.getFloat("friction", 0));
         obstacle.setRestitution(settings.getFloat("restitution", 0));
@@ -65,7 +64,7 @@ public class Bomb extends ObstacleSprite {
 
         // Start the “arc” at z=0, with an initial upward velocity
         this.z   = 0f;
-        this.vz  = 8f; // tweak as desired for arc height
+        this.vz  = 10f; // tweak as desired for arc height
         this.flying = true;
     }
 
