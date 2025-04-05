@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 /**
  * Level
@@ -26,6 +27,7 @@ public class Level {
     private List<Terrain> platforms;
     private List<Bomb> bombs;
     private List<Spray> sprays;
+    private List<WallDepth> depths;
 
     public Level(AssetDirectory directory, float units, JsonValue constants) {
         // Create the goal door
@@ -75,23 +77,62 @@ public class Level {
             }
         }
 
-        // Create platforms
-        platforms = new ArrayList<>();
-        JsonValue platsData = constants.get("platforms");
-        if (platsData != null) {
+
+        depths = new ArrayList<>();
+        JsonValue depthsdata = constants.get("walls");
+        if (depthsdata != null) {
             Texture platTex = directory.getEntry("shared-earth", Texture.class);
-            JsonValue platPositions = platsData.get("positions");
+            JsonValue platPositions = depthsdata.get("positions");
             for (int i = 0; i < platPositions.size; i++) {
                 float[] coords = platPositions.get(i).asFloatArray();
-                Terrain platform = new Terrain(coords, units, platsData);
-                platform.setTexture(platTex);
-                platforms.add(platform);
+                // Create the primary wall terrain
+                float x1 = coords[0];
+                float y1 = coords[1];
+                float x2 = coords[2];
+                float y2 = coords[3];
+
+                if (x1 > x2) {
+                    float tempX = x1;  float tempY = y1;
+                    x1 = x2;          y1 = y2;
+                    x2 = tempX;       y2 = tempY;
+                }
+
+                // 2) Get the "depth" from JSON or define a default
+                float depth = depthsdata.getFloat("depth", 1.5f);
+
+                // 3) Create new coordinates for the depth rectangle
+                float[] depthCoords = makeDepthRectangle(x1, y1, x2, y2, depth);
+                System.out.println("Depth coordinates: " + java.util.Arrays.toString(depthCoords));
+                // 4) Construct a second object for the vertical portion
+                WallDepth depthWall = new WallDepth(depthCoords, units, depthsdata);
+                depthWall.setTexture(platTex); // or a different texture if you prefer
+
+                // 5) Store or add it to an ArrayList for your depth walls
+                depths.add(depthWall);
             }
         }
+
 
         bombs = new ArrayList<>();
         sprays = new ArrayList<>();
     }
+
+    /**
+     * Creates a rectangle for the "vertical" depth based on a top edge and a depth amount,
+     * in CCW order: (top-left) → (bottom-left) → (bottom-right) → (top-right).
+     *
+     * The top edge is (x1,y1)->(x2,y2), extruded downward by 'depth'.
+     */
+    private float[] makeDepthRectangle(float x1, float y1, float x2, float y2, float depth) {
+        return new float[] {
+            x1, y1,            // top-left
+            x1, y1 - depth,    // bottom-left
+            x2, y2 - depth,    // bottom-right
+            x2, y2             // top-right
+        };
+    }
+
+
 
     public Door getGoalDoor() {
         return goalDoor;
@@ -119,5 +160,9 @@ public class Level {
 
     public List<Spray> getSprays() {
         return sprays;
+    }
+
+    public List<WallDepth> getWalldepths() {
+        return depths;
     }
 }

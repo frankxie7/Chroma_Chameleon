@@ -48,9 +48,9 @@ public class PhysicsController implements ContactListener {
     private int sprayContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 30;
+    private int numRays = 20;
     //Length of the rays
-    private float rayLength = 3f;
+    private float rayLength = 4f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -122,32 +122,77 @@ public class PhysicsController implements ContactListener {
      * @param obstacle the Chameleon
      * @param angle the angle to shoot the rays
      */
-    public void shootRays(Chameleon obstacle,float angle) {
-        float angleStep = (float) Math.PI/2f / (float) numRays;
+//    public void shootRays(Chameleon obstacle,float angle) {
+//        float angleStep = (float) Math.PI/2f / (float) numRays;
+//        for (int i = 0; i < numRays; i++) {
+//            float angleOffset = (i - numRays / 2f) * angleStep;
+//            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
+//                (float) Math.sin(angle +angleOffset)).nor();
+//            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
+//            RayCastCallback callback = (fixture, point, normal, fraction) -> {
+//                Object userData = fixture.getBody().getUserData();
+//                if (userData instanceof Spray || userData instanceof Bomb) {
+//                    return -1f;
+//                }
+//                if(userData instanceof Goal){
+//                    Goal tile = (Goal) userData;
+//                    tile.setFull();
+//                    return -1f;
+//                }
+//
+//                endPoint.set(point);
+//                return fraction;
+//            };
+//            world.rayCast(callback,obstacle.getPosition(),endPoint);
+//            endpoints[i] = new Vector2(endPoint);
+//        }
+//    }
+    public void shootRays(Chameleon obstacle, float angle) {
+        float angleStep = (float)(Math.PI / 2.0) / numRays;
         for (int i = 0; i < numRays; i++) {
-            float angleOffset = (i - numRays / 2f) * angleStep;
-            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
-                (float) Math.sin(angle +angleOffset)).nor();
-            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
-            RayCastCallback callback = (fixture, point, normal, fraction) -> {
-                Object userData = fixture.getBody().getUserData();
-                if (userData instanceof Spray || userData instanceof Bomb) {
-                    return -1f;
+            float angleOffset = (i - numRays / 2.0f) * angleStep;
+            float currentAngle = angle + angleOffset;
+            float customRadius = computeRadiusForAngle(angleOffset);
+            Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
+            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            RayCastCallback callback = new RayCastCallback() {
+                @Override
+                public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
+                    Object userData = fixture.getBody().getUserData();
+                    if (userData instanceof Spray || userData instanceof Bomb) {
+                        return -1f;
+                    }
+                    if (userData instanceof Goal) {
+                        Goal tile = (Goal) userData;
+                        tile.setFull();
+                        return -1f;
+                    }
+                    endPoint.set(point);
+                    return fraction;
                 }
-                if(userData instanceof Goal){
-                    Goal tile = (Goal) userData;
-                    tile.setFull();
-                    return -1f;
-                }
-
-                endPoint.set(point);
-                return fraction;
             };
-            world.rayCast(callback,obstacle.getPosition(),endPoint);
+            world.rayCast(callback, obstacle.getPosition(), endPoint);
             endpoints[i] = new Vector2(endPoint);
         }
     }
 
+
+//    private float computeRadiusForAngle(float angleOffset) {
+//        float halfFanAngle = (float) (Math.PI / 4.0);
+//        float normalized = angleOffset / halfFanAngle;
+//        float alpha = 0.6f;
+//        float factor = 1 - alpha * normalized * normalized;
+//        return rayLength * factor;
+//    }
+
+    private float computeRadiusForAngle(float angleOffset) {
+        float halfFanAngle = (float)(Math.PI / 4.0);
+        float normalized = angleOffset / halfFanAngle;
+        float centerFactor = 1.2f;
+        float tailFactor = 0.1f;
+        float factor = tailFactor + (centerFactor - tailFactor) * (float)Math.cos(normalized * Math.PI / 2);
+        return rayLength * factor;
+    }
     /**
      * Adds the Spray objects created by the raycasting code
      * @param avatar the Chameleon
