@@ -336,7 +336,6 @@ public class Chameleon extends ObstacleSprite {
             velocity.nor().scl(getMaxSpeed());
             obstacle.getBody().setLinearVelocity(velocity);
         }
-
     }
 
     /**

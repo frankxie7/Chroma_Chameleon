@@ -463,7 +463,7 @@ public class GameplayController implements Screen {
                 float tileY = y * units;
                 String coordText = "(" + x + "," + y + ")";
 
-                font.draw(batch, coordText, tileX + units / 4f, tileY + units / 2f);
+                font.draw(batch, coordText, tileX, tileY);
             }
         }
     }
@@ -530,12 +530,12 @@ public class GameplayController implements Screen {
 
             // Uncomment to see AI Enemy debugging (from AIController)
 //            drawMapCoords(batch);
-
-//            batch.end();
-//            for (AIController aiController : aiControllers) {
-//                aiController.debugRender(camera); // Call debug grid rendering
-//            }
-//            batch.begin(); // Resume SpriteBatch rendering
+//
+            batch.end();
+            for (AIController aiController : aiControllers) {
+                aiController.debugRender(camera); // Call debug grid rendering
+            }
+            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects

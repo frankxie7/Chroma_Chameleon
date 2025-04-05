@@ -53,7 +53,8 @@ public class Level {
             JsonValue enemyPatrolPath = enemiesData.get("patrol_paths");
             JsonValue enemyDetectionRange = enemiesData.get("detection-range");
             JsonValue enemyFOV = enemiesData.get("fov");
-            JsonValue enemyRotation = enemiesData.get("rotation");
+            JsonValue enemyStartRotation = enemiesData.get("startRotation");
+            JsonValue enemyRotateAngles = enemiesData.get("rotateAngle");
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords = enemyPositions.get(i).asFloatArray();
                 String name = enemyNames.get(i).asString();
@@ -68,8 +69,9 @@ public class Level {
 
                 float detectionRange = enemyDetectionRange.get(i).asFloat();
                 float fov = enemyFOV.get(i).asFloat();
-                float rotation = enemyRotation.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, name, type, patrol, patrolPathList, detectionRange, fov, rotation, units, enemiesData);
+                float startRotation = enemyStartRotation.get(i).asFloat();
+                float rotateAngle = enemyRotateAngles.get(i).asFloat();
+                Enemy enemy = new Enemy(coords, name, type, patrol, patrolPathList, detectionRange, fov, startRotation, rotateAngle, units, enemiesData);
                 enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }

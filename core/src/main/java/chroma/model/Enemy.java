@@ -44,6 +44,9 @@ public class Enemy extends ObstacleSprite {
 
     private float rotation;
     private float startRotation;
+    /** Min and Max angles for camera rotation */
+    private float minRotation;
+    private float maxRotation;
 
     /** Sensor */
     private Path2 sensorOutline;
@@ -55,7 +58,7 @@ public class Enemy extends ObstacleSprite {
 
     private Enemy.Type type;
 
-    public Enemy(float[] position, String name, String type, boolean patrol, List<float[]> patrolPath, float detectionRange, float fov, float startRotation, float units, JsonValue data) {
+    public Enemy(float[] position, String name, String type, boolean patrol, List<float[]> patrolPath, float detectionRange, float fov, float startRotation, float rotateAngle, float units, JsonValue data) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -63,6 +66,8 @@ public class Enemy extends ObstacleSprite {
         this.fov = fov;
         this.startRotation = startRotation;
         this.rotation = startRotation;
+        this.minRotation = startRotation - rotateAngle % 360;
+        this.maxRotation = startRotation + rotateAngle % 360;
 
         JsonValue debugInfo = data.get("debug");
         float s = data.getFloat("size");
@@ -131,7 +136,7 @@ public class Enemy extends ObstacleSprite {
 
     public float getRotation() {
         if (type == Type.CAMERA) {
-            return rotation; // Cameras use their own stored rotation
+            return (float) Math.toRadians(rotation); // Cameras use their own stored rotation
         }
 
         Vector2 velocity = obstacle.getBody().getLinearVelocity();
@@ -143,8 +148,12 @@ public class Enemy extends ObstacleSprite {
 
         return (float) Math.atan2(velocity.y, velocity.x);
     }
-
-    public void setRotation(float angle) { this.rotation = angle; }
+    public void setRotation(float angle) {
+        this.rotation = ((float) Math.toDegrees(angle)) % 360f;
+        if (this.rotation < 0) this.rotation += 360f; // Keep it in [0, 360)
+    }
+    public float getMinRotation() { return (float) Math.toRadians(minRotation); }
+    public float getMaxRotation() { return (float) Math.toRadians(maxRotation); }
 
     private Vector2 targetVelocity = new Vector2();
     private Vector2 currentVelocity = new Vector2();
@@ -156,8 +165,6 @@ public class Enemy extends ObstacleSprite {
         }
 
         Vector2 pos = obstacle.getPosition();
-        float vx = obstacle.getVX();
-        float vy = obstacle.getVY();
         Body body = obstacle.getBody();
 
         // Get the current movement direction
@@ -171,6 +178,8 @@ public class Enemy extends ObstacleSprite {
         // Scale by force and apply smoothing
         targetVelocity.scl(getForce());
         currentVelocity.lerp(targetVelocity, turnSmoothing); // Smoothly transition
+
+//        System.out.println(getName() + ": " + currentVelocity);
 
         // Apply the interpolated force
         body.applyForce(currentVelocity, pos, true);
