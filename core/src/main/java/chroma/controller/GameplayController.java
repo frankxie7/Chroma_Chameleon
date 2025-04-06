@@ -358,7 +358,7 @@ public class GameplayController implements Screen {
         Vector2 playerPos = player.getObstacle().getPosition();
 
         // 3) Straight‐line velocity from player -> target
-        float speed = 10f; // or get from JSON
+        float speed = 6f; // or get from JSON
         Vector2 velocity = new Vector2(targetPos).sub(playerPos).nor().scl(speed);
 
         // 4) Build the Bomb
