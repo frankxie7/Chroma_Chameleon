@@ -6,7 +6,7 @@
       "wrapV": "repeated"
     },
     "shared-goal":   "shared/goaldoor.png",
-    "platform-traci"    : "platform/traci.png",
+    "platform-traci"    : "platform/enemy.png",
     "platform-chameleon": "platform/idle.png",
     "platform-rope"     : "platform/ropebridge.png",
     "platform-barrier"  : "platform/barrier.png",
