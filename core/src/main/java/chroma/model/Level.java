@@ -1,6 +1,9 @@
 package chroma.model;
 
+import chroma.controller.AnimationHelper;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -37,12 +40,12 @@ public class Level {
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
 
-        // Create the chameleon (player)
-        Texture avatarTex = directory.getEntry("platform-chameleon", Texture.class);
+        // Create the chameleon (player) using animation
+        Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
+        Animation<TextureRegion> chameleonAnim = AnimationHelper.createAnimation(chameleonSheet, 13, 0.1f);
         JsonValue chamData = constants.get("chameleon");
-        avatar = new Chameleon(units, chamData);
-        avatar.setTexture(avatarTex);
-        avatar.createSensor();
+        avatar = new Chameleon(units, chamData, chameleonAnim);
+
 
         enemies = new ArrayList<>();
         JsonValue enemiesData = constants.get("enemies");

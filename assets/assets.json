@@ -16,7 +16,8 @@
     "floor-tiles": "platform/floortile.png",
     "aiming-range": "platform/circle.png",
     "paintBar": "platform/bar.png",
-    "paintBar-overlay": "platform/paintbaroverlay.png"
+    "paintBar-overlay": "platform/paintbaroverlay.png",
+    "chameleonSheet": "platform/chameleon.png"
   },
   "jsons"  : {
     "platform-constants": "platform/constants.json"

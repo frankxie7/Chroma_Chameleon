@@ -2,6 +2,8 @@ package chroma.model;
 
 import chroma.controller.InputController;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -43,8 +45,6 @@ public class Chameleon extends ObstacleSprite {
     private float movement;
     /** The current vertical movement of the character */
     private float verticalMovement;
-    /** Which direction is the character facing */
-    private boolean faceRight;
 
     /** How long until we can shoot again */
     private int shootCooldown;
@@ -70,10 +70,15 @@ public class Chameleon extends ObstacleSprite {
 
     //Position
     private Vector2 position;
-    // For asset rotation, nothing to do with raycasting.
+
     private float orientation = 0.0f;
     private boolean hidden;
     private Vector2 lastSeen;
+    private boolean faceRight = true;
+
+    private Animation<TextureRegion> walkAnim;
+    private float animTime;
+    private TextureRegion currentFrame;
 
     /**
      * Returns the posiiton of the Chameleon
@@ -206,7 +211,7 @@ public class Chameleon extends ObstacleSprite {
      * @param units     The physics units
      * @param data      The physics constants for Traci
      */
-    public Chameleon(float units, JsonValue data) {
+    public Chameleon(float units, JsonValue data, Animation<TextureRegion> animation) {
         this.data = data;
         JsonValue debugInfo = data.get("debug");
 
@@ -254,48 +259,13 @@ public class Chameleon extends ObstacleSprite {
 //        for (int i = 0; i < count; i++) {
 //            mesh.setColor(i, Color.PURPLE);
 //        }
+
+        this.walkAnim = animation;
+        animTime = 0;
+        TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
+        currentFrame = frames[4];
     }
 
-
-    /**
-     * Creates the sensor for Traci.
-     *
-     * We only allow the Traci to jump when she's on the ground. Double jumping
-     * is not allowed.
-     *
-     * To determine whether Traci is on the ground we create a thin sensor under
-     * her feet, which reports collisions with the world but has no collision
-     * response. This sensor is just a FIXTURE, it is not an obstacle. We will
-     * talk about the different between these later.
-     *
-     * Note this method is not part of the constructor. It can only be called
-     * once the physics obstacle has been activated.
-     */
-    public void createSensor() {
-//        Vector2 sensorCenter = new Vector2(0, -height / 2);
-//        FixtureDef sensorDef = new FixtureDef();
-//        sensorDef.density = data.getFloat("density",0);
-//        sensorDef.isSensor = true;
-//
-//        JsonValue sensorjv = data.get("sensor");
-//        float w = sensorjv.getFloat("shrink",0)*width/2.0f;
-//        float h = sensorjv.getFloat("height",0);
-//        PolygonShape sensorShape = new PolygonShape();
-//        sensorShape.setAsBox(w, h, sensorCenter, 0.0f);
-//        sensorDef.shape = sensorShape;
-//
-//        // Ground sensor to represent our feet
-//        Body body = obstacle.getBody();
-//        Fixture sensorFixture = body.createFixture( sensorDef );
-//        sensorName = "traci_sensor";
-//        sensorFixture.setUserData(sensorName);
-//
-//        // Finally, we need a debug outline
-//        float u = obstacle.getPhysicsUnits();
-//        PathFactory factory = new PathFactory();
-//        sensorOutline = new Path2();
-//        factory.makeRect( (sensorCenter.x-w/2)*u,(sensorCenter.y-h/2)*u, w*u, h*u,  sensorOutline);
-    }
 
     /**
      * Applies the force to the body of Traci
@@ -364,7 +334,22 @@ public class Chameleon extends ObstacleSprite {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
         // Update orientation based on current velocity
-        updateOrientation();
+//        updateOrientation();
+
+        if (hmove > 0) {
+            faceRight = true;
+        } else if (hmove < 0) {
+            faceRight = false;
+        }
+
+        if (hmove == 0 && vmove == 0) {
+            TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
+            currentFrame = frames[4];
+            animTime = 0;
+        } else {
+            animTime += dt;
+            currentFrame = walkAnim.getKeyFrame(animTime, true);
+        }
         // Then call the superclass update
         super.update(dt);
     }
@@ -382,7 +367,7 @@ public class Chameleon extends ObstacleSprite {
     public void draw(SpriteBatch batch) {
         // Save the current color of the batch
         Color target = isHidden() ? Color.PURPLE : Color.WHITE;
-
+        batch.setColor(target);
         // Update the mesh vertex colors dynamically.
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
@@ -393,12 +378,28 @@ public class Chameleon extends ObstacleSprite {
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
 
-        // Call the parent draw method with the transform
-        super.draw(batch, transform);
+        float px = obstacle.getX() * obstacle.getPhysicsUnits();
+        float py = obstacle.getY() * obstacle.getPhysicsUnits();
+        float drawWidth  = 64;
+        float drawHeight = 64;
 
-//        for (int i = 0; i < count; i++) {
-//            mesh.setColor(i, Color.WHITE);
-//        }
+        if (faceRight) {
+            if (currentFrame.isFlipX()) {
+                currentFrame.flip(true, false);
+            }
+        } else {
+            if (!currentFrame.isFlipX()) {
+                currentFrame.flip(true, false);
+            }
+        }
+
+        batch.draw(currentFrame,
+            px - drawWidth / 2,
+            py - drawHeight / 2,
+            drawWidth / 2, drawHeight / 2,
+            drawWidth, drawHeight,
+            1, 1,
+            0);
     }
 
 
