@@ -87,6 +87,7 @@ public class GameplayController implements Screen {
     private BitmapFont displayFont;
     private TextLayout goodMessage;
     private TextLayout badMessage;
+    private TextLayout goalMessage;
 
     //Single scale factor for world→screen
     private float units;
@@ -136,6 +137,8 @@ public class GameplayController implements Screen {
         badMessage.setColor(Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
         badMessage.setFont(displayFont);
+
+        goalMessage = new TextLayout();
 
 
         // Now that everything is ready, build the level, etc.
@@ -238,10 +241,6 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
-        boolean win = physics.goalsFull();
-        if(win){
-            System.out.println("The player has filled the goal tiles");
-        }
 
         // Update AI enemies
         boolean anyChasing = false;
@@ -582,12 +581,26 @@ public class GameplayController implements Screen {
         barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         drawPaintContainer(barTex, barOverlayTex);
 
+
         // UI messages
         if (complete && !failed) {
             batch.drawText(goodMessage, width / 2, height / 2);
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
+        int numFilled = 0;
+        for(Goal goal : physics.getGoalList()){
+            if(goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
+        goalMessage.setText("Goals filled: " + goalPercentage + "%");
+        goalMessage.setColor(Color.YELLOW);
+        goalMessage.setAlignment(TextAlign.middleCenter);
+        goalMessage.setFont(displayFont);
+        batch.drawText(goalMessage, width - 100, height - 5);
+
 
         batch.setColor(Color.WHITE);
         batch.end();
