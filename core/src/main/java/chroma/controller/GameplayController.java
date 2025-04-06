@@ -81,6 +81,7 @@ public class GameplayController implements Screen {
     private Level level;
 
     private List<AIController> aiControllers;
+    private boolean globalChase = false;
 
     // For UI messages
     private BitmapFont displayFont;
@@ -178,7 +179,9 @@ public class GameplayController implements Screen {
         // Initialize AI
         aiControllers = new ArrayList<>();
         for (Enemy enemy : level.getEnemies()) {
-            physics.addObject(enemy);
+            if (enemy.getType() != Enemy.Type.CAMERA) { // Only add physical enemies
+                physics.addObject(enemy);
+            }
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
@@ -241,16 +244,22 @@ public class GameplayController implements Screen {
         }
 
         // Update AI enemies
+        boolean anyChasing = false;
         for (AIController ai : aiControllers) {
             ai.update(dt);
+            if (ai.getPlayerDetected()) {
+                anyChasing = true;
+            }
         }
+        if (anyChasing) {
+            for (AIController ai : aiControllers) {
+                ai.setState(AIController.State.CHASE);
+            }
+        }
+        globalChase = anyChasing;
 
         // Update the state of aiming
-        if (input.didAim() && player.hasEnoughPaint(bombCost)) {
-            player.setAiming(true);
-        } else {
-            player.setAiming(false);
-        }
+        player.setAiming(input.didAim() && player.hasEnoughPaint(bombCost));
 
         // Throw a bomb on left‐click
         if (input.didTertiary() && player.hasEnoughPaint(bombCost) && input.didAim()) {
@@ -453,7 +462,25 @@ public class GameplayController implements Screen {
 
         // Draw the aiming range
         batch.draw(aimTex, startX*units - aimRange/2, startY*units - aimRange/2, aimRange, aimRange);
+    }
 
+    /**
+     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in 'draw' method to view.
+     */
+    private void drawMapCoords(SpriteBatch batch) {
+        BitmapFont font = new BitmapFont(); // Default font
+        font.setColor(Color.WHITE); // Set color to white for visibility
+        font.getData().setScale(0.5f); // Scale down text if needed
+
+        for (int x = 0; x < worldWidth; x++) {
+            for (int y = 0; y < worldHeight; y++) {
+                float tileX = x * units;
+                float tileY = y * units;
+                String coordText = "(" + x + "," + y + ")";
+
+                font.draw(batch, coordText, tileX, tileY);
+            }
+        }
     }
 
     /**
@@ -489,12 +516,7 @@ public class GameplayController implements Screen {
             }
         }
 
-        // Draw the aiming
-        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
-        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        if (player.isAiming()) {
-            drawAimRange(aimTex);
-        }
+
 
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
@@ -506,9 +528,15 @@ public class GameplayController implements Screen {
             }
         }
 
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("spray")) {
+                sprite.draw(batch);
+            }
+        }
+
         // Draw all physics objects other than bombs
         for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb"))) {
+            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb")  && !sprite.getName().equals("spray"))) {
                 sprite.draw(batch);
             }
         }
@@ -520,19 +548,31 @@ public class GameplayController implements Screen {
                 }
             }
         }
+        // Draw the aiming
+        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
+        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        if (player.isAiming()) {
+            drawAimRange(aimTex);
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
+                sprite.draw(batch);
+            }
+        }
         // Debug overlays
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
                 sprite.drawDebug(batch);
             }
 
-            // Uncomment to see ai debugging (from AIController)
-
-//            batch.end();
-//            for (AIController aiController : aiControllers) {
-//                aiController.debugRender(camera); // Call debug grid rendering
-//            }
-//            batch.begin(); // Resume SpriteBatch rendering
+            // Uncomment to see AI Enemy debugging (from AIController)
+//            drawMapCoords(batch);
+//
+            batch.end();
+            for (AIController aiController : aiControllers) {
+                aiController.debugRender(camera); // Call debug grid rendering
+            }
+            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects
@@ -654,8 +694,7 @@ public class GameplayController implements Screen {
     }
 
     public OrthographicCamera getCamera() { return camera; }
-
     public float getWorldWidth() { return worldWidth; }
-
     public float getWorldHeight() { return worldHeight; }
+    public boolean isGlobalChase() { return globalChase; }
 }
