@@ -22,8 +22,8 @@
     "border-left": "platform/border_left.png",
     "border-right": "platform/border_right.png",
     "border-top": "platform/border_top.png",
-    "wall-up": "platform/wall-up.png",
-    "wall-down": "platform/wall-down.png"
+    "wall-up": "platform/wall_up.png",
+    "wall-down": "platform/wall_down.png"
   },
   "jsons"  : {
     "platform-constants": "platform/constants.json"

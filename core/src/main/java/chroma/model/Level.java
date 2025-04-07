@@ -106,7 +106,7 @@ public class Level {
         if (wallsData != null) {
             // If wallsData contains the "data" array, it indicates that tile layer data is being used.
             if (wallsData.has("data")) {
-                Texture wallTex = directory.getEntry("border-left", Texture.class);
+                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
                 // Get the tile layer's width and height (measured in tiles, i.e., physics units).
                 int layerWidth = wallsData.getInt("width");
                 int layerHeight = wallsData.getInt("height");
