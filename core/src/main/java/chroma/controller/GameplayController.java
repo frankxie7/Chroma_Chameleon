@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -126,6 +127,35 @@ public class GameplayController implements Screen {
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
+        float targetWidth = Gdx.graphics.getWidth() * 0.8f;
+        float targetHeight = Gdx.graphics.getHeight() * 0.1f; // optional for height limit
+
+// Set a default font scale
+        float baseScale = 1.0f;
+        displayFont.getData().setScale(baseScale);
+
+// Measure both messages
+        GlyphLayout layout = new GlyphLayout();
+
+        layout.setText(displayFont, "VICTORY!");
+        float victoryWidth = layout.width;
+        float victoryHeight = layout.height;
+
+        layout.setText(displayFont, "FAILURE!");
+        float failureWidth = layout.width;
+        float failureHeight = layout.height;
+
+// Choose the larger width or height to normalize
+        float maxWidth = Math.max(victoryWidth, failureWidth);
+        float maxHeight = Math.max(victoryHeight, failureHeight);
+
+// Scale factor to make both messages fit the same bounding box
+        float scale = Math.min(targetWidth / maxWidth, targetHeight / maxHeight);
+
+// Apply the scale to the font
+        displayFont.getData().setScale(scale);
+
+// Now make layouts
         goodMessage = new TextLayout();
         goodMessage.setText("VICTORY!");
         goodMessage.setColor(Color.YELLOW);
@@ -137,6 +167,7 @@ public class GameplayController implements Screen {
         badMessage.setColor(Color.RED);
         badMessage.setAlignment(TextAlign.middleCenter);
         badMessage.setFont(displayFont);
+
 
         goalMessage = new TextLayout();
 
