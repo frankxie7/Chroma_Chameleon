@@ -18,7 +18,12 @@
     "paintBar": "platform/bar.png",
     "paintBar-overlay": "platform/paintbaroverlay.png",
     "chameleonSheet": "platform/chameleon.png",
-    "tileset-export": "platform/tileset-export.png"
+    "tileset-export": "platform/tileset-export.png",
+    "border-left": "platform/border_left.png",
+    "border-right": "platform/border_right.png",
+    "border-top": "platform/border_top.png",
+    "wall-up": "platform/wall-up.png",
+    "wall-down": "platform/wall-down.png"
   },
   "jsons"  : {
     "platform-constants": "platform/constants.json"
