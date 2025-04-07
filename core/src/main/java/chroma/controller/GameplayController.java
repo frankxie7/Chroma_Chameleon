@@ -49,7 +49,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
-    private int numGoals = 500;
+    private int numGoals = 1000;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -209,8 +209,8 @@ public class GameplayController implements Screen {
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
-        physics.createGoal(new Vector2(3f,14.5f),10,units, constants);
-        physics.createGoal(new Vector2(15.5f,1.5f),20,units, constants);
+        physics.createGoal(new Vector2(3f,28.5f),10,units, constants);
+        physics.createGoal(new Vector2(23.5f,6.5f),30,units, constants);
 
         // Initialize AI
         aiControllers = new ArrayList<>();
