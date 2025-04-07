@@ -352,30 +352,24 @@ public class GameplayController implements Screen {
      * Helper for creating the bomb
      * */
     private void createBomb() {
-        // 1) Mouse → world position
         Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(screenPos);
-        Vector2 targetPos = new Vector2(screenPos.x / units, screenPos.y / units);
 
-        // 2) Player position
+        Vector2 clampedPos = clampBombPos(screenPos);
+        Vector2 targetPos = new Vector2(clampedPos.x / units, clampedPos.y / units);
         Vector2 playerPos = player.getObstacle().getPosition();
-
-        // 3) Straight‐line velocity from player -> target
-        float speed = 6f; // or get from JSON
+        float speed = 6f;
         Vector2 velocity = new Vector2(targetPos).sub(playerPos).nor().scl(speed);
-
-        // 4) Build the Bomb
         Texture bombTex   = directory.getEntry("platform-bullet", Texture.class);
         JsonValue bombData= constants.get("bomb");
-
         Bomb bomb = new Bomb(units, bombData, playerPos, velocity, targetPos);
         bomb.setTexture(bombTex);
         bomb.getObstacle().setName("bomb");
 
-        // 5) Add to the game
         level.getBombs().add(bomb);
         physics.addObject(bomb);
     }
+
 
 
 

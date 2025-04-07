@@ -381,6 +381,7 @@ public class PhysicsController implements ContactListener {
         // Handle bomb contacts (unchanged or similar counter logic if needed)
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
+            Bomb bomb = (userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB);
             playerWithBomb = true;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
