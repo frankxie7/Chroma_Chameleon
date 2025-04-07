@@ -118,7 +118,7 @@ public class Level {
 
                 // 3) Create new coordinates for the depth rectangle
                 float[] depthCoords = makeDepthRectangle(x1, y1, x2, y2, depth);
-                System.out.println("Depth coordinates: " + java.util.Arrays.toString(depthCoords));
+//                System.out.println("Depth coordinates: " + java.util.Arrays.toString(depthCoords));
                 // 4) Construct a second object for the vertical portion
                 WallDepth depthWall = new WallDepth(depthCoords, units, depthsdata);
                 depthWall.setTexture(platTex); // or a different texture if you prefer

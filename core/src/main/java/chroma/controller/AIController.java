@@ -92,9 +92,11 @@ public class AIController {
         float worldHeight = gameplay.getWorldHeight();
 
         // Scaling for nodes
-        OrthographicCamera camera = gameplay.getCamera();
-        float screenHeight = camera.viewportHeight;
-        this.scale = screenHeight / worldHeight;
+//        OrthographicCamera camera = gameplay.getCamera();
+//        float screenHeight = camera.viewportHeight;
+//        this.scale = screenHeight / worldHeight;
+        this.scale = gameplay.getUnits();
+
 
         // Build navigation graph
         buildGraph(worldWidth, worldHeight);

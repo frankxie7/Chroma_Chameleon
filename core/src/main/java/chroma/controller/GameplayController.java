@@ -611,7 +611,7 @@ public class GameplayController implements Screen {
 
         // Simply set the camera position to the player's position
         camera.position.set(desiredCamX, desiredCamY, 0);
-        camera.zoom = 0.9f;
+//        camera.zoom = 0.9f;
         camera.update();
     }
 
@@ -658,7 +658,7 @@ public class GameplayController implements Screen {
 
         // 1) Compute the uniform scale factor from world→screen
         //    so that worldHeight always fits the new window height
-        units = (this.height == 0) ? 1.0f : (this.height / worldHeight);
+        units = 32;
 
         // 2) The InputController scale for screen→world
         //    scale.x = (float) screenWidth / worldWidth
@@ -700,4 +700,8 @@ public class GameplayController implements Screen {
     public float getWorldWidth() { return worldWidth; }
     public float getWorldHeight() { return worldHeight; }
     public boolean isGlobalChase() { return globalChase; }
+    public float getUnits() {
+        return units;
+    }
+
 }
