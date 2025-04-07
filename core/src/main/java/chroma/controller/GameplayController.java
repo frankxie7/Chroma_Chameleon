@@ -598,7 +598,7 @@ public class GameplayController implements Screen {
         goalMessage.setColor(Color.YELLOW);
         goalMessage.setAlignment(TextAlign.middleCenter);
         goalMessage.setFont(displayFont);
-        batch.drawText(goalMessage, width/2, height - 5);
+        batch.drawText(goalMessage, width / 2, height - 40);
 
 
         batch.setColor(Color.WHITE);
