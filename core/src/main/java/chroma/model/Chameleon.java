@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
@@ -80,6 +81,7 @@ public class Chameleon extends ObstacleSprite {
     private float animTime;
     private TextureRegion currentFrame;
 
+    private float drawScale;
     /**
      * Returns the posiiton of the Chameleon
      * @return position the position of the chameleon
@@ -221,6 +223,7 @@ public class Chameleon extends ObstacleSprite {
 
         float s = data.getFloat("size");
         float size = s * units;
+        drawScale = data.getFloat("drawScale");
 
         // Create a capsule obstacle
         obstacle = new CapsuleObstacle(x, y, s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
@@ -378,10 +381,12 @@ public class Chameleon extends ObstacleSprite {
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
 
+        Rectangle bounds = mesh.computeBounds();
+        float drawWidth  = bounds.width * drawScale;
+        float drawHeight = bounds.height * drawScale;
         float px = obstacle.getX() * obstacle.getPhysicsUnits();
         float py = obstacle.getY() * obstacle.getPhysicsUnits();
-        float drawWidth  = 64;
-        float drawHeight = 64;
+
 
         if (faceRight) {
             if (currentFrame.isFlipX()) {

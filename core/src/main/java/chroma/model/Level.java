@@ -1,14 +1,11 @@
 package chroma.model;
 
-import chroma.controller.AnimationHelper;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 /**
  * Level
@@ -41,9 +38,9 @@ public class Level {
         goalDoor.getObstacle().setName("goal");
 
         // Create the chameleon (player) using animation
-        Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
-        Animation<TextureRegion> chameleonAnim = AnimationHelper.createAnimation(chameleonSheet, 13, 0.1f);
         JsonValue chamData = constants.get("chameleon");
+        Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
+        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.06f);
         avatar = new Chameleon(units, chamData, chameleonAnim);
 
 
@@ -142,16 +139,6 @@ public class Level {
      *
      * The top edge is (x1,y1)->(x2,y2), extruded downward by 'depth'.
      */
-    private float[] makeDepthRectangle(float x1, float y1, float x2, float y2, float depth) {
-        return new float[] {
-            x1, y1,            // top-left
-            x1, y1 - depth,    // bottom-left
-            x2, y2 - depth,    // bottom-right
-            x2, y2             // top-right
-        };
-    }
-
-
 
     public Door getGoalDoor() {
         return goalDoor;
@@ -184,4 +171,29 @@ public class Level {
     public List<WallDepth> getWalldepths() {
         return depths;
     }
+
+    private float[] makeDepthRectangle(float x1, float y1, float x2, float y2, float depth) {
+        return new float[] {
+            x1, y1,            // top-left
+            x1, y1 - depth,    // bottom-left
+            x2, y2 - depth,    // bottom-right
+            x2, y2             // top-right
+        };
+    }
+    public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount, float frameDuration) {
+        int totalWidth = sheet.getWidth();
+        int totalHeight = sheet.getHeight();
+        int frameWidth = totalWidth / frameCount;
+        int frameHeight = totalHeight;
+        TextureRegion[][] tmp = TextureRegion.split(sheet, frameWidth, frameHeight);
+        TextureRegion[] frames = new TextureRegion[frameCount];
+        for (int i = 0; i < frameCount; i++) {
+            frames[i] = tmp[0][i];
+        }
+
+        Animation<TextureRegion> animation = new Animation<>(frameDuration, frames);
+        animation.setPlayMode(Animation.PlayMode.LOOP);
+        return animation;
+    }
+
 }

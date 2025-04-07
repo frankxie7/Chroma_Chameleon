@@ -187,11 +187,6 @@ public class GameplayController implements Screen {
             }
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
-
-
-
-
-
     }
 
     /**
@@ -622,6 +617,7 @@ public class GameplayController implements Screen {
 
         // Simply set the camera position to the player's position
         camera.position.set(desiredCamX, desiredCamY, 0);
+        camera.zoom = 0.9f;
         camera.update();
     }
 
