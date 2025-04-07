@@ -23,10 +23,10 @@ public class Level {
     private Chameleon avatar;
     private List<Enemy> enemies;
     private List<Terrain> walls;
-    private List<Terrain> platforms;
+    private List<BackgroundTile> background;
     private List<Bomb> bombs;
     private List<Spray> sprays;
-    private List<WallDepth> depths;
+
 
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
@@ -44,6 +44,31 @@ public class Level {
         goalDoor = new Door(units, goalData);
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
+
+//        background = new ArrayList<>();
+//        JsonValue backgroundData = constants.get("background");
+//        if (backgroundData != null) {
+//            if (backgroundData.has("data")) {
+//                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+//                int layerWidth = backgroundData.getInt("width");
+//                int layerHeight = backgroundData.getInt("height");
+//                JsonValue data = backgroundData.get("data");
+//                for (int i = 0; i < data.size; i++) {
+//                    int tileValue = data.getInt(i);
+//                    if (tileValue == 22) {
+//                        int tx = i % layerWidth;
+//                        int ty = i / layerWidth;
+//                        ty = layerHeight - 1 - ty;
+//                        String type = backgroundData.getString("shape", "square");
+//                        float[] coords = createCoords(tx, ty, type);
+//                        Terrain wall = new Terrain(coords, units, backgroundData);
+//                        wall.setTexture(wallTex);
+//                        walls.add(wall);
+//                    }
+//                }
+//            }
+//        }
+//
 
         // Create the chameleon (player) using animation
         JsonValue chamData = constants.get("chameleon");
@@ -100,8 +125,44 @@ public class Level {
 //                walls.add(wall);
 //            }
 //        }
-        // Create walls using the tile layer data from the level editor.
+//         Create walls using the tile layer data from the level editor.
         walls = new ArrayList<>();
+
+        JsonValue wallsDepth = constants.get("depth");
+        if ( wallsDepth != null) {
+            if (wallsDepth.has("data")) {
+                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                int layerWidth =  wallsDepth.getInt("width");
+                int layerHeight =  wallsDepth.getInt("height");
+                JsonValue data =  wallsDepth.get("data");
+                for (int i = 0; i < data.size; i++) {
+                    int tileValue = data.getInt(i);
+                    if (tileValue == 6) {
+                        int tx = i % layerWidth;
+                        int ty = i / layerWidth;
+                        ty = layerHeight - 1 - ty;
+                        String type =  wallsDepth.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
+                        Terrain wall = new Terrain(coords, units,  wallsDepth);
+                        wall.setTexture(wallTex);
+                        wall.setDepthColor();
+                        walls.add(wall);
+                    }
+                    if (tileValue == 18) {
+                        int tx = i % layerWidth;
+                        int ty = i / layerWidth;
+                        ty = layerHeight - 1 - ty;
+                        String type =  wallsDepth.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
+                        Terrain wall = new Terrain(coords, units,  wallsDepth);
+                        wall.setTexture(wallTex);
+                        wall.setDepthColor();
+                        walls.add(wall);
+                    }
+                }
+            }
+        }
+
         JsonValue wallsData = constants.get("top-left");
         if (wallsData != null) {
             // If wallsData contains the "data" array, it indicates that tile layer data is being used.
@@ -122,30 +183,64 @@ public class Level {
                         // Tiled uses a top-left origin; convert to physics world coordinates (origin at bottom-left).
                         ty = layerHeight - 1 - ty;
                         // Each tile occupies 1 physics unit; create the rectangular vertices for this tile.
-                        float[] coords = new float[]{
-                            tx, ty,
-                            tx + 1, ty,
-                            tx + 1, ty + 1,
-                            tx, ty + 1
-                        };
+                        String type = wallsData.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
                         // Create the wall object; note that the Terrain constructor scales the coordinates by the units factor.
                         Terrain wall = new Terrain(coords, units, wallsData);
                         wall.setTexture(wallTex);
                         walls.add(wall);
                     }
                 }
-            } else {
-                // If there is no "data" field, fall back to the original logic based on "positions".
+            }
+        }
+
+        JsonValue wallsRightData = constants.get("top-right");
+        if (wallsRightData != null) {
+            if (wallsRightData.has("data")) {
                 Texture wallTex = directory.getEntry("shared-earth", Texture.class);
-                JsonValue wallPositions = wallsData.get("positions");
-                for (int i = 0; i < wallPositions.size; i++) {
-                    float[] coords = wallPositions.get(i).asFloatArray();
-                    Terrain wall = new Terrain(coords, units, wallsData);
-                    wall.setTexture(wallTex);
-                    walls.add(wall);
+                int layerWidth = wallsRightData.getInt("width");
+                int layerHeight = wallsRightData.getInt("height");
+                JsonValue data = wallsRightData.get("data");
+                for (int i = 0; i < data.size; i++) {
+                    int tileValue = data.getInt(i);
+                    if (tileValue == 22) {
+                        int tx = i % layerWidth;
+                        int ty = i / layerWidth;
+                        ty = layerHeight - 1 - ty;
+                        String type = wallsRightData.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
+                        Terrain wall = new Terrain(coords, units, wallsRightData);
+                        wall.setTexture(wallTex);
+                        walls.add(wall);
+                    }
                 }
             }
         }
+
+        JsonValue walls3Data = constants.get("wall3");
+        if (walls3Data != null) {
+            if (walls3Data.has("data")) {
+                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                int layerWidth = walls3Data.getInt("width");
+                int layerHeight = walls3Data.getInt("height");
+                JsonValue data = walls3Data.get("data");
+                for (int i = 0; i < data.size; i++) {
+                    int tileValue = data.getInt(i);
+                    if (tileValue == 38) {
+                        int tx = i % layerWidth;
+                        int ty = i / layerWidth;
+                        ty = layerHeight - 1 - ty;
+                        String type = walls3Data.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
+                        Terrain wall = new Terrain(coords, units, walls3Data);
+                        wall.setTexture(wallTex);
+                        walls.add(wall);
+                    }
+                }
+            }
+        }
+
+
 
 //        depths = new ArrayList<>();
 //        JsonValue depthsdata = constants.get("walls");
@@ -205,12 +300,8 @@ public class Level {
     }
 
     public List<Terrain> getWalls() {
-        return walls;
-    }
+        return walls;}
 
-    public List<Terrain> getPlatforms() {
-        return platforms;
-    }
 
     public List<Bomb> getBombs() {
         return bombs;
@@ -220,9 +311,9 @@ public class Level {
         return sprays;
     }
 
-    public List<WallDepth> getWalldepths() {
-        return depths;
-    }
+//    public List<WallDepth> getWalldepths() {
+//        return depths;
+//    }
 
     private float[] makeDepthRectangle(float x1, float y1, float x2, float y2, float depth) {
         return new float[]{
@@ -231,6 +322,48 @@ public class Level {
             x2, y2 - depth,    // bottom-right
             x2, y2             // top-right
         };
+    }
+
+    private float[] createCoords(float tx, float ty, String type) {
+        switch(type) {
+            case "left":
+                return new float[]{
+                    tx,     ty,
+                    tx+0.5f, ty,
+                    tx+0.5f, ty+1,
+                    tx,     ty+1
+                };
+            case "right":
+                return new float[]{
+                    tx+0.5f, ty,
+                    tx+1,    ty,
+                    tx+1,    ty+1,
+                    tx+0.5f, ty+1
+                };
+            case "top":
+                return new float[]{
+                    tx,     ty+0.5f,
+                    tx+1,   ty+0.5f,
+                    tx+1,   ty+1,
+                    tx,     ty+1
+                };
+            case "bottom":
+                return new float[]{
+                    tx,     ty,
+                    tx+1,   ty,
+                    tx+1,   ty+0.5f,
+                    tx,     ty+0.5f
+                };
+            case "square":
+            default:
+                // 默认正方形碰撞体
+                return new float[]{
+                    tx,     ty,
+                    tx+1,   ty,
+                    tx+1,   ty+1,
+                    tx,     ty+1
+                };
+        }
     }
 
     public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount,

@@ -1,3 +1,5 @@
+package chroma.model;
+
 /*
  * Surface.java
  *
@@ -14,7 +16,7 @@
  * Author:  Walker M. White
  * Version: 2/8/2025
  */
-package chroma.model;
+
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Polygon;
@@ -47,7 +49,7 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
  * as the physics body (adjusted for physics units), and then apply a texture
  * to that shape.
  */
-public class Terrain extends ObstacleSprite {
+public class BackgroundTile extends ObstacleSprite {
     private Polygon polygon;
 
     /**
@@ -61,7 +63,7 @@ public class Terrain extends ObstacleSprite {
      * @param points    The outline of the shape as x,y pairs
      * @param units     The physics units
      */
-    public Terrain(float[] points, float units, JsonValue settings) {
+    public BackgroundTile(float[] points, float units, JsonValue settings) {
         super();
 
         float tile = settings.getFloat("tile");
@@ -78,6 +80,7 @@ public class Terrain extends ObstacleSprite {
         obstacle.setRestitution(settings.getFloat("restitution", 0));
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
+        obstacle.setSensor(true);
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
 
         // Scale the polygon and create the mesh.
@@ -87,48 +90,5 @@ public class Terrain extends ObstacleSprite {
         // Create a Polygon for point containment checks
         this.polygon = new Polygon(points);
         this.polygon.setScale(units, units);
-    }
-    /**
-     * Returns the primary fixture associated with this terrain object.
-     *
-     * @return the first fixture from the physics body, or null if not available.
-     */
-    public Fixture getFixture() {
-        if (obstacle.getBody() != null && obstacle.getBody().getFixtureList().size > 0) {
-            return obstacle.getBody().getFixtureList().first();
-        }
-        return null;
-    }
-
-    public boolean contains(Vector2 point) {
-        if (polygon.contains(point.x, point.y)) {
-            return true;
-        }
-
-        float[] vertices = polygon.getTransformedVertices();
-        int numVertices = vertices.length / 2;
-
-        for (int i = 0; i < numVertices; i++) {
-            int next = (i + 1) % numVertices;
-            float x1 = vertices[i * 2], y1 = vertices[i * 2 + 1];
-            float x2 = vertices[next * 2], y2 = vertices[next * 2 + 1];
-
-            // Check if point is on the right or top edge
-            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
-                return true;
-            }
-            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
-                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void setDepthColor(){
-        int count = mesh.vertexCount();
-        for (int i = 0; i < count; i++) {
-            mesh.setColor(i, new Color(0.6f, 0.6f, 0.6f, 1f));
-        }
     }
 }

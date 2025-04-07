@@ -81,7 +81,6 @@ public class AIController {
         this.type = enemy.getType();
         this.player = level.getAvatar();
         this.walls = level.getWalls();
-        this.platforms = level.getPlatforms();
         this.goals = physics.getGoalList();
         this.detectionRange = enemy.getDetectionRange();
         this.fov = enemy.getFov();

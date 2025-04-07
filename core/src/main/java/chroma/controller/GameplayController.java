@@ -198,13 +198,12 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, levelSelector);
 
 
-//        for (WallDepth walldepth : level.getWalldepths()) {
-//            physics.addObject(walldepth);
-//        }
+
         // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
         }
+
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
@@ -512,32 +511,7 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-//        batch.setColor(new Color(0.5f, 0f, 0.5f, 1f));
         // Draw tiled background
-        float mapWidth  = worldWidth  * units;
-        float mapHeight = worldHeight * units;
-
-        JsonValue bgConfig = constants.get("background");
-        float scaleFactor = bgConfig.getFloat("scaleFactor", 1.0f);
-        Texture floorTile = directory.getEntry("floor-tiles", Texture.class);
-        floorTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-        int nativeTileWidth  = floorTile.getWidth();
-        int nativeTileHeight = floorTile.getHeight();
-        int effectiveTileWidth  = (int) (nativeTileWidth  * scaleFactor);
-        int effectiveTileHeight = (int) (nativeTileHeight * scaleFactor);
-
-        int tilesX = (int) Math.ceil(mapWidth  / (float) effectiveTileWidth);
-        int tilesY = (int) Math.ceil(mapHeight / (float) effectiveTileHeight);
-
-        for (int i = 0; i < tilesX; i++) {
-            for (int j = 0; j < tilesY; j++) {
-                float x = i * effectiveTileWidth;
-                float y = j * effectiveTileHeight;
-                batch.draw(floorTile, x, y, effectiveTileWidth, effectiveTileHeight);
-            }
-        }
-
 
 
         // Draw all bombs
@@ -581,6 +555,8 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+        batch.setColor(Color.WHITE);
+        batch.setTexture(null);
         // Debug overlays
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
