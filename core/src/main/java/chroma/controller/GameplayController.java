@@ -79,6 +79,7 @@ public class GameplayController implements Screen {
 
     private PhysicsController physics;
     private Level level;
+    private LevelSelector levelSelector;
 
     private List<AIController> aiControllers;
     private boolean globalChase = false;
@@ -101,6 +102,7 @@ public class GameplayController implements Screen {
         this.directory = directory;
         this.constants = directory.getEntry("platform-constants", JsonValue.class);
 
+        levelSelector = new LevelSelector(directory);
         // Read world configuration from JSON
         JsonValue worldConf = constants.get("world");
         this.worldWidth = worldConf.get("bounds").getFloat(0);
@@ -162,11 +164,12 @@ public class GameplayController implements Screen {
         countdown = -1;
 
         // Build the level with the current `units`
-        level = new Level(directory, units, constants);
+        level = new Level(directory, units, levelSelector);
 
-        for (WallDepth walldepth : level.getWalldepths()) {
-            physics.addObject(walldepth);
-        }
+
+//        for (WallDepth walldepth : level.getWalldepths()) {
+//            physics.addObject(walldepth);
+//        }
         // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
