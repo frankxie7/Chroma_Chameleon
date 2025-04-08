@@ -132,8 +132,10 @@ public class Level {
         JsonValue wallsDepth = constants.get("depth");
         if ( wallsDepth != null) {
             if (wallsDepth.has("data")) {
-                Texture wallTex1 = directory.getEntry("shared-earth", Texture.class);
-                Texture wallTex2 = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex1 = directory.getEntry("wall-up", Texture.class);
+                Texture wallTex2 = directory.getEntry("wall-down", Texture.class);
+                wallTex1.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+                wallTex2.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
                 int layerWidth =  wallsDepth.getInt("width");
                 int layerHeight =  wallsDepth.getInt("height");
                 JsonValue data =  wallsDepth.get("data");
@@ -169,7 +171,8 @@ public class Level {
         if (wallsData != null) {
             // If wallsData contains the "data" array, it indicates that tile layer data is being used.
             if (wallsData.has("data")) {
-                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex = directory.getEntry("border-left", Texture.class);
+                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
                 // Get the tile layer's width and height (measured in tiles, i.e., physics units).
                 int layerWidth = wallsData.getInt("width");
                 int layerHeight = wallsData.getInt("height");
@@ -199,7 +202,8 @@ public class Level {
         JsonValue wallsRightData = constants.get("top-right");
         if (wallsRightData != null) {
             if (wallsRightData.has("data")) {
-                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex = directory.getEntry("border-right", Texture.class);
+                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
                 int layerWidth = wallsRightData.getInt("width");
                 int layerHeight = wallsRightData.getInt("height");
                 JsonValue data = wallsRightData.get("data");
