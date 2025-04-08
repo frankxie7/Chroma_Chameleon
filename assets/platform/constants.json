@@ -136,7 +136,6 @@
     "x":0,
     "y":0
   },
-
   "top-right": {
     "tile"        : 32.0,
     "friction"    : 0.1,

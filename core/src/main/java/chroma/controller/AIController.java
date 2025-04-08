@@ -571,10 +571,16 @@ public class AIController {
     }
 
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
-
     private Array<Vector2> lastPath;
     private Vector2 lastGoal;
 
+    public void drawCamera(OrthographicCamera camera) {
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(new Color(1, 0, 0, 0.3f)); // Transparent red for vision cone
+        shapeRenderer.circle(enemy.getPosition().x * scale, enemy.getPosition().y * scale, 10);
+        shapeRenderer.end();
+    }
     public void debugRender(OrthographicCamera camera) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -617,7 +623,7 @@ public class AIController {
 
         float angleToLook = enemy.getRotation();
 
-        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.setColor(new Color(1, 0, 0, 0.3f));
         for (int i = 0; i < numRays; i++) {
             float rayAngle = angleToLook - halfFOV + i * angleStep;
 
@@ -647,6 +653,7 @@ public class AIController {
         }
     }
 
+    public Enemy getEnemy() { return enemy; }
     public State getState() { return state; }
     public void setState(State value) { state = value; }
     public boolean getPlayerDetected() { return playerDetected; }

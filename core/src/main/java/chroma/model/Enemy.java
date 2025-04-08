@@ -1,5 +1,6 @@
 package chroma.model;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2; import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -79,8 +80,6 @@ public class Enemy extends ObstacleSprite {
         } else {
             obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
             obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
-        }
-        if (obstacle != null) {
             ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
             obstacle.setDensity(data.getFloat("density", 0));
             obstacle.setFriction(data.getFloat("friction", 0));

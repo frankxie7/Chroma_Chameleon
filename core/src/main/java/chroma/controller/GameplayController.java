@@ -569,6 +569,15 @@ public class GameplayController implements Screen {
         }
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
+
+        batch.end();
+        for (AIController aiController : aiControllers) {
+            if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
+                aiController.drawCamera(camera); // Call debug grid rendering
+            }
+        }
+        batch.begin();
+
         // Debug overlays
         if (debug) {
             for (ObstacleSprite sprite : physics.objects) {
@@ -591,7 +600,6 @@ public class GameplayController implements Screen {
         barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         drawPaintContainer(barTex, barOverlayTex);
-
 
         // UI messages
         if (complete && !failed) {
@@ -636,7 +644,6 @@ public class GameplayController implements Screen {
         camera.zoom = 0.5f;
         camera.update();
     }
-
 
     /**
      * The main render loop.
