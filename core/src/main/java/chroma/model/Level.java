@@ -23,7 +23,7 @@ public class Level {
     private Chameleon avatar;
     private List<Enemy> enemies;
     private List<Terrain> walls;
-    private List<BackgroundTile> background;
+    private List<BackgroundTile> backgroundTiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
 
@@ -45,29 +45,28 @@ public class Level {
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
 
-        background = new ArrayList<>();
+        backgroundTiles = new ArrayList<>();
         JsonValue backgroundData = constants.get("background");
-
-            if (backgroundData.has("data")) {
-                Texture wallTex = directory.getEntry("background-tile", Texture.class);
-                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                int layerWidth = backgroundData.getInt("width");
-                int layerHeight = backgroundData.getInt("height");
-                JsonValue data = backgroundData.get("data");
-                for (int i = 0; i < data.size; i++) {
-                    int tileValue = data.getInt(i);
-                    if (tileValue == 28) {
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        ty = layerHeight - 1 - ty;
-                        String type = backgroundData.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        BackgroundTile backgroundTile = new BackgroundTile(coords, units, backgroundData);
-                        backgroundTile.setTexture(wallTex);
-                        background.add(backgroundTile);
-                    }
+        if (backgroundData.has("data")) {
+            Texture wallTex = directory.getEntry("background-tile", Texture.class);
+            wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+            int layerWidth = backgroundData.getInt("width");
+            int layerHeight = backgroundData.getInt("height");
+            JsonValue data = backgroundData.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int tileValue = data.getInt(i);
+                if (tileValue == 28) {
+                    int tx = i % layerWidth;
+                    int ty = i / layerWidth;
+                    ty = layerHeight - 1 - ty;
+                    String type = backgroundData.getString("shape", "square");
+                    float[] coords = createCoords(tx, ty, type);
+                    BackgroundTile backgroundTile = new BackgroundTile(coords, units, backgroundData);
+                    backgroundTile.setTexture(wallTex);
+                    backgroundTiles.add(backgroundTile);
                 }
             }
+        }
 
 
 
@@ -275,7 +274,7 @@ public class Level {
     }
 
     public List<BackgroundTile> getBackgroundTiles() {
-        return background;
+        return backgroundTiles;
     }
 
 

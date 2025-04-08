@@ -518,6 +518,11 @@ public class GameplayController implements Screen {
         batch.begin();
         // Draw tiled background
 
+        if (level.getBackgroundTiles() != null) {
+            for (BackgroundTile tile : level.getBackgroundTiles()) {
+                tile.draw(batch);
+            }
+        }
 
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
