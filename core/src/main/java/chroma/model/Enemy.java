@@ -111,7 +111,6 @@ public class Enemy extends ObstacleSprite {
 }
 
     public float getMovement() { return movement; }
-
     public void setMovement(float value) {
         movement = value;
         // Change facing if appropriate
@@ -121,11 +120,11 @@ public class Enemy extends ObstacleSprite {
             faceRight = true;
         }
     }
-
     public float getVerticalMovement() { return verticalMovement; }
     public void setVerticalMovement(float value) { verticalMovement = value; }
     public float getForce() { return force; }
     public float getMaxSpeed() { return maxspeed; }
+    public void setMaxSpeed(float value) { this.maxspeed = value; }
     public float getDetectionRange() { return detectionRange; }
     public float getFov() { return fov; }
     public Type getType() { return type; }
@@ -184,7 +183,10 @@ public class Enemy extends ObstacleSprite {
         // Apply the interpolated force
         body.applyForce(currentVelocity, pos, true);
 
+        body.setLinearDamping(0.5f);
+
         // Apply damping to slow down gradually
+
         if (currentVelocity.len2() < 0.01f) { // Prevent tiny movements
             body.setLinearVelocity(0, 0);
         } else if (currentVelocity.len() > getMaxSpeed()) {

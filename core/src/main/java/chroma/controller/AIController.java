@@ -40,8 +40,8 @@ public class AIController {
     private float detectionRange;
     private float fov;
     private float rotationSpeedWander = 45f; // Degrees per second
-    private float rotationSpeedAlert = 90f;
-    private float rotationSpeedChase = 240f;
+    private float rotationSpeedAlert = 240f;
+//    private float rotationSpeedChase = 240f;
     private boolean rotatingClockwise = true;
 
     // GOAL:
@@ -49,13 +49,18 @@ public class AIController {
 
     // ENEMY SPEED:
     private float wanderSpeed = 1f;
-    private float chaseSpeed = 4f;
+    private float chaseSpeed = 1.5f;
+
+    // CHASE:
+    private float chaseMaxSpeed = 7.5f;
 
     // ALERT:
+    private float alertMaxSpeed = 6f;
     private float alertLength = 3f;
     private float alertTimer = alertLength;
 
     // WANDER:
+    private float wanderMaxSpeed = 5f;
     private float timeToChangeTarget = 2f;
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries
@@ -120,8 +125,7 @@ public class AIController {
             return false;
         }
 
-        // If the fixture is a goal, ignore it
-        return !(hitFixture.getUserData() instanceof Goal);
+        return true;
     }
 
     private boolean isBlocked(Vector2 position) {
@@ -135,11 +139,11 @@ public class AIController {
 //                return true;
 //            }
 //        }
-        for (Goal goal : goals) {
-            if (goal.contains(position)) {
-                return true;
-            }
-        }
+//        for (Goal goal : goals) {
+//            if (goal.contains(position)) {
+//                return true;
+//            }
+//        }
         return false;
     }
 
@@ -320,24 +324,25 @@ public class AIController {
         float vmove = direction.y;
 
         // Apply movement similar to the player
+//        System.out.println(hmove * speed + ", " + vmove * speed);
         enemy.setMovement(hmove * speed);
         enemy.setVerticalMovement(vmove * speed);
     }
 
     public void update(float delta) {
-//        System.out.println(enemy.getName() + " current goal: " + target);
-//        System.out.println("State: " + state);
         Vector2 enemyPos = enemy.getPosition();
         Vector2 playerPos = player.getPosition();
         if (enemyPos == null || playerPos == null) {
             return;
         }
+
         playerDetected = false;
         float distanceToPlayer = enemyPos.dst(playerPos);
-        if (!player.isHidden() && distanceToPlayer <= detectionRange) {
+        boolean isCamera = type == Type.CAMERA;
+        boolean guardInRange = distanceToPlayer <= detectionRange;
 
+        if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
-//            System.out.println(enemy.getName() + ": " + angleLooking);
             float halfFOV = (float) Math.toRadians(fov / 2);
             int numRays = (int) (fov / 5);
             float angleStep = (halfFOV * 2) / (numRays - 1);
@@ -345,30 +350,32 @@ public class AIController {
             for (int i = 0; i < numRays; i++) {
                 float rayAngle = angleLooking - halfFOV + (i * angleStep);
                 Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-                Vector2 rayEnd = enemyPos.cpy().add(direction.scl(detectionRange));
+                float rayLength = isCamera ? 9999f : detectionRange;
+                Vector2 rayEnd = enemyPos.cpy().add(direction.scl(rayLength));
 
-                final boolean[] hitPlayer = {false};
+                final Vector2 rayHit = rayEnd.cpy(); // Initialize the ray hit position
 
                 RayCastCallback callback = (fixture, point, normal, fraction) -> {
                     Object userData = fixture.getBody().getUserData();
 
-                    if (userData instanceof Spray || userData instanceof Bomb) {
-                        return -1f; // Keep going
+                    // Skip transparent objects like spray, bomb, or goal
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal) {
+                        return -1f;  // Continue the ray without stopping
                     }
 
-                    if (userData == player) {
-                        hitPlayer[0] = true;
-                        return 0; // Stop ray
-                    }
-
-                    return fraction; // Stop at first solid object
+                    // Store the hit position when encountering an obstacle
+                    rayHit.set(point);
+                    return fraction;  // Stop ray at the first obstacle or player hit
                 };
 
+                // Perform the raycast from the enemy position to the rayEnd point
                 physics.getWorld().rayCast(callback, enemyPos, rayEnd);
 
-                if (hitPlayer[0]) {
+                // After the raycast, check what is at the end of the ray
+                // If the ray ends at the player, detect the player
+                if (rayHit.epsilonEquals(playerPos, 1f)) {  // Use epsilonEquals for tolerance
                     playerDetected = true;
-                    break;
+                    break;  // Stop as soon as the player is detected
                 }
             }
         }
@@ -406,6 +413,7 @@ public class AIController {
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
         alertTimer = 0;
+        enemy.setMaxSpeed(chaseMaxSpeed);
         target = playerPos;
         if (!isLineBlocked(enemyPos, target)) {
             moveTowards(target, chaseSpeed);
@@ -420,6 +428,7 @@ public class AIController {
     }
     private void alertState(float delta, Vector2 enemyPos) {
         alertTimer += delta;
+        enemy.setMaxSpeed(alertMaxSpeed);
         target = player.getLastSeen();
         if (!isLineBlocked(enemyPos, target)) {
             moveTowards(target, chaseSpeed);
@@ -433,10 +442,10 @@ public class AIController {
         }
     }
     private void patrolState(float delta, Vector2 enemyPos) {
+        enemy.setMaxSpeed(wanderMaxSpeed);
         target = graph.getNearestWalkableNode(new Vector2(patrolPath.get(patrolIndex)[0], patrolPath.get(patrolIndex)[1]));
-
         if (!isLineBlocked(enemyPos, target)) {
-            moveTowards(target, chaseSpeed);
+            moveTowards(target, wanderSpeed);
         } else {
             Vector2 waypoint = getNextPathPoint(enemyPos, target);
             if (waypoint != null) {
@@ -450,6 +459,7 @@ public class AIController {
     }
     private void wanderState(float delta, Vector2 enemyPos) {
         wanderTimer += delta;
+        enemy.setMaxSpeed(wanderMaxSpeed);
         if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
             wanderTimer = 0f;
             pickNewWanderTarget();
@@ -500,6 +510,28 @@ public class AIController {
             }
         }
         newRotation = (newRotation + (float)Math.toRadians(360)) % ((float)Math.toRadians(360)); // Keep rotation within [0,360]
+
+        if (state == State.CHASE) {
+            Vector2 enemyPos = enemy.getPosition();
+            Vector2 playerPos = player.getPosition();
+
+            if (enemyPos != null && playerPos != null) {
+                Vector2 toPlayer = playerPos.cpy().sub(enemyPos);
+                float angleToPlayer = (float) Math.atan2(toPlayer.y, toPlayer.x); // In radians
+                angleToPlayer = (angleToPlayer + MathUtils.PI2) % MathUtils.PI2;   // Normalize to [0, 2π)
+
+                float clampedAngle;
+                if (wrapsAround) {
+                    boolean inRange = (angleToPlayer >= minRotation) || (angleToPlayer <= maxRotation);
+                    clampedAngle = inRange ? angleToPlayer : closestBound(angleToPlayer, minRotation, maxRotation);
+                } else {
+                    boolean inRange = angleToPlayer >= minRotation && angleToPlayer <= maxRotation;
+                    clampedAngle = inRange ? angleToPlayer : MathUtils.clamp(angleToPlayer, minRotation, maxRotation);
+                }
+
+                newRotation = clampedAngle;
+            }
+        }
         enemy.setRotation(newRotation);
 
         if (playerDetected) {
@@ -517,10 +549,19 @@ public class AIController {
         }
     }
 
+    private float closestBound(float angle, float min, float max) {
+        float distToMin = angleDistance(angle, min);
+        float distToMax = angleDistance(angle, max);
+        return (distToMin < distToMax) ? min : max;
+    }
+    private float angleDistance(float a, float b) {
+        float diff = Math.abs(a - b) % MathUtils.PI2;
+        return diff > MathUtils.PI ? MathUtils.PI2 - diff : diff;
+    }
     private float getRotationSpeed() {
         switch (state) {
             case CHASE:
-                return (float)Math.toRadians(rotationSpeedChase);
+                return 0;
             case ALERT:
                 return (float)Math.toRadians(rotationSpeedAlert);
             case WANDER:

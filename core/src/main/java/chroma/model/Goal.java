@@ -50,6 +50,10 @@ public class Goal extends ObstacleSprite {
         this.units = units;
         this.points = points;
 
+        // Filter allows collisions with everything except other enemies
+        Filter goalFilter = new Filter();
+        goalFilter.groupIndex = -1;
+        obstacle.setFilterData(goalFilter);
 
         short[] indices = { 0, 1, 2, 0, 2, 3};
         // Create the polygon for the mesh (rendering).
