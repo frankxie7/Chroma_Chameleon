@@ -198,7 +198,9 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, levelSelector);
 
 
-
+        for (BackgroundTile tile : level.getBackgroundTiles()) {
+            physics.addObject(tile);
+        }
         // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
@@ -530,6 +532,8 @@ public class GameplayController implements Screen {
             }
         }
 
+        batch.setColor(Color.WHITE);
+        batch.setTexture(null);
         // Draw all physics objects other than bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb")  && !sprite.getName().equals("spray"))) {

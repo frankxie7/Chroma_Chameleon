@@ -23,7 +23,9 @@
     "border-right": "platform/border_right.png",
     "border-top": "platform/border_top.png",
     "wall-up": "platform/wall_up.png",
-    "wall-down": "platform/wall_down.png"
+    "wall-down": "platform/wall_down.png",
+    "background-tile": "platform/tile043.png",
+    "wall-top": "platform/tile061.png"
   },
   "jsons"  : {
     "platform-constants": "platform/constants.json"

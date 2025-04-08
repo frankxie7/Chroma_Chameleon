@@ -45,30 +45,31 @@ public class Level {
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
 
-//        background = new ArrayList<>();
-//        JsonValue backgroundData = constants.get("background");
-//        if (backgroundData != null) {
-//            if (backgroundData.has("data")) {
-//                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
-//                int layerWidth = backgroundData.getInt("width");
-//                int layerHeight = backgroundData.getInt("height");
-//                JsonValue data = backgroundData.get("data");
-//                for (int i = 0; i < data.size; i++) {
-//                    int tileValue = data.getInt(i);
-//                    if (tileValue == 22) {
-//                        int tx = i % layerWidth;
-//                        int ty = i / layerWidth;
-//                        ty = layerHeight - 1 - ty;
-//                        String type = backgroundData.getString("shape", "square");
-//                        float[] coords = createCoords(tx, ty, type);
-//                        Terrain wall = new Terrain(coords, units, backgroundData);
-//                        wall.setTexture(wallTex);
-//                        walls.add(wall);
-//                    }
-//                }
-//            }
-//        }
-//
+        background = new ArrayList<>();
+        JsonValue backgroundData = constants.get("background");
+
+            if (backgroundData.has("data")) {
+                Texture wallTex = directory.getEntry("background-tile", Texture.class);
+                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+                int layerWidth = backgroundData.getInt("width");
+                int layerHeight = backgroundData.getInt("height");
+                JsonValue data = backgroundData.get("data");
+                for (int i = 0; i < data.size; i++) {
+                    int tileValue = data.getInt(i);
+                    if (tileValue == 28) {
+                        int tx = i % layerWidth;
+                        int ty = i / layerWidth;
+                        ty = layerHeight - 1 - ty;
+                        String type = backgroundData.getString("shape", "square");
+                        float[] coords = createCoords(tx, ty, type);
+                        BackgroundTile backgroundTile = new BackgroundTile(coords, units, backgroundData);
+                        backgroundTile.setTexture(wallTex);
+                        background.add(backgroundTile);
+                    }
+                }
+            }
+
+
 
         // Create the chameleon (player) using animation
         JsonValue chamData = constants.get("chameleon");
@@ -131,7 +132,8 @@ public class Level {
         JsonValue wallsDepth = constants.get("depth");
         if ( wallsDepth != null) {
             if (wallsDepth.has("data")) {
-                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex1 = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex2 = directory.getEntry("shared-earth", Texture.class);
                 int layerWidth =  wallsDepth.getInt("width");
                 int layerHeight =  wallsDepth.getInt("height");
                 JsonValue data =  wallsDepth.get("data");
@@ -144,7 +146,7 @@ public class Level {
                         String type =  wallsDepth.getString("shape", "square");
                         float[] coords = createCoords(tx, ty, type);
                         Terrain wall = new Terrain(coords, units,  wallsDepth);
-                        wall.setTexture(wallTex);
+                        wall.setTexture(wallTex1);
                         wall.setDepthColor();
                         walls.add(wall);
                     }
@@ -155,7 +157,7 @@ public class Level {
                         String type =  wallsDepth.getString("shape", "square");
                         float[] coords = createCoords(tx, ty, type);
                         Terrain wall = new Terrain(coords, units,  wallsDepth);
-                        wall.setTexture(wallTex);
+                        wall.setTexture(wallTex2);
                         wall.setDepthColor();
                         walls.add(wall);
                     }
@@ -217,10 +219,11 @@ public class Level {
             }
         }
 
-        JsonValue walls3Data = constants.get("wall3");
+        JsonValue walls3Data = constants.get("top");
         if (walls3Data != null) {
             if (walls3Data.has("data")) {
-                Texture wallTex = directory.getEntry("shared-earth", Texture.class);
+                Texture wallTex = directory.getEntry("wall-top", Texture.class);
+                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
                 int layerWidth = walls3Data.getInt("width");
                 int layerHeight = walls3Data.getInt("height");
                 JsonValue data = walls3Data.get("data");
@@ -239,42 +242,6 @@ public class Level {
                 }
             }
         }
-
-
-
-//        depths = new ArrayList<>();
-//        JsonValue depthsdata = constants.get("walls");
-//        if (depthsdata != null) {
-//            Texture platTex = directory.getEntry("shared-earth", Texture.class);
-//            JsonValue platPositions = depthsdata.get("positions");
-//            for (int i = 0; i < platPositions.size; i++) {
-//                float[] coords = platPositions.get(i).asFloatArray();
-//                // Create the primary wall terrain
-//                float x1 = coords[0];
-//                float y1 = coords[1];
-//                float x2 = coords[2];
-//                float y2 = coords[3];
-//
-//                if (x1 > x2) {
-//                    float tempX = x1;  float tempY = y1;
-//                    x1 = x2;          y1 = y2;
-//                    x2 = tempX;       y2 = tempY;
-//                }
-//
-//                // 2) Get the "depth" from JSON or define a default
-//                float depth = depthsdata.getFloat("depth", 1.5f);
-//
-//                // 3) Create new coordinates for the depth rectangle
-//                float[] depthCoords = makeDepthRectangle(x1, y1, x2, y2, depth);
-////                System.out.println("Depth coordinates: " + java.util.Arrays.toString(depthCoords));
-//                // 4) Construct a second object for the vertical portion
-//                WallDepth depthWall = new WallDepth(depthCoords, units, depthsdata);
-//                depthWall.setTexture(platTex); // or a different texture if you prefer
-//
-//                // 5) Store or add it to an ArrayList for your depth walls
-//                depths.add(depthWall);
-//            }
-//        }
 
         bombs = new ArrayList<>();
         sprays = new ArrayList<>();
@@ -300,7 +267,12 @@ public class Level {
     }
 
     public List<Terrain> getWalls() {
-        return walls;}
+        return walls;
+    }
+
+    public List<BackgroundTile> getBackgroundTiles() {
+        return background;
+    }
 
 
     public List<Bomb> getBombs() {
@@ -315,14 +287,6 @@ public class Level {
 //        return depths;
 //    }
 
-    private float[] makeDepthRectangle(float x1, float y1, float x2, float y2, float depth) {
-        return new float[]{
-            x1, y1,            // top-left
-            x1, y1 - depth,    // bottom-left
-            x2, y2 - depth,    // bottom-right
-            x2, y2             // top-right
-        };
-    }
 
     private float[] createCoords(float tx, float ty, String type) {
         switch(type) {
