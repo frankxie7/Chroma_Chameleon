@@ -198,9 +198,12 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, levelSelector);
 
 
-        for (BackgroundTile tile : level.getBackgroundTiles()) {
-            physics.addObject(tile);
-        }
+//        for (BackgroundTile tile : level.getBackgroundTiles()) {
+//            physics.addObject(tile);
+//        }
+
+
+
         // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
@@ -625,7 +628,7 @@ public class GameplayController implements Screen {
 
         // Simply set the camera position to the player's position
         camera.position.set(desiredCamX, desiredCamY, 0);
-//        camera.zoom = 0.9f;
+        camera.zoom = 0.5f;
         camera.update();
     }
 
