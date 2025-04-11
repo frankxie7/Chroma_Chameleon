@@ -13,7 +13,7 @@
   },
   "chameleon" : {
     "pos"       : [5.0, 5.0],
-    "inner"     : [1.8, 0.8],
+    "inner"     : [1.2, 0.8],
     "size"      : 1.0,
     "drawScale": 0.8,
     "force"     : 20.0,
