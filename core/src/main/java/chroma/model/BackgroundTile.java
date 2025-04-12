@@ -19,9 +19,6 @@ public class BackgroundTile {
         this.units = units;
         this.tileSize = settings.getFloat("tile");
 
-        // 如果需要重复纹理，则建议在 Level 中设置 texture 的 wrap 模式
-        // 这里仅保存多边形数据用于确定位置和尺寸
-        // 注意：如果背景仅为矩形，可直接根据tileSize计算出bounds，否则可以利用多边形的包围矩形
         polygon = new Polygon(points);
         polygon.setScale(units, units);
         bounds = polygon.getBoundingRectangle();

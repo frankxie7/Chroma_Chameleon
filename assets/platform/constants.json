@@ -14,8 +14,8 @@
   "chameleon" : {
     "pos"       : [5.0, 5.0],
     "inner"     : [1.2, 0.8],
-    "size"      : 1.5,
-    "drawScale": 1.6,
+    "size"      : 1.0,
+    "drawScale": 0.8,
     "force"     : 20.0,
     "damping"   : 40.0,
     "density"   : 0.5,

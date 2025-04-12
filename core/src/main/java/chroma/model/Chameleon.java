@@ -266,7 +266,7 @@ public class Chameleon extends ObstacleSprite {
         this.walkAnim = animation;
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-        currentFrame = frames[4];
+        currentFrame = frames[6];
     }
 
 
@@ -347,8 +347,10 @@ public class Chameleon extends ObstacleSprite {
 
         if (hmove == 0 && vmove == 0) {
             TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-            currentFrame = frames[4];
-            animTime = 0;
+            currentFrame = frames[6];
+            animTime += dt;
+            currentFrame = walkAnim.getKeyFrame(animTime, true);
+            animTime = 6;
         } else {
             animTime += dt;
             currentFrame = walkAnim.getKeyFrame(animTime, true);
@@ -381,12 +383,11 @@ public class Chameleon extends ObstacleSprite {
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
 
-        Rectangle bounds = mesh.computeBounds();
-        float drawWidth  = bounds.width * drawScale;
-        float drawHeight = bounds.height * drawScale;
+//        Rectangle bounds = mesh.computeBounds();
+        float drawWidth  = currentFrame.getRegionWidth() * drawScale;
+        float drawHeight = currentFrame.getRegionHeight() * drawScale;
         float px = obstacle.getX() * obstacle.getPhysicsUnits();
         float py = obstacle.getY() * obstacle.getPhysicsUnits();
-
 
         if (faceRight) {
             if (currentFrame.isFlipX()) {
@@ -397,7 +398,6 @@ public class Chameleon extends ObstacleSprite {
                 currentFrame.flip(true, false);
             }
         }
-
         batch.draw(currentFrame,
             px - drawWidth / 2,
             py - drawHeight / 2,
