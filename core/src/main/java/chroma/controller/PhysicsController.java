@@ -445,9 +445,9 @@ public class PhysicsController implements ContactListener {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
 
-        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
-            contact.setEnabled(false);  // disables physical collision response
-        }
+        //if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
+        //    contact.setEnabled(false);  // disables physical collision response
+        //}
     }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 

@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -31,6 +32,7 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
+import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.ScreenListener;
 
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
-    private int numGoals = 1000;
+    private int numGoals = 700;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -215,7 +217,12 @@ public class GameplayController implements Screen {
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
         physics.createGoal(new Vector2(3f,28.5f),10,units, constants);
-        physics.createGoal(new Vector2(23.5f,6.5f),30,units, constants);
+        physics.createGoal(new Vector2(23.5f,6.5f),10,units, constants);
+        physics.createGoal(new Vector2(25.5f,6.5f),10,units, constants);
+        physics.createGoal(new Vector2(23.5f,8.5f),10,units, constants);
+        physics.createGoal(new Vector2(25.5f,8.5f),10,units, constants);
+        physics.createGoal(new Vector2(27.5f,8.5f),10,units, constants);
+        physics.createGoal(new Vector2(27.5f,6.5f),10,units, constants);
 
         // Initialize AI
         aiControllers = new ArrayList<>();
@@ -523,6 +530,8 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
+
+
 
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
