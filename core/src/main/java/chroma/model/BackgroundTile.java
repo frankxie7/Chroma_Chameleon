@@ -31,7 +31,6 @@ public class BackgroundTile {
 
 
     public void draw(SpriteBatch batch) {
-        // 直接绘制整个 bounds 区域的纹理（适用于单块填充的情况）
         batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 

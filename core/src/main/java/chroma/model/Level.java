@@ -73,7 +73,7 @@ public class Level {
         // Create the chameleon (player) using animation
         JsonValue chamData = constants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
-        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.06f);
+        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.1f);
         avatar = new Chameleon(units, chamData, chameleonAnim);
 
         enemies = new ArrayList<>();

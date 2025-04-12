@@ -99,6 +99,8 @@ public class GameplayController implements Screen {
 
     protected Rectangle bounds;
 
+    private float accumulator = 0f;
+
     public GameplayController(AssetDirectory directory) {
         this.directory = directory;
         this.constants = directory.getEntry("platform-constants", JsonValue.class);
@@ -652,9 +654,17 @@ public class GameplayController implements Screen {
     public void render(float delta) {
         if (!active) return;
         if (!preUpdate(delta)) return;
-        update(delta);
-        postUpdate(delta);
-        draw(delta);
+        float frameTime = Math.min(delta, 0.25f);
+        accumulator += frameTime;
+        final float FIXED_TIMESTEP = 1 / 120f;
+
+        while (accumulator >= FIXED_TIMESTEP) {
+            update(FIXED_TIMESTEP);
+            postUpdate(FIXED_TIMESTEP);
+            accumulator -= FIXED_TIMESTEP;
+        }
+        float alpha = accumulator / FIXED_TIMESTEP;
+        draw(alpha);
     }
 
     // Screen interface methods
