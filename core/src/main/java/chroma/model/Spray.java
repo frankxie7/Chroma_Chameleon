@@ -26,14 +26,11 @@ public class Spray extends ObstacleSprite {
      *
      * @param points   The polygon vertices in local coordinates.
      * @param units    The physics scale factor (pixels per world unit).
-     * @param settings Additional settings from a JSON config (unused here).
      */
-    public Spray(float[] points, float units, JsonValue settings) {
+    public Spray(float[] points, float units) {
         // Create the underlying physics shape (a PolygonObstacle).
+
         obstacle = new PolygonObstacle(points);
-        obstacle.setDensity(0);
-        obstacle.setFriction(0);
-        obstacle.setRestitution(0);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);       // No physical collisions; only sensor hits
         obstacle.setUserData(this);

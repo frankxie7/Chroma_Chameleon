@@ -81,9 +81,6 @@ public class Enemy extends ObstacleSprite {
             obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
             obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
             ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
-            obstacle.setDensity(data.getFloat("density", 0));
-            obstacle.setFriction(data.getFloat("friction", 0));
-            obstacle.setRestitution(data.getFloat("restitution", 0));
             obstacle.setFixedRotation(true);
             obstacle.setPhysicsUnits(units);
             obstacle.setUserData(this);

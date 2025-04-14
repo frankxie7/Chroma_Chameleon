@@ -55,9 +55,6 @@ public class Bomb extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("bomb");
 
-        obstacle.setDensity(settings.getFloat("density", 0));
-        obstacle.setFriction(settings.getFloat("friction", 0));
-        obstacle.setRestitution(settings.getFloat("restitution", 0));
 
         // 2) Initialize debug color and mesh to match the circle
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);

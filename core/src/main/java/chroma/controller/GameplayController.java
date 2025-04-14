@@ -346,7 +346,7 @@ public class GameplayController implements Screen {
             // Compute angle (in radians) from avatar to mouse.
             float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
             physics.shootRays(player, sprayAngle);
-            physics.addPaint(player, units, constants);
+            physics.addPaint(player, units);
             player.setPaint(player.getPaint() - splatterCost);
         }
 
@@ -529,6 +529,12 @@ public class GameplayController implements Screen {
 
         if (level.getBackgroundTiles() != null) {
             for (BackgroundTile tile : level.getBackgroundTiles()) {
+                tile.draw(batch);
+            }
+        }
+        // Draw goal tiles
+        if (level.getMachineTiles() != null) {
+            for (BackgroundTile tile : level.getMachineTiles()) {
                 tile.draw(batch);
             }
         }
