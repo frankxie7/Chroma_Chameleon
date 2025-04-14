@@ -525,6 +525,7 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
+        // Draw goal tiles
         if (level.getMachineTiles() != null) {
             for (BackgroundTile tile : level.getMachineTiles()) {
                 tile.draw(batch);

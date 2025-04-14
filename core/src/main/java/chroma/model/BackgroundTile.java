@@ -8,6 +8,7 @@ import edu.cornell.gdiac.assets.ParserUtils;
 import com.badlogic.gdx.graphics.Color;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 
+// This creates a pure visual tile that has no physics property.
 public class BackgroundTile {
     private Polygon polygon;
     private Rectangle bounds;

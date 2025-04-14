@@ -30,10 +30,6 @@ public class Spray extends ObstacleSprite {
      */
     public Spray(float[] points, float units, JsonValue settings) {
         // Create the underlying physics shape (a PolygonObstacle).
-        obstacle = new PolygonObstacle(points);
-        obstacle.setDensity(0);
-        obstacle.setFriction(0);
-        obstacle.setRestitution(0);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);       // No physical collisions; only sensor hits
         obstacle.setUserData(this);
