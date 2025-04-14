@@ -28,7 +28,8 @@
     "goalTileTemp": "platform/tile088.png"
   },
   "jsons"  : {
-    "platform-constants": "platform/constants.json"
+    "platform-constants": "constants/constants.json",
+    "level-1-constants": "constants/level1.json"
   },
   "soundfx" : {
   },

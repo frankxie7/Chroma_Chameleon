@@ -38,14 +38,21 @@ public class Level {
      */
     public Level(AssetDirectory directory, float units, LevelSelector selector) {
         // Load the level JSON configuration via the LevelSelector.
+
+        // levels.json
         JsonValue constants = selector.loadCurrentLevel();
+
+        // constant.json
+        JsonValue globalConstants = directory.getEntry("platform-constants", JsonValue.class);
+
         // Create the goal door
         Texture goalTex = directory.getEntry("shared-goal", Texture.class);
-        JsonValue goalData = constants.get("goal");
+        JsonValue goalData = globalConstants.get("goal");
         goalDoor = new Door(units, goalData);
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
 
+        //background
         backgroundTiles = new ArrayList<>();
         JsonValue backgroundData = constants.get("background");
         if (backgroundData.has("data")) {
@@ -68,6 +75,7 @@ public class Level {
                 }
             }
         }
+        //goal tiles
         machineTiles = new ArrayList<>();
         JsonValue goalTileData = constants.get("g");
         if (goalTileData.has("data")) {
@@ -95,13 +103,13 @@ public class Level {
 
 
         // Create the chameleon (player) using animation
-        JsonValue chamData = constants.get("chameleon");
+        JsonValue chamData = globalConstants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
         Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.1f);
         avatar = new Chameleon(units, chamData, chameleonAnim);
 
         enemies = new ArrayList<>();
-        JsonValue enemiesData = constants.get("enemies");
+        JsonValue enemiesData = globalConstants.get("enemies");
         if (enemiesData != null) {
             Texture enemyTex = directory.getEntry("platform-traci", Texture.class);
             JsonValue enemyPositions = enemiesData.get("positions");
