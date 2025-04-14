@@ -13,7 +13,7 @@ public class Bomb extends ObstacleSprite {
 
     // For the bomb to appear “in flight” visually
     private static final float GRAVITY = 30f; // tune as needed for arc
-    private static final float LIFETIME = 4f;
+    private static final float LIFETIME = 12f;
 
     /**
      * Horizontal velocity in physics units (straight line)

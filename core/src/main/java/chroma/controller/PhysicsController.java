@@ -40,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
 
-    private boolean playerWithBomb = false;
+    private int bombContactCount = 0;
 
     // Whether the player reaches the door
     private boolean playerWithDoor = false;
@@ -355,11 +355,9 @@ public class PhysicsController implements ContactListener {
         // Handle bomb contacts (unchanged or similar counter logic if needed)
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
-            Bomb bomb = (userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB);
-            playerWithBomb = true;
+            bombContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-//            System.out.println("Player is hidden in bomb!");
         }
 
         // Check enemy collisions, etc.
@@ -389,12 +387,11 @@ public class PhysicsController implements ContactListener {
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
-            playerWithBomb = false;
-            // Only set visible if no spray contact remains.
-            if (sprayContactCount <= 0) {
+            bombContactCount--;
+            if (bombContactCount <= 0 && sprayContactCount <= 0) {
+                bombContactCount = 0;
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-//                System.out.println("Player is visible again (bomb ended)!");
             }
         }
 
@@ -402,7 +399,7 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
             sprayContactCount--;
-            if (sprayContactCount <= 0 && !playerWithBomb) {
+            if (sprayContactCount <= 0) {
                 sprayContactCount = 0; // Ensure counter doesn't go negative
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
@@ -445,13 +442,6 @@ public class PhysicsController implements ContactListener {
         return win;
     }
 
-    public boolean didPlayerCollideWithBomb() {
-        return playerWithBomb;
-    }
-
-    public void resetBombFlags() {
-        playerWithBomb = false;
-    }
 
     public void dispose() {
         for (ObstacleSprite spr : objects) {

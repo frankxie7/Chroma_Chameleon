@@ -67,8 +67,7 @@ public class InputController {
     /** Whether the secondary action button was pressed. */
     private boolean secondPressed;
     private boolean secondPrevious;
-    /** Whether the teritiary action button was pressed. */
-    private boolean tertiaryPressed;
+
     /** Whether the debug toggle was pressed. */
     private boolean debugPressed;
     private boolean debugPrevious;
@@ -93,6 +92,19 @@ public class InputController {
     private Vector2 mousePos;
     /** The mousePos cache*/
     private Vector2 mousecache;
+
+    /** New Bomb: Whether the skill‑cast button was pressed. */
+    private boolean skillPressed;
+    private boolean skillPrevious;
+
+    /** Whether the mouse left button was pressed. */
+    private boolean leftPressed;
+    private boolean leftPrevious;
+    /** Whether the mouse right button was pressed. */
+    private boolean rightPressed;
+    private boolean rightPrevious;
+
+
 
     /** An X-Box controller (if it is connected) */
     XBoxController xbox;
@@ -162,17 +174,7 @@ public class InputController {
         return secondPressed && !secondPrevious;
     }
 
-    /**
-     * Returns true if the tertiary action button was pressed.
-     *
-     * This is a sustained button. It will returns true as long as the player
-     * holds it down.
-     *
-     * @return true if the secondary action button was pressed.
-     */
-    public boolean didTertiary() {
-        return tertiaryPressed;
-    }
+
 
     /**
      * Returns true if the reset button was pressed.
@@ -227,6 +229,28 @@ public class InputController {
     }
 
     /**
+     * Returns true if the skill‑cast key was pressed this frame.
+     */
+    public boolean didSkill() {
+        return skillPressed && !skillPrevious;
+    }
+    /** true only on the frame the mouse LEFT button is pressed */
+    public boolean didLeftClick() {
+        return leftPressed && !leftPrevious;
+    }
+
+    /** true only on the frame the mouse RIGHT button is pressed */
+    public boolean didRightClick() {
+        return rightPressed && !rightPrevious;
+    }
+    /** true while the skill‑cast key (E) is being held down */
+    public boolean isSkillHeld() {
+        return skillPressed;          // sustained
+    }
+
+
+
+    /**
      * Creates a new input controller
      *
      * The input controller attempts to connect to the X-Box controller at
@@ -267,6 +291,11 @@ public class InputController {
         exitPrevious = exitPressed;
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
+        skillPrevious = skillPressed;
+        leftPrevious  = leftPressed;
+        rightPrevious = rightPressed;
+
+
 
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
@@ -300,8 +329,7 @@ public class InputController {
         vertical   = xbox.getLeftY();
         secondPressed = xbox.getRightTrigger() > 0.6f;
 
-        // Move the crosshairs with the right stick.
-        tertiaryPressed = xbox.getA();
+
         crosscache.set(xbox.getLeftX(), xbox.getLeftY());
         if (crosscache.len2() > GP_THRESHOLD) {
             momentum += GP_ACCELERATE;
@@ -334,6 +362,10 @@ public class InputController {
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
         shiftPressed = (secondary && shiftPressed) || (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT));
+        skillPressed = (secondary && skillPressed) || Gdx.input.isKeyPressed(Input.Keys.E);
+        leftPressed  = (secondary && leftPressed)  || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
+        rightPressed = (secondary && rightPressed) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT);
+
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);
@@ -352,9 +384,6 @@ public class InputController {
             vertical -= 1.0f;
         }
 
-
-        // Mouse results
-        tertiaryPressed = Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
         crosshair.set(Gdx.input.getX(), Gdx.input.getY());
         crosshair.scl(1/scale.x,-1/scale.y);
         crosshair.y += bounds.height;
