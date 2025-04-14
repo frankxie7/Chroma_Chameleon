@@ -362,7 +362,7 @@ public class InputController {
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
         shiftPressed = (secondary && shiftPressed) || (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT));
-        skillPressed = (secondary && skillPressed) || Gdx.input.isKeyPressed(Input.Keys.E);
+        skillPressed = (secondary && skillPressed) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT);
         leftPressed  = (secondary && leftPressed)  || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
         rightPressed = (secondary && rightPressed) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT);
 

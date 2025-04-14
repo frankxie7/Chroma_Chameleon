@@ -131,7 +131,7 @@ public class GameplayController implements Screen {
 
 
     /* ───────── Aim‑range charging ───────── */
-    private float aimRangeCurrent = RANGE_MIN;   // 当前半径
+    private float aimRangeCurrent = RANGE_MIN;
     private float cameraZoom      = ZOOM_DEFAULT;
     private float targetZoom      = ZOOM_DEFAULT;
 
@@ -499,7 +499,7 @@ public class GameplayController implements Screen {
 
             case PAINTING:
                 if (in.didRightClick()) {
-                    firePlannedBombs();  // 此时计划点入队，状态转为 FIRING
+                    firePlannedBombs();
                 } else {
                     updatePainting();
                 }
@@ -741,13 +741,13 @@ public class GameplayController implements Screen {
 //            Texture rangeTex = directory.getEntry("aiming-range", Texture.class);
 //            rangeTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 //            batch.draw(rangeTex, p.x*units - r/2, p.y*units - r/2, r, r);
-            batch.end();                                           // 暂停 SpriteBatch
+            batch.end();
             shapeRenderer.setProjectionMatrix(camera.combined);
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-            shapeRenderer.setColor(1, 1, 0, 1);                    // 黄色，可自行调整
-            shapeRenderer.circle(p.x*units, p.y*units, r/2, 64);   // 64 段近似圆
+            shapeRenderer.setColor(1, 1, 0, 1);
+            shapeRenderer.circle(p.x*units, p.y*units, r/2, 64);
             shapeRenderer.end();
-            batch.begin();                                         // 恢复 SpriteBatch
+            batch.begin();
 
         }
 
