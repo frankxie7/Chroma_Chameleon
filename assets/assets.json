@@ -24,7 +24,8 @@
     "wall-up": "platform/tile005.png",
     "wall-down": "platform/tile025.png",
     "background-tile": "platform/tile043.png",
-    "wall-top": "platform/tile061.png"
+    "wall-top": "platform/tile061.png",
+    "goalTileTemp": "platform/tile088.png"
   },
   "jsons"  : {
     "platform-constants": "platform/constants.json"

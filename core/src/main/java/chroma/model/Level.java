@@ -24,6 +24,7 @@ public class Level {
     private List<Enemy> enemies;
     private List<Terrain> walls;
     private List<BackgroundTile> backgroundTiles;
+    private List<BackgroundTile> machineTiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
 
@@ -64,6 +65,29 @@ public class Level {
                     BackgroundTile backgroundTile = new BackgroundTile(coords, units, backgroundData);
                     backgroundTile.setTexture(wallTex);
                     backgroundTiles.add(backgroundTile);
+                }
+            }
+        }
+        machineTiles = new ArrayList<>();
+        JsonValue goalTileData = constants.get("g");
+        if (goalTileData.has("data")) {
+            Texture machineTex = directory.getEntry("goalTileTemp", Texture.class);
+            machineTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+            int layerWidth = goalTileData.getInt("width");
+            int layerHeight = goalTileData.getInt("height");
+            JsonValue data = goalTileData.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int tileValue = data.getInt(i);
+                if (tileValue == 45 || tileValue == 46 || tileValue == 57 || tileValue == 58 ||
+                    tileValue == 69 || tileValue == 70){
+                    int tx = i % layerWidth;
+                    int ty = i / layerWidth;
+                    ty = layerHeight - 1 - ty;
+                    String type = goalTileData.getString("shape", "square");
+                    float[] coords = createCoords(tx, ty, type);
+                    BackgroundTile goalTile = new BackgroundTile(coords, units, goalTileData);
+                    goalTile.setTexture(machineTex);
+                    machineTiles.add(goalTile);
                 }
             }
         }
@@ -275,6 +299,9 @@ public class Level {
 
     public List<BackgroundTile> getBackgroundTiles() {
         return backgroundTiles;
+    }
+    public List<BackgroundTile> getMachineTiles() {
+        return machineTiles;
     }
 
 
