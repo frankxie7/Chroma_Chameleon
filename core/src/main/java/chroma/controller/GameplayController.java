@@ -51,7 +51,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
-    private int numGoals = 700;
+    private int numGoals =672;
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -218,13 +218,19 @@ public class GameplayController implements Screen {
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
         physics.addObject(player);
-        physics.createGoal(new Vector2(3f,28.5f),10,units, constants);
-        physics.createGoal(new Vector2(23.5f,6.5f),10,units, constants);
-        physics.createGoal(new Vector2(25.5f,6.5f),10,units, constants);
-        physics.createGoal(new Vector2(23.5f,8.5f),10,units, constants);
-        physics.createGoal(new Vector2(25.5f,8.5f),10,units, constants);
-        physics.createGoal(new Vector2(27.5f,8.5f),10,units, constants);
-        physics.createGoal(new Vector2(27.5f,6.5f),10,units, constants);
+        int id = 0;
+        for(BackgroundTile machine : level.getMachineTiles()){
+            Rectangle rec = machine.getBounds();
+            System.out.println(scale);
+            System.out.println(rec.getX());
+
+
+            float y = (rec.getY() / 32) + 0.2f;
+            float x = (rec.getX() / 32) + 0.2f;
+
+            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,id);
+        }
+
 
         // Initialize AI
         aiControllers = new ArrayList<>();

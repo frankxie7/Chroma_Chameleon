@@ -15,6 +15,9 @@ public class BackgroundTile {
     private Texture texture;
     private float units;
     private float tileSize;
+    private float width;
+    private float x;
+    private float y;
 
     public BackgroundTile(float[] points, float units, JsonValue settings) {
         this.units = units;
@@ -23,6 +26,7 @@ public class BackgroundTile {
         polygon = new Polygon(points);
         polygon.setScale(units, units);
         bounds = polygon.getBoundingRectangle();
+        width = settings.getInt("width");
     }
 
 
@@ -38,4 +42,7 @@ public class BackgroundTile {
     public Rectangle getBounds() {
         return bounds;
     }
+
+    public float getWidth(){return width;}
+
 }

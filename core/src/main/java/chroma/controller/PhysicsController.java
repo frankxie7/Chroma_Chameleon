@@ -212,14 +212,13 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center,int gridSize, float units, JsonValue settings){
-        float boxRad = 0.2f;
+    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
-                float x = center.x + row *  boxRad;
-                float y = center.y + col * boxRad;
+                float x = center.x + row * width;
+                float y = center.y + col * width;
                 boolean edge = row == gridSize - 1 || col == gridSize - 1;
-                Goal tile = createTile(x, y,boxRad, units, settings);
+                Goal tile = createTile(x, y, width, units, settings,id);
                 goalList[index] = tile;
                 addObject(tile);
                 index+=1;
@@ -236,7 +235,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings,int id){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -253,7 +252,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints, units, settings);
+        return new Goal(goalPoints, units, settings,id);
     }
 
     /**
