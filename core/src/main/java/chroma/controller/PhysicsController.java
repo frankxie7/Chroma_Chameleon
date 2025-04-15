@@ -137,7 +137,7 @@ public class PhysicsController implements ContactListener {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb) {
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon) {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
@@ -149,6 +149,12 @@ public class PhysicsController implements ContactListener {
                     return fraction;
                 }
             };
+//            Vector2 position = obstacle.getPosition();
+//            if(obstacle.isFacingRight()){
+//                position.x += 1/32f;
+//            }else{
+//                position.x -=1/32f;
+//            }
             world.rayCast(callback, obstacle.getPosition(), endPoint);
             endpoints[i] = new Vector2(endPoint);
         }
