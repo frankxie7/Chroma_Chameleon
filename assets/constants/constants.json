@@ -61,7 +61,7 @@
     }
   },
   "bomb": {
-    "size"      : 2.5,
+    "size"      : 2.0,
     "aimRange": 8
   },
   "paintBar": {
