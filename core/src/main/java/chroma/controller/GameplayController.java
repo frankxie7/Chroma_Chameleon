@@ -468,6 +468,7 @@ public class GameplayController implements Screen {
 
         switch (bombState) {
             case IDLE:
+                player.setMaxSpeed(1f);
                 if (skillKey && player.hasEnoughPaint(bombCost)) {
                     bombState       = BombSkillState.CHARGING;
                     aimRangeCurrent = RANGE_MIN;
@@ -476,6 +477,7 @@ public class GameplayController implements Screen {
                 break;
 
             case CHARGING:
+                player.setMaxSpeed(0.5f);
                 if (in.isSkillHeld()) {
                     aimRangeCurrent = Math.min(RANGE_MAX, aimRangeCurrent + RANGE_GROWTH * dt);
                     float t         = (aimRangeCurrent - RANGE_MIN) / (RANGE_MAX - RANGE_MIN);
@@ -487,6 +489,7 @@ public class GameplayController implements Screen {
                 break;
 
             case READY:
+                player.setMaxSpeed(0.5f);
                 if (skillKey) {
                     bombState = BombSkillState.IDLE;
                     targetZoom = ZOOM_DEFAULT;
@@ -498,6 +501,7 @@ public class GameplayController implements Screen {
 
 
             case PAINTING:
+                player.setMaxSpeed(1f);
                 if (in.didRightClick()) {
                     firePlannedBombs();
                 } else {
@@ -506,6 +510,7 @@ public class GameplayController implements Screen {
                 break;
 
             case COOLDOWN:
+                player.setMaxSpeed(1f);
                 cooldownTimer -= dt;
                 if (cooldownTimer <= 0f) {
                     bombState = BombSkillState.IDLE;

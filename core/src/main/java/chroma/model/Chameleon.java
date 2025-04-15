@@ -38,6 +38,7 @@ public class Chameleon extends ObstacleSprite {
     private float damping;
     /** The maximum character speed */
     private float maxspeed;
+    private float currentMaxSpeed;
 
     /** Cooldown (in animation frames) for shooting */
     private int shotLimit;
@@ -178,7 +179,7 @@ public class Chameleon extends ObstacleSprite {
      * @return the upper limit on Traci's left-right movement.
      */
     public float getMaxSpeed() {
-        return maxspeed;
+        return currentMaxSpeed;
     }
 
     /**
@@ -241,6 +242,7 @@ public class Chameleon extends ObstacleSprite {
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
         maxspeed = data.getFloat("maxspeed", 0);
+        currentMaxSpeed = maxspeed;
         damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
 
@@ -434,7 +436,6 @@ public class Chameleon extends ObstacleSprite {
             transform.preRotate( (float) (a * 180.0f / Math.PI) );
             transform.preTranslate( p.x * u, p.y * u );
 
-            //
             batch.outline( sensorOutline, transform );
             batch.setColor(original);
         }
@@ -491,5 +492,6 @@ public class Chameleon extends ObstacleSprite {
     public Vector2 getLastSeen() { return lastSeen; }
     public void setLastSeen(Vector2 pos) { this.lastSeen = pos; }
 
+    public void setMaxSpeed (float factor) { this.currentMaxSpeed = factor * maxspeed;}
 
 }
