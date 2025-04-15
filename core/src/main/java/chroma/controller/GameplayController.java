@@ -53,7 +53,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
-    private int numGoals =672;
+
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -84,6 +84,7 @@ public class GameplayController implements Screen {
 
     private PhysicsController physics;
     private Level level;
+    private int numGoals = 672;
     private LevelSelector levelSelector;
 
     private List<AIController> aiControllers;
@@ -347,6 +348,10 @@ public class GameplayController implements Screen {
             for (AIController ai : aiControllers) {
                 ai.setState(AIController.State.CHASE);
             }
+        }
+
+        if(physics.goalsFull()){
+
         }
         globalChase = anyChasing;
 
@@ -727,7 +732,6 @@ public class GameplayController implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         // Draw tiled background
-
         if (level.getBackgroundTiles() != null) {
             for (BackgroundTile tile : level.getBackgroundTiles()) {
                 tile.draw(batch);
@@ -818,6 +822,7 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
@@ -858,18 +863,18 @@ public class GameplayController implements Screen {
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
-        int numFilled = 0;
-        for(Goal goal : physics.getGoalList()){
-            if(goal.isFull()){
-                numFilled +=1;
-            }
-        }
-        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
-        goalMessage.setText("Goals filled: " + goalPercentage + "%");
-        goalMessage.setColor(Color.YELLOW);
-        goalMessage.setAlignment(TextAlign.middleCenter);
-        goalMessage.setFont(displayFont);
-        batch.drawText(goalMessage, width / 2, height - 40);
+//        int numFilled = 0;
+//        for(Goal goal : physics.getGoalList()){
+//            if(goal != null && goal.isFull()){
+//                numFilled +=1;
+//            }
+//        }
+//        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
+//        goalMessage.setText("Goals filled: " + goalPercentage + "%");
+//        goalMessage.setColor(Color.YELLOW);
+//        goalMessage.setAlignment(TextAlign.middleCenter);
+//        goalMessage.setFont(displayFont);
+//        batch.drawText(goalMessage, width / 2, height - 40);
 
 
         batch.setColor(Color.WHITE);

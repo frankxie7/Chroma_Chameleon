@@ -415,9 +415,7 @@ public class PhysicsController implements ContactListener {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
 
-//        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
-//            contact.setEnabled(false);  // disables physical collision response
-//        }
+
     }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
@@ -432,13 +430,14 @@ public class PhysicsController implements ContactListener {
     }
 
     public boolean goalsFull(){
-        boolean win = true;
+        int numFilled = 0;
         for(Goal goal : goalList){
-            if(!goal.isFull()){
-                win = false;
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
             }
+            System.out.println(numFilled);
         }
-        return win;
+        return (float)numFilled / goalList.length > 0.9;
     }
 
 

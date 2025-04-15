@@ -50,6 +50,7 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 public class Terrain extends ObstacleSprite {
     private Polygon polygon;
 
+
     /**
      * Creates a surface from the given set of points and physics units
      *
@@ -75,7 +76,9 @@ public class Terrain extends ObstacleSprite {
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
+        obstacle.setName("terrain");
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
+
 
         // Scale the polygon and create the mesh.
         poly.scl(units);
@@ -128,4 +131,5 @@ public class Terrain extends ObstacleSprite {
             mesh.setColor(i, new Color(0.6f, 0.6f, 0.6f, 1f));
         }
     }
+
 }
