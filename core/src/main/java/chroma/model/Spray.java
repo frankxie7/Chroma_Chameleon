@@ -3,6 +3,7 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.math.Poly2;
@@ -21,6 +22,7 @@ public class Spray extends ObstacleSprite {
     private static Texture sprayTexture = null;
     private static final float LIFETIME = 5f;
     private float timeAlive;
+    private float[] trianglePoints;
     /**
      * Creates a new Spray object from the given points and world unit scale.
      *
@@ -29,6 +31,16 @@ public class Spray extends ObstacleSprite {
      * @param settings Additional settings from a JSON config (unused here).
      */
     public Spray(float[] points, float units, JsonValue settings) {
+        this.trianglePoints = points.clone(); // Store a copy of original points
+
+        Vector2 centroid = computeCentroid(points);
+
+        // Shift points to be relative to centroid
+        for (int i = 0; i < points.length; i += 2) {
+            points[i] -= centroid.x;
+            points[i + 1] -= centroid.y;
+        }
+
         // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
         obstacle.setDensity(0);
@@ -39,6 +51,7 @@ public class Spray extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("spray");
         obstacle.setPhysicsUnits(units);
+        obstacle.setPosition(centroid); // Now getPosition() will work
 
         // Create the polygon for the mesh (rendering).
 
@@ -73,7 +86,19 @@ public class Spray extends ObstacleSprite {
         super.update(dt);
     }
 
+    private Vector2 computeCentroid(float[] points) {
+        float cx = 0, cy = 0;
+        int count = points.length / 2;
+        for (int i = 0; i < points.length; i += 2) {
+            cx += points[i];
+            cy += points[i + 1];
+        }
+        return new Vector2(cx / count, cy / count);
+    }
+
     public boolean isExpired() {
         return timeAlive >= LIFETIME;
     }
+    public void setExpired() { this.timeAlive = LIFETIME; }
+    public Vector2 getPosition() { return computeCentroid(trianglePoints); }
 }

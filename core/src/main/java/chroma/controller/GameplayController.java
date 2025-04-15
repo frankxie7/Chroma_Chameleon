@@ -285,7 +285,11 @@ public class GameplayController implements Screen {
         }
         if (anyChasing) {
             for (AIController ai : aiControllers) {
-                ai.setState(AIController.State.CHASE);
+                if (ai.getEnemy().getType() != Enemy.Type.CAMERA) {
+                    ai.setState(AIController.State.CHASE);
+                } else if (!ai.getPlayerDetected()) {
+                    ai.setState(AIController.State.ALERT);
+                }
             }
         }
         globalChase = anyChasing;
@@ -408,10 +412,6 @@ public class GameplayController implements Screen {
         physics.addObject(bomb);
     }
 
-
-
-
-
     /**
      * Removes a bomb from the physics world.
      */
@@ -460,7 +460,6 @@ public class GameplayController implements Screen {
         batch.drawText(paintText, displayFont, width*posXRatio, height*(posYRatio-textOffset));
 
         batch.setColor(Color.WHITE);
-
     }
 
     /**
@@ -573,7 +572,7 @@ public class GameplayController implements Screen {
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
-                aiController.drawCamera(camera); // Call debug grid rendering
+                aiController.drawEnemyVision(camera);
             }
         }
         batch.begin();
@@ -587,11 +586,11 @@ public class GameplayController implements Screen {
             // Uncomment to see AI Enemy debugging (from AIController)
 //            drawMapCoords(batch);
 //
-            batch.end();
-            for (AIController aiController : aiControllers) {
-                aiController.debugRender(camera); // Call debug grid rendering
-            }
-            batch.begin(); // Resume SpriteBatch rendering
+//            batch.end();
+//            for (AIController aiController : aiControllers) {
+//                aiController.debugRender(camera); // Call debug grid rendering
+//            }
+//            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects
@@ -619,7 +618,6 @@ public class GameplayController implements Screen {
         goalMessage.setAlignment(TextAlign.middleCenter);
         goalMessage.setFont(displayFont);
         batch.drawText(goalMessage, width / 2, height - 40);
-
 
         batch.setColor(Color.WHITE);
         batch.end();
@@ -732,5 +730,4 @@ public class GameplayController implements Screen {
     public float getUnits() {
         return units;
     }
-
 }

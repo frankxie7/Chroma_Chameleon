@@ -2,10 +2,12 @@ package chroma.controller;
 
 import chroma.model.*;
 import chroma.model.Enemy.Type;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -17,6 +19,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
+import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -337,9 +340,20 @@ public class AIController {
         }
 
         playerDetected = false;
-        float distanceToPlayer = enemyPos.dst(playerPos);
         boolean isCamera = type == Type.CAMERA;
+        boolean isSweeper = type == Type.SWEEPER;
+        float distanceToPlayer = enemyPos.dst(playerPos);
         boolean guardInRange = distanceToPlayer <= detectionRange;
+
+        // Sweeper does not chase or alert, only patrols and cleans paint
+        if (isSweeper) {
+            state = State.PATROL;
+            cleanNearbyPaint(delta);
+            patrolState(delta, enemyPos);
+            enemy.applyForce();
+            enemy.update(delta);
+            return;
+        }
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
@@ -350,7 +364,7 @@ public class AIController {
             for (int i = 0; i < numRays; i++) {
                 float rayAngle = angleLooking - halfFOV + (i * angleStep);
                 Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-                float rayLength = isCamera ? 9999f : detectionRange;
+                float rayLength = detectionRange;
                 Vector2 rayEnd = enemyPos.cpy().add(direction.scl(rayLength));
 
                 final Vector2 rayHit = rayEnd.cpy(); // Initialize the ray hit position
@@ -570,17 +584,30 @@ public class AIController {
         }
     }
 
+    private float cleaningTimer = 0f;
+    private static final float CLEANING_INTERVAL = 1f;
+    private void cleanNearbyPaint(float delta) {
+        cleaningTimer += delta;
+        if (cleaningTimer >= CLEANING_INTERVAL) {
+            for (ObstacleSprite obj : physics.objects) {
+                if (obj instanceof Spray) {
+                    Spray spray = (Spray) obj;
+                    Vector2 sprayPos = spray.getPosition();
+//                    System.out.println("Spray: " + sprayPos);
+//                    System.out.println("Dist: " + enemy.getPosition().dst(sprayPos));
+                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= detectionRange) {
+                        cleaningTimer = 0f;
+                        spray.setExpired();; // however you handle removing objects
+                    }
+                }
+            }
+        }
+    }
+
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
     private Array<Vector2> lastPath;
     private Vector2 lastGoal;
 
-    public void drawCamera(OrthographicCamera camera) {
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(new Color(1, 0, 0, 0.3f)); // Transparent red for vision cone
-        shapeRenderer.circle(enemy.getPosition().x * scale, enemy.getPosition().y * scale, 10);
-        shapeRenderer.end();
-    }
     public void debugRender(OrthographicCamera camera) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -608,49 +635,72 @@ public class AIController {
 
         // Draw enemy FOV and rays
         shapeRenderer.setColor(new Color(1, 0, 0, 0.3f)); // Transparent red for vision cone
-        drawEnemyVision();
+        drawEnemyVision(camera);
 
         shapeRenderer.end();
     }
-    private void drawEnemyVision() {
-        // UNscale for physics calculations
+    public void drawEnemyVision(OrthographicCamera camera) {
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
         Vector2 enemyWorldPos = new Vector2(enemy.getPosition().x, enemy.getPosition().y);
         Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
 
         float halfFOV = (float) Math.toRadians(fov / 2);
-        int numRays = (int) (fov / 5);
+        int numRays = (int) (fov);  // high = smoother
         float angleStep = (halfFOV * 2) / (numRays - 1);
 
         float angleToLook = enemy.getRotation();
 
-        shapeRenderer.setColor(new Color(1, 0, 0, 0.3f));
+        shapeRenderer.setColor(new Color(1, 0, 0, 0.2f));
+
+        Array<Vector2> hitPoints = new Array<>();
+
         for (int i = 0; i < numRays; i++) {
             float rayAngle = angleToLook - halfFOV + i * angleStep;
 
             Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-            Vector2 rayEndWorld = type == Type.CAMERA
-                    ? enemyWorldPos.cpy().add(direction.scl(9999)) // Very long in world units
-                    : enemyWorldPos.cpy().add(direction.scl(detectionRange));
+            Vector2 rayEndWorld = enemyWorldPos.cpy().add(direction.scl(detectionRange));
 
-            Vector2 rayHitWorld = rayEndWorld.cpy();  // Will update on hit
+            Vector2 rayHitWorld = rayEndWorld.cpy();
 
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
 
-                if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal) {
+                if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
                     return -1f; // Skip transparent
                 }
 
-                rayHitWorld.set(point);  // Save where we actually hit
+                rayHitWorld.set(point);
                 return fraction;
             };
 
             physics.getWorld().rayCast(callback, enemyWorldPos, rayEndWorld);
 
-            // SCALE back up to draw on screen
+            // SCALE back up for screen drawing
             Vector2 screenHit = new Vector2(rayHitWorld.x * scale, rayHitWorld.y * scale);
-            shapeRenderer.line(enemyScreenPos, screenHit);
+            hitPoints.add(screenHit);
         }
+
+        // Now draw filled triangles between each hit point
+        for (int i = 0; i < hitPoints.size - 1; i++) {
+            Vector2 p1 = hitPoints.get(i);
+            Vector2 p2 = hitPoints.get(i + 1);
+
+            if (p1.dst(p2) < detectionRange * scale * 1.1f) {  // Only draw if neighboring rays are "connected"
+                shapeRenderer.triangle(
+                        enemyScreenPos.x, enemyScreenPos.y,
+                        p1.x, p1.y,
+                        p2.x, p2.y
+                );
+            }
+        }
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     public Enemy getEnemy() { return enemy; }

@@ -18,7 +18,7 @@ import java.util.List;
 
 public class Enemy extends ObstacleSprite {
     public enum Type {
-        GUARD, JANITOR, CAMERA
+        GUARD, SWEEPER, SNIFFER, CAMERA
     }
 
     private float detectionRange;
