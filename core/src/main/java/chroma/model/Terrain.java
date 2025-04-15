@@ -73,9 +73,6 @@ public class Terrain extends ObstacleSprite {
         triangulator.getPolygon(poly);
         obstacle = new PolygonObstacle(points);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
-        obstacle.setDensity(settings.getFloat("density", 0));
-        obstacle.setFriction(settings.getFloat("friction", 0));
-        obstacle.setRestitution(settings.getFloat("restitution", 0));
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);

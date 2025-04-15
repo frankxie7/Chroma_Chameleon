@@ -8,23 +8,25 @@ import edu.cornell.gdiac.assets.ParserUtils;
 import com.badlogic.gdx.graphics.Color;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 
+// This creates a pure visual tile that has no physics property.
 public class BackgroundTile {
     private Polygon polygon;
     private Rectangle bounds;
     private Texture texture;
     private float units;
     private float tileSize;
+    private float width;
+    private float x;
+    private float y;
 
     public BackgroundTile(float[] points, float units, JsonValue settings) {
         this.units = units;
         this.tileSize = settings.getFloat("tile");
 
-        // 如果需要重复纹理，则建议在 Level 中设置 texture 的 wrap 模式
-        // 这里仅保存多边形数据用于确定位置和尺寸
-        // 注意：如果背景仅为矩形，可直接根据tileSize计算出bounds，否则可以利用多边形的包围矩形
         polygon = new Polygon(points);
         polygon.setScale(units, units);
         bounds = polygon.getBoundingRectangle();
+        width = settings.getInt("width");
     }
 
 
@@ -34,11 +36,13 @@ public class BackgroundTile {
 
 
     public void draw(SpriteBatch batch) {
-        // 直接绘制整个 bounds 区域的纹理（适用于单块填充的情况）
         batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     public Rectangle getBounds() {
         return bounds;
     }
+
+    public float getWidth(){return width;}
+
 }

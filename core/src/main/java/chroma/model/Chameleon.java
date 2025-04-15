@@ -38,6 +38,7 @@ public class Chameleon extends ObstacleSprite {
     private float damping;
     /** The maximum character speed */
     private float maxspeed;
+    private float currentMaxSpeed;
 
     /** Cooldown (in animation frames) for shooting */
     private int shotLimit;
@@ -175,7 +176,7 @@ public class Chameleon extends ObstacleSprite {
      * @return the upper limit on Traci's left-right movement.
      */
     public float getMaxSpeed() {
-        return maxspeed;
+        return currentMaxSpeed;
     }
 
     /**
@@ -226,9 +227,6 @@ public class Chameleon extends ObstacleSprite {
         obstacle = new CapsuleObstacle(x, y, s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
         ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
 
-        obstacle.setDensity(data.getFloat("density", 0));
-        obstacle.setFriction(data.getFloat("friction", 0));
-        obstacle.setRestitution(data.getFloat("restitution", 0));
         // Ensure the body is dynamic so it can move.
         obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
         obstacle.setFixedRotation(true);
@@ -241,6 +239,7 @@ public class Chameleon extends ObstacleSprite {
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
         maxspeed = data.getFloat("maxspeed", 0);
+        currentMaxSpeed = maxspeed;
         damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
 
@@ -261,7 +260,7 @@ public class Chameleon extends ObstacleSprite {
         this.walkAnim = animation;
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-        currentFrame = frames[4];
+        currentFrame = frames[6];
     }
 
     /**
@@ -341,8 +340,10 @@ public class Chameleon extends ObstacleSprite {
 
         if (hmove == 0 && vmove == 0) {
             TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-            currentFrame = frames[4];
-            animTime = 0;
+            currentFrame = frames[6];
+            animTime += dt;
+            currentFrame = walkAnim.getKeyFrame(animTime, true);
+            animTime = 6;
         } else {
             animTime += dt;
             currentFrame = walkAnim.getKeyFrame(animTime, true);
@@ -375,12 +376,11 @@ public class Chameleon extends ObstacleSprite {
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
 
-        Rectangle bounds = mesh.computeBounds();
-        float drawWidth  = bounds.width * drawScale;
-        float drawHeight = bounds.height * drawScale;
+//        Rectangle bounds = mesh.computeBounds();
+        float drawWidth  = currentFrame.getRegionWidth() * drawScale;
+        float drawHeight = currentFrame.getRegionHeight() * drawScale;
         float px = obstacle.getX() * obstacle.getPhysicsUnits();
         float py = obstacle.getY() * obstacle.getPhysicsUnits();
-
 
         if (faceRight) {
             if (currentFrame.isFlipX()) {
@@ -391,7 +391,6 @@ public class Chameleon extends ObstacleSprite {
                 currentFrame.flip(true, false);
             }
         }
-
         batch.draw(currentFrame,
             px - drawWidth / 2,
             py - drawHeight / 2,
@@ -431,7 +430,6 @@ public class Chameleon extends ObstacleSprite {
             transform.preRotate( (float) (a * 180.0f / Math.PI) );
             transform.preTranslate( p.x * u, p.y * u );
 
-            //
             batch.outline( sensorOutline, transform );
             batch.setColor(original);
         }
@@ -488,5 +486,6 @@ public class Chameleon extends ObstacleSprite {
     public Vector2 getLastSeen() { return lastSeen; }
     public void setLastSeen(Vector2 pos) { this.lastSeen = pos; }
 
+    public void setMaxSpeed (float factor) { this.currentMaxSpeed = factor * maxspeed;}
 
 }

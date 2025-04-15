@@ -57,9 +57,6 @@ public class Door extends ObstacleSprite {
         float size = s * units;
 
         obstacle = new BoxObstacle(x, y, s, s);
-        obstacle.setDensity(settings.getFloat("density", 0));
-        obstacle.setFriction(settings.getFloat("friction", 0));
-        obstacle.setRestitution(settings.getFloat("restitution", 0));
         obstacle.setPhysicsUnits(units);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);

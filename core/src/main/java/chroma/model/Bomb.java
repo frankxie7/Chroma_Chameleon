@@ -13,7 +13,7 @@ public class Bomb extends ObstacleSprite {
 
     // For the bomb to appear “in flight” visually
     private static final float GRAVITY = 30f; // tune as needed for arc
-    private static final float LIFETIME = 4f;
+    private static final float LIFETIME = 12f;
 
     /**
      * Horizontal velocity in physics units (straight line)
@@ -55,16 +55,13 @@ public class Bomb extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("bomb");
 
-        obstacle.setDensity(settings.getFloat("density", 0));
-        obstacle.setFriction(settings.getFloat("friction", 0));
-        obstacle.setRestitution(settings.getFloat("restitution", 0));
 
         // 2) Initialize debug color and mesh to match the circle
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
         mesh.set(-radius, -radius, 2 * radius, 2 * radius);
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
-            mesh.setColor(i, new Color(0.5f, 0.0f, 1.0f, 0.5f));
+            mesh.setColor(i, new Color( 1.0f, 1.0f, 1.0f, 1.0f));
         }
         // 3) Store everything
         this.timeAlive = 0;

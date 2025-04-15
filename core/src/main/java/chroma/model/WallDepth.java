@@ -57,9 +57,6 @@ public class WallDepth extends ObstacleSprite {
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         // Turn off sensor so that collision is enabled.
         obstacle.setSensor(false);
-        obstacle.setDensity(settings.getFloat("density", 0));
-        obstacle.setFriction(settings.getFloat("friction", 0));
-        obstacle.setRestitution(settings.getFloat("restitution", 0));
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);

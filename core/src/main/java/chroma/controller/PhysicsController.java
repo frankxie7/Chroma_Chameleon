@@ -40,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
 
-    private boolean playerWithBomb = false;
+    private int bombContactCount = 0;
 
     // Whether the player reaches the door
     private boolean playerWithDoor = false;
@@ -125,31 +125,6 @@ public class PhysicsController implements ContactListener {
      * @param obstacle the Chameleon
      * @param angle the angle to shoot the rays
      */
-//    public void shootRays(Chameleon obstacle,float angle) {
-//        float angleStep = (float) Math.PI/2f / (float) numRays;
-//        for (int i = 0; i < numRays; i++) {
-//            float angleOffset = (i - numRays / 2f) * angleStep;
-//            Vector2 direction = new Vector2((float)  Math.cos(angle + angleOffset),
-//                (float) Math.sin(angle +angleOffset)).nor();
-//            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(rayLength));
-//            RayCastCallback callback = (fixture, point, normal, fraction) -> {
-//                Object userData = fixture.getBody().getUserData();
-//                if (userData instanceof Spray || userData instanceof Bomb) {
-//                    return -1f;
-//                }
-//                if(userData instanceof Goal){
-//                    Goal tile = (Goal) userData;
-//                    tile.setFull();
-//                    return -1f;
-//                }
-//
-//                endPoint.set(point);
-//                return fraction;
-//            };
-//            world.rayCast(callback,obstacle.getPosition(),endPoint);
-//            endpoints[i] = new Vector2(endPoint);
-//        }
-//    }
     public void shootRays(Chameleon obstacle, float angle) {
         float angleStep = (float)(Math.PI / 2.0) / numRays;
         for (int i = 0; i < numRays; i++) {
@@ -200,9 +175,8 @@ public class PhysicsController implements ContactListener {
      * Adds the Spray objects created by the raycasting code
      * @param avatar the Chameleon
      * @param units the scaled physics units
-     * @param settings the Json settings
      */
-    public void addPaint(Chameleon avatar, float units, JsonValue settings) {
+    public void addPaint(Chameleon avatar, float units) {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
@@ -223,7 +197,7 @@ public class PhysicsController implements ContactListener {
                 points[5] = y3;
                 if(!isConcave(points) && isCounterClockwise(points)){
                     try{
-                        Spray paintTriangle = new Spray(points, units, settings);
+                        Spray paintTriangle = new Spray(points, units);
                         addObject(paintTriangle);
                     }catch(IllegalArgumentException ignored){
                     }
@@ -238,14 +212,13 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center,int gridSize, float units, JsonValue settings){
-        float boxRad = 0.2f;
+    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
-                float x = center.x + row *  boxRad;
-                float y = center.y + col * boxRad;
+                float x = center.x + row * width;
+                float y = center.y + col * width;
                 boolean edge = row == gridSize - 1 || col == gridSize - 1;
-                Goal tile = createTile(x, y,boxRad, units, settings);
+                Goal tile = createTile(x, y, width, units, settings,id);
                 goalList[index] = tile;
                 addObject(tile);
                 index+=1;
@@ -262,7 +235,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings,int id){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -279,7 +252,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints, units, settings);
+        return new Goal(goalPoints, units, settings,id);
     }
 
     /**
@@ -381,11 +354,9 @@ public class PhysicsController implements ContactListener {
         // Handle bomb contacts (unchanged or similar counter logic if needed)
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
-            Bomb bomb = (userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB);
-            playerWithBomb = true;
+            bombContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
             player.setHidden(true);
-//            System.out.println("Player is hidden in bomb!");
         }
 
         // Check enemy collisions, etc.
@@ -415,12 +386,11 @@ public class PhysicsController implements ContactListener {
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
-            playerWithBomb = false;
-            // Only set visible if no spray contact remains.
-            if (sprayContactCount <= 0) {
+            bombContactCount--;
+            if (bombContactCount <= 0 && sprayContactCount <= 0) {
+                bombContactCount = 0;
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
-//                System.out.println("Player is visible again (bomb ended)!");
             }
         }
 
@@ -428,7 +398,7 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
             sprayContactCount--;
-            if (sprayContactCount <= 0 && !playerWithBomb) {
+            if (sprayContactCount <= 0) {
                 sprayContactCount = 0; // Ensure counter doesn't go negative
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
                 player.setHidden(false);
@@ -445,9 +415,9 @@ public class PhysicsController implements ContactListener {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
 
-        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
-            contact.setEnabled(false);  // disables physical collision response
-        }
+//        if ((a instanceof Chameleon && b instanceof Goal) || (a instanceof Goal && b instanceof Chameleon)) {
+//            contact.setEnabled(false);  // disables physical collision response
+//        }
     }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
@@ -471,13 +441,6 @@ public class PhysicsController implements ContactListener {
         return win;
     }
 
-    public boolean didPlayerCollideWithBomb() {
-        return playerWithBomb;
-    }
-
-    public void resetBombFlags() {
-        playerWithBomb = false;
-    }
 
     public void dispose() {
         for (ObstacleSprite spr : objects) {

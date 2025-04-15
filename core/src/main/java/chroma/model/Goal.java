@@ -29,6 +29,7 @@ public class Goal extends ObstacleSprite {
     float units;
     float[] points;
     private Poly2 poly;
+    private int id;
 
     /**
      * Creates a new Spray object from the given points and world unit scale.
@@ -37,18 +38,16 @@ public class Goal extends ObstacleSprite {
      * @param units    The physics scale factor (pixels per world unit).
      * @param settings Additional settings from a JSON config (unused here).
      */
-    public Goal(float[] points, float units, JsonValue settings) {
+    public Goal(float[] points, float units, JsonValue settings,int id) {
         // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
-        obstacle.setDensity(0);
-        obstacle.setFriction(0);
-        obstacle.setRestitution(0);
         obstacle.setBodyType(BodyType.StaticBody);
         obstacle.setUserData(this);
         obstacle.setName("goal");
         obstacle.setPhysicsUnits(units);
         this.units = units;
         this.points = points;
+        this.id = id;
 
         // Filter allows collisions with everything except other enemies
         Filter goalFilter = new Filter();
@@ -60,13 +59,14 @@ public class Goal extends ObstacleSprite {
         this.poly = new Poly2(points,indices);
         this.poly.scl(units);
 
+
         // If the shared texture is not created yet, make it now.
         if (sprayTexture == null) {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color purpleTranslucent = new Color(0.5f, 0.5f, 0.5f, 0.3f);
-            pixmap.setColor(purpleTranslucent);
+            Color grey = new Color(0.5f, 0.5f, 0.5f, 0.0f);
+            pixmap.setColor(grey);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);
             pixmap.dispose();
@@ -75,7 +75,7 @@ public class Goal extends ObstacleSprite {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color purpleTranslucent = new Color(0.5f, 0.0f, 0.5f, 0.5f);
+            Color purpleTranslucent = new Color(1.0f, 0f, 1.0f, 0.2f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
             sprayTextureFull = new Texture(pixmap);
@@ -144,4 +144,6 @@ public class Goal extends ObstacleSprite {
         // Then call the superclass update
         super.update(dt);
     }
+
+    public int getId(){return id;}
 }
