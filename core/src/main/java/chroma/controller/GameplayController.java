@@ -129,7 +129,7 @@ public class GameplayController implements Screen {
     private static final float RANGE_MAX      = 20f;
     private static final float RANGE_GROWTH   = 12f;
     private static final float ZOOM_DEFAULT = 0.5f;
-    private static final float ZOOM_OUT_MAX = 1.0f;
+    private static final float ZOOM_OUT_MAX = 0.75f;
     private static final float ZOOM_LERP    = 5f;
 
 
@@ -517,10 +517,14 @@ public class GameplayController implements Screen {
                 }
                 break;
 
-
             case PAINTING:
                 player.setMaxSpeed(1f);
-                if (in.didRightClick()) {
+                if (in.didSkill()) {
+                    planned.clear();
+                    bombState = BombSkillState.IDLE;
+                    aimRangeCurrent = RANGE_MIN;
+                    targetZoom = ZOOM_DEFAULT;
+                } else if (in.didRightClick()) {
                     firePlannedBombs();
                 } else {
                     updatePainting();
@@ -536,13 +540,13 @@ public class GameplayController implements Screen {
                     targetZoom = ZOOM_DEFAULT;
                 }
                 break;
-
         }
 
         if (old != bombState) {
             com.badlogic.gdx.Gdx.app.log("BombSkill", old + " -> " + bombState);
         }
     }
+
 
 
     /** read json aim range */
@@ -783,7 +787,7 @@ public class GameplayController implements Screen {
                 batch.draw(ghost, phys.x*units - s/2, phys.y*units - s/2, s, s);
             }
             Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(raw);                          // ★ 新增
+            camera.unproject(raw);
             Vector2 curPix = clampBombPos(raw,aimRangeCurrent);
             batch.draw(ghost, curPix.x - s/2, curPix.y - s/2, s, s);
         }
