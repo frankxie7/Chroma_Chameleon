@@ -625,23 +625,19 @@ public class GameplayController implements Screen {
 
                 bombFireTimer = bombFireDelay;
             }
-
-    /**
-     * Removes a bomb from the physics world.
-     */
-    public void removeBomb(ObstacleSprite bomb) {
-        bomb.getObstacle().markRemoved(true);
-    }
-            if (bombQueue.size == 0) {
-                bombState = BombSkillState.COOLDOWN;
-                cooldownTimer = BOMB_COOLDOWN;
-            }
         }
     }
 
-
-
-
+//    /**
+//     * Removes a bomb from the physics world.
+//     */
+//    public void removeBomb(ObstacleSprite bomb) {
+//        bomb.getObstacle().markRemoved(true);
+//        if (bombQueue.size == 0) {
+//            bombState = BombSkillState.COOLDOWN;
+//            cooldownTimer = BOMB_COOLDOWN;
+//        }
+//    }
 
     /**
      * Step physics after update.
@@ -852,11 +848,13 @@ public class GameplayController implements Screen {
             // Uncomment to see AI Enemy debugging (from AIController)
 //            drawMapCoords(batch);
 //
-//            batch.end();
-//            for (AIController aiController : aiControllers) {
-//                aiController.debugRender(camera); // Call debug grid rendering
-//            }
-//            batch.begin(); // Resume SpriteBatch rendering
+            batch.end();
+            for (AIController aiController : aiControllers) {
+//                if (aiController.getEnemy().getType() != Enemy.Type.CAMERA) {
+                aiController.debugRender(camera); // Call debug grid rendering
+//                }
+            }
+            batch.begin(); // Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects

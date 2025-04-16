@@ -29,7 +29,7 @@ public class Spray extends ObstacleSprite {
      * @param points   The polygon vertices in local coordinates.
      * @param units    The physics scale factor (pixels per world unit).
      */
-    public Spray(float[] points, float units, JsonValue settings) {
+    public Spray(float[] points, float units) {
         this.trianglePoints = points.clone(); // Store a copy of original points
 
         Vector2 centroid = computeCentroid(points);

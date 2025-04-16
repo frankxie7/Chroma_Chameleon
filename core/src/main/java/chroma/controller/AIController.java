@@ -104,7 +104,6 @@ public class AIController {
 //        this.scale = screenHeight / worldHeight;
         this.scale = gameplay.getUnits();
 
-
         // Build navigation graph
         buildGraph(worldWidth, worldHeight);
     }
@@ -137,16 +136,11 @@ public class AIController {
                 return true;
             }
         }
-//        for (Terrain platform : platforms) {
-//            if (platform.contains(position)) {
-//                return true;
-//            }
-//        }
-//        for (Goal goal : goals) {
-//            if (goal.contains(position)) {
-//                return true;
-//            }
-//        }
+        for (Goal goal : goals) {
+            if (goal.contains(position)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -306,12 +300,42 @@ public class AIController {
         PathFinder pathFinder = new PathFinder(graph);
         Array<Vector2> path = pathFinder.findPath(start, end);
 
-        if (path.size > 1) {
+        if (path.size > 0) {
             lastPath = path; // Store for debugging
             lastGoal = end;
-            return path.get(1);
+
+            lastVisible = getFarthestVisiblePoint(start, path);
+
+            return getFarthestVisiblePoint(start, path);
         }
         return null;
+    }
+
+    private Vector2 getFarthestVisiblePoint(Vector2 start, Array<Vector2> path) {
+        Vector2 lastVisible = start;
+        float bodyRadius = enemy.getHeight() / 2;
+
+        for (Vector2 point : path) {
+            // Check if a circle with radius `bodyRadius` can fit along the path
+            if (isPathClearForBody(start, point, bodyRadius)) {
+                lastVisible = point;
+            } else {
+                break;  // First blocked point — stop here.
+            }
+        }
+        return lastVisible.equals(start) ? null : lastVisible;
+    }
+
+    private boolean isPathClearForBody(Vector2 start, Vector2 end, float radius) {
+        Vector2 direction = new Vector2(end).sub(start).nor();
+        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+
+        Vector2 offset = new Vector2(perpendicular).scl(radius - 0.05f);
+
+        // Perform 3 raycasts: center, left offset, right offset
+        return !isLineBlocked(start, end) &&
+                !isLineBlocked(start.cpy().add(offset), end.cpy().add(offset)) &&
+                !isLineBlocked(start.cpy().sub(offset), end.cpy().sub(offset));
     }
 
     private void moveTowards(Vector2 target, float speed) {
@@ -606,6 +630,7 @@ public class AIController {
 
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
     private Array<Vector2> lastPath;
+    private Vector2 lastVisible;
     private Vector2 lastGoal;
 
     public void debugRender(OrthographicCamera camera) {
@@ -618,26 +643,29 @@ public class AIController {
 //            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
 //        }
 
-        // Highlight the A* path in yellow
+//        // 1. Draw all NavNodes first (background layer)
+//        shapeRenderer.setColor(Color.GRAY);
+//        for (NavNode node : graph.nodes) {
+//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+//        }
+//
+//        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
-//            System.out.println(enemy.getName() + ": " + lastPath);
 //            shapeRenderer.setColor(Color.YELLOW);
 //            for (Vector2 pathPoint : lastPath) {
 //                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
 //            }
 //        }
-
-//        // Draw all NavNodes (grid)
-//        shapeRenderer.setColor(Color.GRAY);
-//        for (NavNode node : graph.nodes) {
-//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+//
+//        // 3. Draw the last visible target point on top
+//        if (lastVisible != null) {
+//            shapeRenderer.setColor(Color.BLUE);
+//            shapeRenderer.rect(lastVisible.x * scale - 5f, lastVisible.y * scale - 10f, 10f, 10f);
 //        }
 
-        // Draw enemy FOV and rays
-        shapeRenderer.setColor(new Color(1, 0, 0, 0.3f)); // Transparent red for vision cone
-        drawEnemyVision(camera);
-
         shapeRenderer.end();
+
+        drawEnemyVision(camera);
     }
     public void drawEnemyVision(OrthographicCamera camera) {
 
