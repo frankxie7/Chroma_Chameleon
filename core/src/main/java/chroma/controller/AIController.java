@@ -41,7 +41,7 @@ public class AIController {
     private float fov;
     private float rotationSpeedWander = 45f; // Degrees per second
     private float rotationSpeedAlert = 240f;
-//    private float rotationSpeedChase = 240f;
+    //    private float rotationSpeedChase = 240f;
     private boolean rotatingClockwise = true;
 
     // GOAL:
@@ -629,8 +629,8 @@ public class AIController {
 
             Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
             Vector2 rayEndWorld = type == Type.CAMERA
-                    ? enemyWorldPos.cpy().add(direction.scl(9999)) // Very long in world units
-                    : enemyWorldPos.cpy().add(direction.scl(detectionRange));
+                ? enemyWorldPos.cpy().add(direction.scl(9999)) // Very long in world units
+                : enemyWorldPos.cpy().add(direction.scl(detectionRange));
 
             Vector2 rayHitWorld = rayEndWorld.cpy();  // Will update on hit
 

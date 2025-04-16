@@ -65,14 +65,6 @@ public class GameplayController implements Screen {
     // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
 
-    // Paint Bar constants, unused
-    private Texture paintBarFrame;
-    private Texture paintBarFill;
-    private float paintBarMaxWidth = 200;
-    private float paintBarHeight = 20;
-    private float paintBarX = 50;
-    private float paintBarY = 50;
-
     private Chameleon player;
     private float splatterCost = 3f;
     private float bombCost = 0.1f;
@@ -262,13 +254,30 @@ public class GameplayController implements Screen {
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(player);
+        physics.addObject(player);// Place grates near the chameleon spawn position
+        Vector2 spawnPos = player.getObstacle().getPosition();
+        float grateSize = 0.25f;
+
+        int gridSize = 6;
+
+        float halfGrid = (gridSize - 1) / 2f;
+
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                float offsetX = (i - halfGrid) * grateSize;
+                float offsetY = (j - halfGrid) * grateSize;
+                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
+                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
+                physics.addObject(g);
+            }
+        }
+
+
         int id = 0;
         for(BackgroundTile machine : level.getMachineTiles()){
             Rectangle rec = machine.getBounds();
             System.out.println(scale);
             System.out.println(rec.getX());
-
 
             float y = (rec.getY() / 32) + 0.2f;
             float x = (rec.getX() / 32) + 0.2f;
@@ -966,8 +975,6 @@ public class GameplayController implements Screen {
         scale.x = (this.width  == 0) ? 1.0f : ( (float)this.width  / worldWidth  );
         scale.y = (this.height == 0) ? 1.0f : ( (float)this.height / worldHeight );
         // Rebuild the world for the new scale
-        paintBarX = width - 250; // 50px margin from the right
-        paintBarY = height - 100;
         reset();
     }
 

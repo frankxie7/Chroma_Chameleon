@@ -1,12 +1,6 @@
 package chroma.controller;
 
-import chroma.model.Chameleon;
-import chroma.model.Enemy;
-import chroma.model.Goal;
-import chroma.model.Spray;
-import chroma.model.Bomb;
-import chroma.model.Door;
-import chroma.model.Terrain;
+import chroma.model.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -232,6 +226,8 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+
+
     /**
      * Creates a single goal tile from a given x y
      * @param x The x value
@@ -260,6 +256,30 @@ public class PhysicsController implements ContactListener {
         goalPoints[7] = y4;
         return new Goal(goalPoints, units, settings,id);
     }
+
+    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
+        float x1 = x + boxRad;
+        float y1 = y - boxRad;
+        float x2 = x + boxRad;
+        float y2 = y + boxRad;
+        float x3 = x - boxRad;
+        float y3 = y + boxRad;
+        float x4 = x - boxRad;
+        float y4 = y - boxRad;
+
+        float[] gratePoints = new float[8];
+        gratePoints[0] = x1;
+        gratePoints[1] = y1;
+        gratePoints[2] = x2;
+        gratePoints[3] = y2;
+        gratePoints[4] = x3;
+        gratePoints[5] = y3;
+        gratePoints[6] = x4;
+        gratePoints[7] = y4;
+
+        return new Grate(gratePoints, units, settings);
+    }
+
 
     /**
      * Determines whether or not points are CCW or not
@@ -441,7 +461,7 @@ public class PhysicsController implements ContactListener {
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
-            System.out.println(numFilled);
+//            System.out.println(numFilled);
         }
         return (float)numFilled / goalList.length > 0.9;
     }
