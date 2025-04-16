@@ -61,7 +61,7 @@ public class Bomb extends ObstacleSprite {
         mesh.set(-radius, -radius, 2 * radius, 2 * radius);
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
-            mesh.setColor(i, new Color( 1.0f, 1.0f, 1.0f, 1.0f));
+            mesh.setColor(i, new Color( 1.0f, 1.0f, 1.0f, 0.5f));
         }
         // 3) Store everything
         this.timeAlive = 0;

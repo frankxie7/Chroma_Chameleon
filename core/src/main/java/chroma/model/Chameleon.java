@@ -224,7 +224,7 @@ public class Chameleon extends ObstacleSprite {
         drawScale = data.getFloat("drawScale");
 
         // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(x, y, s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
+        obstacle = new CapsuleObstacle(x, y, s * data.get("inner").getFloat(0) + 0.5f, s * data.get("inner").getFloat(1));
         ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
 
         // Ensure the body is dynamic so it can move.

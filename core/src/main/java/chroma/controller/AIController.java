@@ -44,7 +44,7 @@ public class AIController {
     private float fov;
     private float rotationSpeedWander = 45f; // Degrees per second
     private float rotationSpeedAlert = 240f;
-//    private float rotationSpeedChase = 240f;
+    //    private float rotationSpeedChase = 240f;
     private boolean rotatingClockwise = true;
 
     // GOAL:

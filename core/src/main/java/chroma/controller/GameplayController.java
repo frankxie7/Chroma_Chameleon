@@ -53,7 +53,7 @@ public class GameplayController implements Screen {
     private boolean failed;
     private int countdown;
     private int failureDelay;
-    private int numGoals =672;
+
 
     private ScreenListener listener;
     private SpriteBatch batch;
@@ -64,14 +64,6 @@ public class GameplayController implements Screen {
     private float width, height;
     // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
-
-    // Paint Bar constants, unused
-    private Texture paintBarFrame;
-    private Texture paintBarFill;
-    private float paintBarMaxWidth = 200;
-    private float paintBarHeight = 20;
-    private float paintBarX = 50;
-    private float paintBarY = 50;
 
     private Chameleon player;
     private float splatterCost = 3f;
@@ -84,6 +76,7 @@ public class GameplayController implements Screen {
 
     private PhysicsController physics;
     private Level level;
+    private int numGoals = 672;
     private LevelSelector levelSelector;
 
     private List<AIController> aiControllers;
@@ -261,13 +254,30 @@ public class GameplayController implements Screen {
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(player);
+        physics.addObject(player);// Place grates near the chameleon spawn position
+        Vector2 spawnPos = player.getObstacle().getPosition();
+        float grateSize = 0.25f;
+
+        int gridSize = 6;
+
+        float halfGrid = (gridSize - 1) / 2f;
+
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                float offsetX = (i - halfGrid) * grateSize;
+                float offsetY = (j - halfGrid) * grateSize;
+                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
+                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
+                physics.addObject(g);
+            }
+        }
+
+
         int id = 0;
         for(BackgroundTile machine : level.getMachineTiles()){
             Rectangle rec = machine.getBounds();
             System.out.println(scale);
             System.out.println(rec.getX());
-
 
             float y = (rec.getY() / 32) + 0.2f;
             float x = (rec.getX() / 32) + 0.2f;
@@ -351,6 +361,10 @@ public class GameplayController implements Screen {
                     ai.setState(AIController.State.ALERT);
                 }
             }
+        }
+
+        if(physics.goalsFull()){
+
         }
         globalChase = anyChasing;
 
@@ -737,7 +751,6 @@ public class GameplayController implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         // Draw tiled background
-
         if (level.getBackgroundTiles() != null) {
             for (BackgroundTile tile : level.getBackgroundTiles()) {
                 tile.draw(batch);
@@ -828,6 +841,7 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
@@ -870,18 +884,18 @@ public class GameplayController implements Screen {
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
-        int numFilled = 0;
-        for(Goal goal : physics.getGoalList()){
-            if(goal.isFull()){
-                numFilled +=1;
-            }
-        }
-        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
-        goalMessage.setText("Goals filled: " + goalPercentage + "%");
-        goalMessage.setColor(Color.YELLOW);
-        goalMessage.setAlignment(TextAlign.middleCenter);
-        goalMessage.setFont(displayFont);
-        batch.drawText(goalMessage, width / 2, height - 40);
+//        int numFilled = 0;
+//        for(Goal goal : physics.getGoalList()){
+//            if(goal != null && goal.isFull()){
+//                numFilled +=1;
+//            }
+//        }
+//        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
+//        goalMessage.setText("Goals filled: " + goalPercentage + "%");
+//        goalMessage.setColor(Color.YELLOW);
+//        goalMessage.setAlignment(TextAlign.middleCenter);
+//        goalMessage.setFont(displayFont);
+//        batch.drawText(goalMessage, width / 2, height - 40);
 
         batch.setColor(Color.WHITE);
         batch.end();
@@ -966,8 +980,6 @@ public class GameplayController implements Screen {
         scale.x = (this.width  == 0) ? 1.0f : ( (float)this.width  / worldWidth  );
         scale.y = (this.height == 0) ? 1.0f : ( (float)this.height / worldHeight );
         // Rebuild the world for the new scale
-        paintBarX = width - 250; // 50px margin from the right
-        paintBarY = height - 100;
         reset();
     }
 
