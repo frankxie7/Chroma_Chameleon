@@ -28,6 +28,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.graphics.SpriteBatch.BlendMode;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
@@ -266,10 +267,6 @@ public class GameplayController implements Screen {
         int id = 0;
         for(BackgroundTile machine : level.getMachineTiles()){
             Rectangle rec = machine.getBounds();
-            System.out.println(scale);
-            System.out.println(rec.getX());
-
-
             float y = (rec.getY() / 32) + 0.2f;
             float x = (rec.getX() / 32) + 0.2f;
 
@@ -402,6 +399,7 @@ public class GameplayController implements Screen {
             Vector2 avatarPos = player.getObstacle().getPosition();
             // Compute angle (in radians) from avatar to mouse.
             float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
+            System.out.println(avatarPos.x);
             physics.shootRays(player, sprayAngle);
             physics.addPaint(player, units);
             player.setPaint(player.getPaint() - splatterCost);
@@ -795,7 +793,9 @@ public class GameplayController implements Screen {
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
+                batch.setColor(Color.ORANGE);
                 sprite.draw(batch);
+                batch.setColor(Color.WHITE);
             }
         }
 

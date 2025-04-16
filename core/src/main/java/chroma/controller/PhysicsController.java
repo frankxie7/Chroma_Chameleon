@@ -48,9 +48,9 @@ public class PhysicsController implements ContactListener {
     private int sprayContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 30;
     //Length of the rays
-    private float rayLength = 4f;
+    private float rayLength = 3f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -131,13 +131,14 @@ public class PhysicsController implements ContactListener {
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
             float customRadius = computeRadiusForAngle(angleOffset);
+            Vector2 position = obstacle.getPosition();
             Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
-            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
             RayCastCallback callback = new RayCastCallback() {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon) {
+                    if (userData instanceof Spray || userData instanceof Bomb ) {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
@@ -145,17 +146,13 @@ public class PhysicsController implements ContactListener {
                         tile.setFull();
                         return -1f;
                     }
+
                     endPoint.set(point);
                     return fraction;
                 }
             };
-//            Vector2 position = obstacle.getPosition();
-//            if(obstacle.isFacingRight()){
-//                position.x += 1/32f;
-//            }else{
-//                position.x -=1/32f;
-//            }
-            world.rayCast(callback, obstacle.getPosition(), endPoint);
+
+            world.rayCast(callback, position, endPoint);
             endpoints[i] = new Vector2(endPoint);
         }
     }
@@ -441,7 +438,6 @@ public class PhysicsController implements ContactListener {
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
-            System.out.println(numFilled);
         }
         return (float)numFilled / goalList.length > 0.9;
     }

@@ -145,5 +145,5 @@ public class Goal extends ObstacleSprite {
         super.update(dt);
     }
 
-    public int getId(){return id;}
+
 }
