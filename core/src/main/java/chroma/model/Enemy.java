@@ -18,12 +18,14 @@ import java.util.List;
 
 public class Enemy extends ObstacleSprite {
     public enum Type {
-        GUARD, JANITOR, CAMERA
+        GUARD, SWEEPER, SNIFFER, CAMERA
     }
 
     private float detectionRange;
     private float fov;
     private Vector2 position;
+    private float bodyWidth;
+    private float bodyHeight;
 
     /** Whether the guard wanders or patrols as neutral state */
     private boolean patrol;
@@ -77,8 +79,12 @@ public class Enemy extends ObstacleSprite {
         if (this.type == Type.CAMERA) {
             this.position = new Vector2(position[0], position[1]);
             obstacle = null;
+            bodyWidth = 0;
+            bodyHeight = 0;
         } else {
-            obstacle = new CapsuleObstacle(position[0], position[1], s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1));
+            bodyWidth = s * data.get("inner").getFloat(0);
+            bodyHeight = s * data.get("inner").getFloat(1);
+            obstacle = new CapsuleObstacle(position[0], position[1], bodyWidth, bodyHeight);
             obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
             ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
             obstacle.setFixedRotation(true);
@@ -126,6 +132,8 @@ public class Enemy extends ObstacleSprite {
     public Type getType() { return type; }
     public float getStartRotation() { return startRotation; }
     public Vector2 getPosition() { return (type == Type.CAMERA) ? position : obstacle.getPosition(); }
+    public float getWidth() { return bodyWidth; }
+    public float getHeight() { return bodyHeight; }
     public boolean getPatrol() { return patrol; }
     public List<float[]> getPatrolPath() { return patrolPath; }
 

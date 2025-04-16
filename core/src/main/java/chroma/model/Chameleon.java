@@ -99,7 +99,6 @@ public class Chameleon extends ObstacleSprite {
     public float getMovement() {
         return movement;
     }
-
     /**
      * Sets the left/right movement of this character.
      *
@@ -116,9 +115,7 @@ public class Chameleon extends ObstacleSprite {
             faceRight = true;
         }
     }
-
     public float getVerticalMovement() {return verticalMovement;}
-
     public void setVerticalMovement(float value) {
         verticalMovement = value;
     }
@@ -253,8 +250,6 @@ public class Chameleon extends ObstacleSprite {
         faceRight = true;
         shootCooldown = 0;
 
-
-
         // Create a rectangular mesh for the chameleon.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
 //        int count = mesh.vertexCount(); // or however you get the vertex count
@@ -267,7 +262,6 @@ public class Chameleon extends ObstacleSprite {
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
         currentFrame = frames[6];
     }
-
 
     /**
      * Applies the force to the body of Traci

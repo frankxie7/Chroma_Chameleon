@@ -28,7 +28,6 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.graphics.SpriteBatch.BlendMode;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
@@ -65,14 +64,6 @@ public class GameplayController implements Screen {
     private float width, height;
     // Dimensions of the “world” in Box2D units
     private float worldWidth, worldHeight;
-
-    // Paint Bar constants, unused
-    private Texture paintBarFrame;
-    private Texture paintBarFill;
-    private float paintBarMaxWidth = 200;
-    private float paintBarHeight = 20;
-    private float paintBarX = 50;
-    private float paintBarY = 50;
 
     private Chameleon player;
     private float splatterCost = 3f;
@@ -263,10 +254,31 @@ public class GameplayController implements Screen {
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(player);
+        physics.addObject(player);// Place grates near the chameleon spawn position
+        Vector2 spawnPos = player.getObstacle().getPosition();
+        float grateSize = 0.25f;
+
+        int gridSize = 6;
+
+        float halfGrid = (gridSize - 1) / 2f;
+
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                float offsetX = (i - halfGrid) * grateSize;
+                float offsetY = (j - halfGrid) * grateSize;
+                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
+                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
+                physics.addObject(g);
+            }
+        }
+
+
         int id = 0;
         for(BackgroundTile machine : level.getMachineTiles()){
             Rectangle rec = machine.getBounds();
+            System.out.println(scale);
+            System.out.println(rec.getX());
+
             float y = (rec.getY() / 32) + 0.2f;
             float x = (rec.getX() / 32) + 0.2f;
 
@@ -343,7 +355,11 @@ public class GameplayController implements Screen {
         }
         if (anyChasing) {
             for (AIController ai : aiControllers) {
-                ai.setState(AIController.State.CHASE);
+                if (ai.getEnemy().getType() != Enemy.Type.CAMERA) {
+                    ai.setState(AIController.State.CHASE);
+                } else if (!ai.getPlayerDetected()) {
+                    ai.setState(AIController.State.ALERT);
+                }
             }
         }
 
@@ -399,7 +415,6 @@ public class GameplayController implements Screen {
             Vector2 avatarPos = player.getObstacle().getPosition();
             // Compute angle (in radians) from avatar to mouse.
             float sprayAngle = (float) Math.atan2(mouseWorld.y - avatarPos.y, mouseWorld.x - avatarPos.x);
-            System.out.println(avatarPos.x);
             physics.shootRays(player, sprayAngle);
             physics.addPaint(player, units);
             player.setPaint(player.getPaint() - splatterCost);
@@ -624,17 +639,19 @@ public class GameplayController implements Screen {
 
                 bombFireTimer = bombFireDelay;
             }
-
-            if (bombQueue.size == 0) {
-                bombState = BombSkillState.COOLDOWN;
-                cooldownTimer = BOMB_COOLDOWN;
-            }
         }
     }
 
-
-
-
+//    /**
+//     * Removes a bomb from the physics world.
+//     */
+//    public void removeBomb(ObstacleSprite bomb) {
+//        bomb.getObstacle().markRemoved(true);
+//        if (bombQueue.size == 0) {
+//            bombState = BombSkillState.COOLDOWN;
+//            cooldownTimer = BOMB_COOLDOWN;
+//        }
+//    }
 
     /**
      * Step physics after update.
@@ -793,9 +810,7 @@ public class GameplayController implements Screen {
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
-                batch.setColor(Color.ORANGE);
                 sprite.draw(batch);
-                batch.setColor(Color.WHITE);
             }
         }
 
@@ -833,7 +848,7 @@ public class GameplayController implements Screen {
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
-                aiController.drawCamera(camera); // Call debug grid rendering
+                aiController.drawEnemyVision(camera);
             }
         }
         batch.begin();
@@ -849,7 +864,9 @@ public class GameplayController implements Screen {
 //
             batch.end();
             for (AIController aiController : aiControllers) {
+//                if (aiController.getEnemy().getType() != Enemy.Type.CAMERA) {
                 aiController.debugRender(camera); // Call debug grid rendering
+//                }
             }
             batch.begin(); // Resume SpriteBatch rendering
         }
@@ -880,7 +897,6 @@ public class GameplayController implements Screen {
 //        goalMessage.setFont(displayFont);
 //        batch.drawText(goalMessage, width / 2, height - 40);
 
-
         batch.setColor(Color.WHITE);
         batch.end();
     }
@@ -905,8 +921,6 @@ public class GameplayController implements Screen {
         camera.zoom = cameraZoom;
         camera.update();
     }
-
-
 
     /**
      * The main render loop.
@@ -966,8 +980,6 @@ public class GameplayController implements Screen {
         scale.x = (this.width  == 0) ? 1.0f : ( (float)this.width  / worldWidth  );
         scale.y = (this.height == 0) ? 1.0f : ( (float)this.height / worldHeight );
         // Rebuild the world for the new scale
-        paintBarX = width - 250; // 50px margin from the right
-        paintBarY = height - 100;
         reset();
     }
 
@@ -1004,5 +1016,4 @@ public class GameplayController implements Screen {
     public float getUnits() {
         return units;
     }
-
 }
