@@ -43,9 +43,9 @@ import java.util.List;
 
 public class GameplayController implements Screen {
 
-    public static final int EXIT_QUIT = 0;
-    public static final int EXIT_NEXT = 1;
-    public static final int EXIT_PREV = 2;
+    public static final int EXIT_QUIT = 100;
+    public static final int EXIT_NEXT = 101;
+    public static final int EXIT_PREV = 102;
     public static final int EXIT_COUNT = 180;
 
     private boolean debug;
@@ -137,11 +137,11 @@ public class GameplayController implements Screen {
 
 
 
-    public GameplayController(AssetDirectory directory) {
+    public GameplayController(AssetDirectory directory, LevelSelector levelSelector) {
         this.directory = directory;
         this.constants = directory.getEntry("platform-constants", JsonValue.class);
 
-        levelSelector = new LevelSelector(directory);
+        this.levelSelector = levelSelector;
         // Read world configuration from JSON
         JsonValue worldConf = constants.get("world");
         this.worldWidth = worldConf.get("bounds").getFloat(0);
@@ -340,6 +340,15 @@ public class GameplayController implements Screen {
                 if (failed) {
                     reset();
                 } else if (complete && listener != null) {
+                    listener.exitScreen(this, EXIT_NEXT);
+                    return false;
+                }
+            } else {
+                // This handles proceeding to next level or previous level if this level is done
+                if (input.didRetreat()) {
+                    listener.exitScreen(this, EXIT_PREV);
+                    return false;
+                } else if (input.didAdvance()) {
                     listener.exitScreen(this, EXIT_NEXT);
                     return false;
                 }

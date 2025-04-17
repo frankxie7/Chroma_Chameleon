@@ -78,6 +78,18 @@ public class LevelSelector {
     }
 
     /**
+     * Returns to the previous level if available.
+     *
+     * @return true if returned to the previous level; false if there are no more levels.
+     */
+    public boolean prevLevel() {
+        if (currentLevelIndex > 0) {
+            currentLevelIndex --;
+            return true;
+        }
+        return false;
+    }
+    /**
      * Resets the level selector to the first level.
      */
     public void reset() {
