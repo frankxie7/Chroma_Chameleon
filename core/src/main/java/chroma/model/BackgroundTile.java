@@ -1,48 +1,32 @@
 package chroma.model;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.JsonValue;
-import edu.cornell.gdiac.assets.ParserUtils;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 
 // This creates a pure visual tile that has no physics property.
 public class BackgroundTile {
-    private Polygon polygon;
-    private Rectangle bounds;
-    private Texture texture;
+    private TextureRegion region;
     private float units;
-    private float tileSize;
-    private float width;
-    private float x;
-    private float y;
+    private float x, y;
 
-    public BackgroundTile(float[] points, float units, JsonValue settings) {
-        this.units = units;
-        this.tileSize = settings.getFloat("tile");
-
-        polygon = new Polygon(points);
-        polygon.setScale(units, units);
-        bounds = polygon.getBoundingRectangle();
-        width = settings.getInt("width");
+    /**
+     * @param region the sub-texture for this tile
+     * @param units  physics-unit conversion factor
+     */
+    public BackgroundTile(TextureRegion region, float units) {
+        this.region = region;
+        this.units   = units;
     }
 
-
-    public void setTexture(Texture texture) {
-        this.texture = texture;
+    /** set its tile-grid position (in tile units) */
+    public void setPosition(int tx, int ty) {
+        this.x = tx * units;
+        this.y = ty * units;
     }
-
 
     public void draw(SpriteBatch batch) {
-        batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
+        // draw the region at world coords (x,y)
+        batch.draw(region, x, y, units, units);
     }
-
-    public Rectangle getBounds() {
-        return bounds;
-    }
-
-    public float getWidth(){return width;}
-
 }
+

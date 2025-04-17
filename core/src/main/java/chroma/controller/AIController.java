@@ -136,11 +136,11 @@ public class AIController {
                 return true;
             }
         }
-        for (Goal goal : goals) {
-            if (goal.contains(position)) {
-                return true;
-            }
-        }
+//        for (Goal goal : goals) {
+//            if (goal.contains(position)) {
+//                return true;
+//            }
+//        }
         return false;
     }
 

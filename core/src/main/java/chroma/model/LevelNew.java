@@ -11,15 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Level ----- This class is responsible for constructing the game environment from JSON
- * configuration. It instantiates key game objects CURRENTLY including: - The goal door. - The
- * player (Chameleon). - Walls and platforms.
- * <p>
- * Level encapsulates the object creation logic so that higher-level controllers need not manage the
- * details of each object's construction. Getter methods provide access to these objects.
- */
-public class Level {
+public class LevelNew {
+
 
     private Door goalDoor;
     private Chameleon avatar;
@@ -34,27 +27,22 @@ public class Level {
      */
     private Map<Integer, TextureRegion> tileRegions;
 
+
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
      *
      * @param directory the AssetDirectory used for loading textures and JSON files.
-     * @param units the physics units conversion factor.
-     * @param selector the LevelSelector that chooses the JSON configuration for this level.
+     * @param units     the physics units conversion factor.
+     * @param selector  the LevelSelector that chooses the JSON configuration for this level.
      */
-    public Level(AssetDirectory directory, float units, LevelSelector selector) {
-        walls           = new ArrayList<>();
-        backgroundTiles = new ArrayList<>();
-        machineTiles    = new ArrayList<>();
-        bombs           = new ArrayList<>();
-        sprays          = new ArrayList<>();
-        enemies         = new ArrayList<>();
+    public LevelNew(AssetDirectory directory, float units, LevelSelector selector) {
+
         // levels.json
         JsonValue constants = selector.loadCurrentLevel();
 
+        initTileRegions(constants, directory);
         // constant.json
         JsonValue globalConstants = directory.getEntry("platform-constants", JsonValue.class);
-//        int tileSize = globalConstants.getInt("tileSize");  // e.g. 16
-        initTileRegions(directory, 16);
 
         //background
         JsonValue backgroundData = findLayer(constants, "background");
@@ -85,37 +73,6 @@ public class Level {
                 tile.setPosition(tx, ty);
                 backgroundTiles.add(tile);
 
-            }
-        }
-        // Parse the "walls" tile layer and build a list of Terrain tiles
-        JsonValue wallsData = findLayer(constants, "walls");
-        if (wallsData != null && wallsData.has("data")) {
-            walls = new ArrayList<>();
-
-            int layerWidth  = wallsData.getInt("width");
-            int layerHeight = wallsData.getInt("height");
-            JsonValue data  = wallsData.get("data");
-
-            for (int i = 0; i < data.size; i++) {
-                int gid = data.getInt(i);
-                if (gid == 0) continue;                           // skip empty tiles
-
-                // compute tile coordinates in grid
-                int tx = i % layerWidth;
-                int ty = i / layerWidth;
-                ty = layerHeight - 1 - ty;                        // flip Y origin
-
-                // lookup the sub-texture for this gid
-                TextureRegion region = tileRegions.get(gid);
-                if (region == null) continue;                     // no matching region
-                int tileValue = data.getInt(i);
-                // create a 1×1 tile-based Terrain at (tx,ty)
-                if (tileValue != 0) {
-                    float[] coords = createCoords(tx, ty);
-                    Terrain wall = new Terrain(region,coords, units);
-                    walls.add(wall);
-//                    wall.setTexture(region.getTexture());
-                }
             }
         }
 
@@ -174,11 +131,49 @@ public class Level {
     }
 
     /**
-     * Creates a rectangle for the "vertical" depth based on a top edge and a depth amount, in CCW
-     * order: (top-left) → (bottom-left) → (bottom-right) → (top-right).
-     * <p>
-     * The top edge is (x1,y1)->(x2,y2), extruded downward by 'depth'.
+     * Split the tileset image into regions and build the gid→TextureRegion map.
      */
+    private void initTileRegions(JsonValue mapJson, AssetDirectory directory) {
+        JsonValue ts = mapJson.get("tilesets").get(0);
+        int firstGid = ts.getInt("firstgid");
+        String source = ts.getString("source");              // e.g. "tileset16.tsx"
+        JsonValue tsx = directory.getEntry(removeExt(source), JsonValue.class);
+
+        int tileW = tsx.getInt("tilewidth");
+        int tileH = tsx.getInt("tileheight");
+        String imgSrc = tsx.getString("image");              // e.g. "tileset16.png"
+        Texture tex = directory.getEntry(removeExt(imgSrc), Texture.class);
+
+        TextureRegion[][] grid = TextureRegion.split(tex, tileW, tileH);
+        tileRegions = new HashMap<>();
+        int gid = firstGid;
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[row].length; col++) {
+                tileRegions.put(gid++, grid[row][col]);
+            }
+        }
+    }
+
+    /**
+     * Strip file extension from "name.tsx" or "name.png" → "name"
+     */
+    private String removeExt(String name) {
+        int i = name.lastIndexOf('.');
+        return i > 0 ? name.substring(0, i) : name;
+    }
+
+    private JsonValue findLayer(JsonValue mapRoot, String layerName) {
+        JsonValue layers = mapRoot.get("layers");
+        if (layers == null) {
+            return null;
+        }
+        for (JsonValue layer : layers) {
+            if (layerName.equals(layer.getString("name", ""))) {
+                return layer;
+            }
+        }
+        return null;
+    }
 
     public Door getGoalDoor() {
         return goalDoor;
@@ -199,6 +194,7 @@ public class Level {
     public List<BackgroundTile> getBackgroundTiles() {
         return backgroundTiles;
     }
+
     public List<BackgroundTile> getMachineTiles() {
         return machineTiles;
     }
@@ -212,45 +208,7 @@ public class Level {
         return sprays;
     }
 
-//    public List<WallDepth> getWalldepths() {
-//        return depths;
-//    }
 
-    /**
-     * Split the tileset PNG into regions of size tileSize×tileSize
-     * and build gid→TextureRegion map.
-     */
-    private void initTileRegions(AssetDirectory dir, int tileSize) {
-        // load the full tileset image
-        Texture tileset = dir.getEntry("tileset", Texture.class);
-
-        // split into small regions
-        TextureRegion[][] grid = TextureRegion.split(tileset, tileSize, tileSize);
-
-        tileRegions = new HashMap<>();
-        int gid = 1;  // assume this is your first (and only) tileset, so first gid=1
-        for (int row = 0; row < grid.length; row++) {
-            for (int col = 0; col < grid[row].length; col++) {
-                tileRegions.put(gid++, grid[row][col]);
-            }
-        }
-    }
-
-
-
-
-    private JsonValue findLayer(JsonValue mapRoot, String layerName) {
-        JsonValue layers = mapRoot.get("layers");
-        if (layers == null) {
-            return null;
-        }
-        for (JsonValue layer : layers) {
-            if (layerName.equals(layer.getString("name", ""))) {
-                return layer;
-            }
-        }
-        return null;
-    }
     private float[] createCoords(int tx, int ty) {
         return new float[]{
             tx, ty,
@@ -259,6 +217,8 @@ public class Level {
             tx, ty + 1
         };
     }
+
+
     public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount,
         float frameDuration) {
         int totalWidth = sheet.getWidth();

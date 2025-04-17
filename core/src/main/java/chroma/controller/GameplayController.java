@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -223,6 +224,8 @@ public class GameplayController implements Screen {
      * Rebuilds the world state (physics, level objects, etc.).
      */
     public void reset() {
+
+
         // Dispose previous physics world if necessary
         if (physics != null) {
             physics.dispose();
@@ -239,6 +242,19 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, levelSelector);
 
 
+//        for (Terrain wall : level.getWalls()) {
+//            physics.addObject(wall);
+//            PolygonObstacle body = (PolygonObstacle) wall.getObstacle();
+//            Body b = body.getBody();              // activatePhysics 后应不为 null
+//            Gdx.app.log("WALL",
+//                (b == null ? "❌ body=null " : "✅ body OK   ") +
+//                    "fixtures=" + (b == null ? "0" : b.getFixtureList().size) +
+//                    " pos=" + body.getPosition());
+//        }
+//        Gdx.app.log("RESET", "Walls in level = " + level.getWalls().size() +
+//            ", bodies in world = " + physics.getWorld().getBodyCount());
+
+
 //        for (BackgroundTile tile : level.getBackgroundTiles()) {
 //            physics.addObject(tile);
 //        }
@@ -246,6 +262,7 @@ public class GameplayController implements Screen {
 
 
         // Add all walls
+
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
         }
@@ -273,17 +290,17 @@ public class GameplayController implements Screen {
         }
 
 
-        int id = 0;
-        for(BackgroundTile machine : level.getMachineTiles()){
-            Rectangle rec = machine.getBounds();
-            System.out.println(scale);
-            System.out.println(rec.getX());
-
-            float y = (rec.getY() / 32) + 0.2f;
-            float x = (rec.getX() / 32) + 0.2f;
-
-            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,id);
-        }
+//        int id = 0;
+//        for(BackgroundTile machine : level.getMachineTiles()){
+//            Rectangle rec = machine.getBounds();
+////            System.out.println(scale);
+////            System.out.println(rec.getX());
+//
+//            float y = (rec.getY() / 32) + 0.2f;
+//            float x = (rec.getX() / 32) + 0.2f;
+//
+//            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,id);
+//        }
 
 
         // Initialize AI
@@ -976,7 +993,7 @@ public class GameplayController implements Screen {
 
         // 1) Compute the uniform scale factor from world→screen
         //    so that worldHeight always fits the new window height
-        units = 32;
+        units = 16;
 
         // 2) The InputController scale for screen→world
         //    scale.x = (float) screenWidth / worldWidth
