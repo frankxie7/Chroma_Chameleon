@@ -41,6 +41,7 @@ public class PhysicsController implements ContactListener {
     private boolean playerWithDoor = false;
 
     private int sprayContactCount = 0;
+    private int grateContactCount = 0;
 
     //Number of rays to shoot
     private int numRays = 40;
@@ -133,7 +134,7 @@ public class PhysicsController implements ContactListener {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy) {
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Grate) {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
@@ -371,12 +372,23 @@ public class PhysicsController implements ContactListener {
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
+        if ((userDataA instanceof Chameleon && userDataB instanceof Grate) ||
+            (userDataA instanceof Grate && userDataB instanceof Chameleon)) {
+            grateContactCount++;
+            if (sprayContactCount > 0 || bombContactCount > 0) {
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+                player.setHidden(false);
+            }
+        }
+
         // Handle spray contacts
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
             sprayContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-            player.setHidden(true);
+            if (grateContactCount == 0) {
+                player.setHidden(true);
+            }
 //            System.out.println("Player entered spray; count = " + sprayContactCount);
         }
         // Handle bomb and goal collisons
@@ -392,7 +404,9 @@ public class PhysicsController implements ContactListener {
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             bombContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-            player.setHidden(true);
+            if (grateContactCount == 0) {
+                player.setHidden(true);
+            }
         }
 
         // Check enemy collisions, etc.
@@ -418,6 +432,16 @@ public class PhysicsController implements ContactListener {
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
+
+        if ((userDataA instanceof Chameleon && userDataB instanceof Grate) ||
+            (userDataA instanceof Grate && userDataB instanceof Chameleon)) {
+            grateContactCount--;
+            if (grateContactCount < 0) grateContactCount = 0;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            if (grateContactCount == 0 && (sprayContactCount > 0 || bombContactCount > 0)) {
+                player.setHidden(true);
+            }
+        }
 
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
