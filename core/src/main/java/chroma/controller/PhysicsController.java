@@ -15,6 +15,7 @@ import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -42,9 +43,9 @@ public class PhysicsController implements ContactListener {
     private int sprayContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 40;
     //Length of the rays
-    private float rayLength = 4f;
+    private float rayLength = 5f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -127,6 +128,7 @@ public class PhysicsController implements ContactListener {
             float customRadius = computeRadiusForAngle(angleOffset);
             Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            ArrayList<Object> array = new ArrayList<>();
             RayCastCallback callback = new RayCastCallback() {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
@@ -135,21 +137,25 @@ public class PhysicsController implements ContactListener {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
-                        Goal tile = (Goal) userData;
-                        tile.setFull();
+                        array.add(userData);
                         return -1f;
                     }
+                    array.add(userData);
                     endPoint.set(point);
                     return fraction;
                 }
             };
-//            Vector2 position = obstacle.getPosition();
-//            if(obstacle.isFacingRight()){
-//                position.x += 1/32f;
-//            }else{
-//                position.x -=1/32f;
-//            }
             world.rayCast(callback, obstacle.getPosition(), endPoint);
+
+            for(Object o : array.reversed()){
+                if(o instanceof Terrain){
+                    break;
+                }
+                if(o instanceof Goal){
+                    Goal g = (Goal) o;
+                    g.setFull();
+                }
+            }
             endpoints[i] = new Vector2(endPoint);
         }
     }
@@ -444,8 +450,15 @@ public class PhysicsController implements ContactListener {
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
-
-
+        if ((a instanceof Goal && b instanceof Spray) ||
+            (a instanceof Spray && b instanceof Goal)) {
+            Goal g = a instanceof Goal ? (Goal) a : (Goal) b;
+            g.setFull();
+        }
+        if ((a instanceof Spray && b instanceof Chameleon) ||
+            (a instanceof Chameleon && b instanceof Spray)) {
+            contact.setEnabled(false);
+        }
     }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 

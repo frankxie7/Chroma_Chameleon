@@ -23,6 +23,7 @@ public class Spray extends ObstacleSprite {
     private static final float LIFETIME = 5f;
     private float timeAlive;
     private float[] trianglePoints;
+    private Poly2 poly;
     /**
      * Creates a new Spray object from the given points and world unit scale.
      *
@@ -43,17 +44,19 @@ public class Spray extends ObstacleSprite {
         // Create the underlying physics shape (a PolygonObstacle).
 
         obstacle = new PolygonObstacle(points);
-        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
+        obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
         obstacle.setSensor(true);       // No physical collisions; only sensor hits
         obstacle.setUserData(this);
         obstacle.setName("spray");
         obstacle.setPhysicsUnits(units);
         obstacle.setPosition(centroid); // Now getPosition() will work
+        obstacle.setActive(true);
+
 
         // Create the polygon for the mesh (rendering).
 
         short[] indices = { 0, 1, 2};
-        Poly2 poly = new Poly2(points, indices);
+        this.poly = new Poly2(points, indices);
 
         poly.scl(units);
 
@@ -91,6 +94,10 @@ public class Spray extends ObstacleSprite {
             cy += points[i + 1];
         }
         return new Vector2(cx / count, cy / count);
+    }
+
+    public boolean contains(Vector2 point){
+        return poly.contains(point);
     }
 
     public boolean isExpired() {
