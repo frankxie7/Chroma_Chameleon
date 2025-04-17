@@ -7,7 +7,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Level ----- This class is responsible for constructing the game environment from JSON
@@ -24,10 +26,15 @@ public class Level {
     private List<Enemy> enemies;
     private List<Terrain> walls;
     private List<BackgroundTile> backgroundTiles;
-    private List<BackgroundTile> machineTiles;
+    private List<BackgroundTile> goalTiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
 
+
+    /**
+     * gid →  corresponding tile
+     */
+    private Map<Integer, TextureRegion> tileRegions;
 
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
@@ -37,13 +44,117 @@ public class Level {
      * @param selector the LevelSelector that chooses the JSON configuration for this level.
      */
     public Level(AssetDirectory directory, float units, LevelSelector selector) {
-        // Load the level JSON configuration via the LevelSelector.
+        walls           = new ArrayList<>();
+        backgroundTiles = new ArrayList<>();
+        goalTiles    = new ArrayList<>();
+        bombs           = new ArrayList<>();
+        sprays          = new ArrayList<>();
+        enemies         = new ArrayList<>();
 
         // levels.json
+        // level files
         JsonValue constants = selector.loadCurrentLevel();
 
         // constant.json
         JsonValue globalConstants = directory.getEntry("platform-constants", JsonValue.class);
+
+        initTileRegions(directory, 16);
+
+        //background
+        JsonValue backgroundData = findLayer(constants, "background");
+        if (backgroundData != null && backgroundData.has("data")) {
+            backgroundTiles = new ArrayList<>();
+
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = backgroundData.getInt("width");
+            int layerHeight = backgroundData.getInt("height");
+            JsonValue data = backgroundData.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                                 // skip empty
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                backgroundTiles.add(tile);
+
+            }
+        }
+
+        //background
+        JsonValue goalTileData = findLayer(constants, "goal");
+        if (goalTileData != null && goalTileData.has("data")) {
+
+            goalTiles = new ArrayList<>();
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = goalTileData.getInt("width");
+            int layerHeight = goalTileData.getInt("height");
+            JsonValue data = goalTileData.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                                 // skip empty
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                goalTiles.add(tile);
+            }
+        }
+        // Parse the "walls" tile layer and build a list of Terrain tiles
+        JsonValue wallsData = findLayer(constants, "walls");
+        if (wallsData != null && wallsData.has("data")) {
+            walls = new ArrayList<>();
+
+            int layerWidth  = wallsData.getInt("width");
+            int layerHeight = wallsData.getInt("height");
+            JsonValue data  = wallsData.get("data");
+
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                           // skip empty tiles
+
+                // compute tile coordinates in grid
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                        // flip Y origin
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                     // no matching region
+                int tileValue = data.getInt(i);
+                // create a 1×1 tile-based Terrain at (tx,ty)
+                if (tileValue != 0) {
+                    float[] coords = createCoords(tx, ty);
+                    Terrain wall = new Terrain(region,coords, units);
+                    walls.add(wall);
+//                    wall.setTexture(region.getTexture());
+                }
+            }
+        }
+
+
 
         // Create the goal door
         Texture goalTex = directory.getEntry("shared-goal", Texture.class);
@@ -52,63 +163,13 @@ public class Level {
         goalDoor.setTexture(goalTex);
         goalDoor.getObstacle().setName("goal");
 
-        //background
-        backgroundTiles = new ArrayList<>();
-        JsonValue backgroundData = constants.get("background");
-        if (backgroundData.has("data")) {
-            Texture wallTex = directory.getEntry("background-tile", Texture.class);
-            wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-            int layerWidth = backgroundData.getInt("width");
-            int layerHeight = backgroundData.getInt("height");
-            JsonValue data = backgroundData.get("data");
-            for (int i = 0; i < data.size; i++) {
-                int tileValue = data.getInt(i);
-                if (tileValue == 28) {
-                    int tx = i % layerWidth;
-                    int ty = i / layerWidth;
-                    ty = layerHeight - 1 - ty;
-                    String type = backgroundData.getString("shape", "square");
-                    float[] coords = createCoords(tx, ty, type);
-                    BackgroundTile backgroundTile = new BackgroundTile(coords, units, backgroundData);
-                    backgroundTile.setTexture(wallTex);
-                    backgroundTiles.add(backgroundTile);
-                }
-            }
-        }
-        //goal tiles
-        machineTiles = new ArrayList<>();
-        JsonValue goalTileData = constants.get("g");
-        if (goalTileData.has("data")) {
-            Texture machineTex = directory.getEntry("goalTileTemp", Texture.class);
-            machineTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-            int layerWidth = goalTileData.getInt("width");
-            int layerHeight = goalTileData.getInt("height");
-            JsonValue data = goalTileData.get("data");
-            for (int i = 0; i < data.size; i++) {
-                int tileValue = data.getInt(i);
-                if (tileValue == 45 || tileValue == 46 || tileValue == 57 || tileValue == 58 ||
-                    tileValue == 69 || tileValue == 70){
-                    int tx = i % layerWidth;
-                    int ty = i / layerWidth;
-                    ty = layerHeight - 1 - ty;
-                    String type = goalTileData.getString("shape", "square");
-                    float[] coords = createCoords(tx, ty, type);
-                    BackgroundTile goalTile = new BackgroundTile(coords, units, goalTileData);
-                    goalTile.setTexture(machineTex);
-                    machineTiles.add(goalTile);
-                }
-            }
-
-        }
-
-
-
         // Create the chameleon (player) using animation
         JsonValue chamData = globalConstants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
         Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.1f);
         avatar = new Chameleon(units, chamData, chameleonAnim);
 
+        // Create enemies
         enemies = new ArrayList<>();
         JsonValue enemiesData = globalConstants.get("enemies");
         if (enemiesData != null) {
@@ -145,140 +206,6 @@ public class Level {
             }
         }
 
-//        // Create walls
-//        walls = new ArrayList<>();
-//        JsonValue wallsData = constants.get("walls");
-//        if (wallsData != null) {
-//            Texture wallTex = directory.getEntry("shared-earth", Texture.class);
-//            JsonValue wallPositions = wallsData.get("positions");
-//            for (int i = 0; i < wallPositions.size; i++) {
-//                float[] coords = wallPositions.get(i).asFloatArray();
-//                Terrain wall = new Terrain(coords, units, wallsData);
-//                wall.setTexture(wallTex);
-//                walls.add(wall);
-//            }
-//        }
-//         Create walls using the tile layer data from the level editor.
-        walls = new ArrayList<>();
-
-        JsonValue wallsDepth = constants.get("depth");
-        if ( wallsDepth != null) {
-            if (wallsDepth.has("data")) {
-                Texture wallTex1 = directory.getEntry("wall-up", Texture.class);
-                Texture wallTex2 = directory.getEntry("wall-down", Texture.class);
-                wallTex1.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                wallTex2.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                int layerWidth =  wallsDepth.getInt("width");
-                int layerHeight =  wallsDepth.getInt("height");
-                JsonValue data =  wallsDepth.get("data");
-                for (int i = 0; i < data.size; i++) {
-                    int tileValue = data.getInt(i);
-                    if (tileValue == 6) {
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        ty = layerHeight - 1 - ty;
-                        String type =  wallsDepth.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        Terrain wall = new Terrain(coords, units,  wallsDepth);
-                        wall.setTexture(wallTex1);
-                        wall.setDepthColor();
-                        walls.add(wall);
-                    }
-                    if (tileValue == 18) {
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        ty = layerHeight - 1 - ty;
-                        String type =  wallsDepth.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        Terrain wall = new Terrain(coords, units,  wallsDepth);
-                        wall.setTexture(wallTex2);
-                        wall.setDepthColor();
-                        walls.add(wall);
-                    }
-                }
-            }
-        }
-
-        JsonValue wallsData = constants.get("top-left");
-        if (wallsData != null) {
-            // If wallsData contains the "data" array, it indicates that tile layer data is being used.
-            if (wallsData.has("data")) {
-                Texture wallTex = directory.getEntry("border-left", Texture.class);
-                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                // Get the tile layer's width and height (measured in tiles, i.e., physics units).
-                int layerWidth = wallsData.getInt("width");
-                int layerHeight = wallsData.getInt("height");
-                JsonValue data = wallsData.get("data");
-                // Iterate over the entire matrix.
-                for (int i = 0; i < data.size; i++) {
-                    int tileValue = data.getInt(i);
-                    // When tileValue equals 23, it means there is a wall at this tile.
-                    if (tileValue == 23) {
-                        // Calculate the tile coordinates (column tx and row ty) based on the array index.
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        // Tiled uses a top-left origin; convert to physics world coordinates (origin at bottom-left).
-                        ty = layerHeight - 1 - ty;
-                        // Each tile occupies 1 physics unit; create the rectangular vertices for this tile.
-                        String type = wallsData.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        // Create the wall object; note that the Terrain constructor scales the coordinates by the units factor.
-                        Terrain wall = new Terrain(coords, units, wallsData);
-                        wall.setTexture(wallTex);
-                        walls.add(wall);
-                    }
-                }
-            }
-        }
-
-        JsonValue wallsRightData = constants.get("top-right");
-        if (wallsRightData != null) {
-            if (wallsRightData.has("data")) {
-                Texture wallTex = directory.getEntry("border-right", Texture.class);
-                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                int layerWidth = wallsRightData.getInt("width");
-                int layerHeight = wallsRightData.getInt("height");
-                JsonValue data = wallsRightData.get("data");
-                for (int i = 0; i < data.size; i++) {
-                    int tileValue = data.getInt(i);
-                    if (tileValue == 22) {
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        ty = layerHeight - 1 - ty;
-                        String type = wallsRightData.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        Terrain wall = new Terrain(coords, units, wallsRightData);
-                        wall.setTexture(wallTex);
-                        walls.add(wall);
-                    }
-                }
-            }
-        }
-
-        JsonValue walls3Data = constants.get("top");
-        if (walls3Data != null) {
-            if (walls3Data.has("data")) {
-                Texture wallTex = directory.getEntry("wall-top", Texture.class);
-                wallTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-                int layerWidth = walls3Data.getInt("width");
-                int layerHeight = walls3Data.getInt("height");
-                JsonValue data = walls3Data.get("data");
-                for (int i = 0; i < data.size; i++) {
-                    int tileValue = data.getInt(i);
-                    if (tileValue == 38) {
-                        int tx = i % layerWidth;
-                        int ty = i / layerWidth;
-                        ty = layerHeight - 1 - ty;
-                        String type = walls3Data.getString("shape", "square");
-                        float[] coords = createCoords(tx, ty, type);
-                        Terrain wall = new Terrain(coords, units, walls3Data);
-                        wall.setTexture(wallTex);
-                        walls.add(wall);
-                    }
-                }
-            }
-        }
-
         bombs = new ArrayList<>();
         sprays = new ArrayList<>();
     }
@@ -309,8 +236,8 @@ public class Level {
     public List<BackgroundTile> getBackgroundTiles() {
         return backgroundTiles;
     }
-    public List<BackgroundTile> getMachineTiles() {
-        return machineTiles;
+    public List<BackgroundTile> getGoalTiles() {
+        return goalTiles;
     }
 
 
@@ -326,48 +253,49 @@ public class Level {
 //        return depths;
 //    }
 
+    /**
+     * Split the tileset PNG into regions of size tileSize×tileSize
+     * and build gid→TextureRegion map.
+     */
+    private void initTileRegions(AssetDirectory dir, int tileSize) {
+        // load the full tileset image
+        Texture tileset = dir.getEntry("tileset", Texture.class);
 
-    private float[] createCoords(float tx, float ty, String type) {
-        switch(type) {
-            case "left":
-                return new float[]{
-                    tx,     ty,
-                    tx+0.5f, ty,
-                    tx+0.5f, ty+1,
-                    tx,     ty+1
-                };
-            case "right":
-                return new float[]{
-                    tx+0.5f, ty,
-                    tx+1,    ty,
-                    tx+1,    ty+1,
-                    tx+0.5f, ty+1
-                };
-            case "top":
-                return new float[]{
-                    tx,     ty+0.5f,
-                    tx+1,   ty+0.5f,
-                    tx+1,   ty+1,
-                    tx,     ty+1
-                };
-            case "bottom":
-                return new float[]{
-                    tx,     ty,
-                    tx+1,   ty,
-                    tx+1,   ty+0.5f,
-                    tx,     ty+0.5f
-                };
-            case "square":
-            default:
-                return new float[]{
-                    tx,     ty,
-                    tx+1,   ty,
-                    tx+1,   ty+1,
-                    tx,     ty+1
-                };
+        // split into small regions
+        TextureRegion[][] grid = TextureRegion.split(tileset, tileSize, tileSize);
+
+        tileRegions = new HashMap<>();
+        int gid = 1;  // assume this is your first (and only) tileset, so first gid=1
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[row].length; col++) {
+                tileRegions.put(gid++, grid[row][col]);
+            }
         }
     }
 
+
+
+
+    private JsonValue findLayer(JsonValue mapRoot, String layerName) {
+        JsonValue layers = mapRoot.get("layers");
+        if (layers == null) {
+            return null;
+        }
+        for (JsonValue layer : layers) {
+            if (layerName.equals(layer.getString("name", ""))) {
+                return layer;
+            }
+        }
+        return null;
+    }
+    private float[] createCoords(int tx, int ty) {
+        return new float[]{
+            tx, ty,
+            tx + 1, ty,
+            tx + 1, ty + 1,
+            tx, ty + 1
+        };
+    }
     public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount,
         float frameDuration) {
         int totalWidth = sheet.getWidth();
