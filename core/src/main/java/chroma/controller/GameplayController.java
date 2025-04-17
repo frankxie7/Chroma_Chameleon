@@ -208,7 +208,7 @@ public class GameplayController implements Screen {
         badMessage.setFont(displayFont);
 
         shapeRenderer = new ShapeRenderer();
-        shapeRenderer.setAutoShapeType(true);   // 允许在一次 begin 内切换类型
+        shapeRenderer.setAutoShapeType(true);
 
 
         goalMessage = new TextLayout();
@@ -638,6 +638,10 @@ public class GameplayController implements Screen {
                 physics.addObject(bomb);
 
                 bombFireTimer = bombFireDelay;
+            }
+            if (bombQueue.size == 0) {
+                bombState = BombSkillState.COOLDOWN;
+                cooldownTimer = BOMB_COOLDOWN;
             }
         }
     }

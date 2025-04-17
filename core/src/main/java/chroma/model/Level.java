@@ -359,7 +359,6 @@ public class Level {
                 };
             case "square":
             default:
-                // 默认正方形碰撞体
                 return new float[]{
                     tx,     ty,
                     tx+1,   ty,
