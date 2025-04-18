@@ -4,12 +4,11 @@ import chroma.controller.LevelSelector;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 /**
  * Level ----- This class is responsible for constructing the game environment from JSON
@@ -29,12 +28,16 @@ public class Level {
     private List<BackgroundTile> goalTiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
+    private List<Grate> grates;
+
 
 
     /**
      * gid →  corresponding tile
      */
     private Map<Integer, TextureRegion> tileRegions;
+
+    private static final Set<Integer> GRATE_GIDS = Set.of(659, 662, 664, 697, 702, 737, 849, 851, 854);
 
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
@@ -50,6 +53,8 @@ public class Level {
         bombs           = new ArrayList<>();
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
+        grates = new ArrayList<>();
+
 
         // levels.json
         // level files
@@ -84,11 +89,16 @@ public class Level {
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                            // flip Y origin
 
-                // create BackgroundTile with the region
-                BackgroundTile tile = new BackgroundTile(region, units);
-                tile.setPosition(tx, ty);
-                backgroundTiles.add(tile);
-
+                if (GRATE_GIDS.contains(gid)) {
+                    Grate grate = new Grate(region, units);
+                    grate.setPosition(tx, ty);
+                    grates.add(grate);
+                } else {
+                    // create BackgroundTile with the region
+                    BackgroundTile tile = new BackgroundTile(region, units);
+                    tile.setPosition(tx, ty);
+                    backgroundTiles.add(tile);
+                }
             }
         }
 
@@ -248,6 +258,11 @@ public class Level {
     public List<Spray> getSprays() {
         return sprays;
     }
+
+    public List<Grate> getGrates() {
+        return grates;
+    }
+
 
 //    public List<WallDepth> getWalldepths() {
 //        return depths;

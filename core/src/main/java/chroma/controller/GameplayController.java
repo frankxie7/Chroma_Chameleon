@@ -272,23 +272,23 @@ public class GameplayController implements Screen {
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(player);// Place grates near the chameleon spawn position
-        Vector2 spawnPos = player.getObstacle().getPosition();
-        float grateSize = 0.25f;
-
-        int gridSize = 6;
-
-        float halfGrid = (gridSize - 1) / 2f;
-
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
-                float offsetX = (i - halfGrid) * grateSize;
-                float offsetY = (j - halfGrid) * grateSize;
-                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
-                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
-                physics.addObject(g);
-            }
-        }
+        physics.addObject(player);
+//        Vector2 spawnPos = player.getObstacle().getPosition();
+//        float grateSize = 0.25f;
+//
+//        int gridSize = 6;
+//
+//        float halfGrid = (gridSize - 1) / 2f;
+//
+//        for (int i = 0; i < gridSize; i++) {
+//            for (int j = 0; j < gridSize; j++) {
+//                float offsetX = (i - halfGrid) * grateSize;
+//                float offsetY = (j - halfGrid) * grateSize;
+//                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
+//                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
+//                physics.addObject(g);
+//            }
+//        }
 
 
         int id = 0;
@@ -331,11 +331,6 @@ public class GameplayController implements Screen {
             reset();
         }
         if (input.didExit()) {
-            listener.exitScreen(this, EXIT_QUIT);
-            return false;
-        }
-        if (input.didMenu()) {
-            listener.exitScreen(this, EXIT_MAP);
             return false;
         }
 
@@ -790,6 +785,11 @@ public class GameplayController implements Screen {
         if (level.getBackgroundTiles() != null) {
             for (BackgroundTile tile : level.getBackgroundTiles()) {
                 tile.draw(batch);
+            }
+        }
+        if (level.getGrates() != null) {
+            for (Grate grate : level.getGrates()) {
+                grate.draw(batch);
             }
         }
         // Draw goal tiles

@@ -200,6 +200,24 @@ public class Chameleon extends ObstacleSprite {
         return faceRight;
     }
 
+    public void setPosition(float x, float y) {
+        if (obstacle != null && obstacle.getBody() != null) {
+            obstacle.setPosition(x, y);
+            position = new Vector2(x, y);
+        }
+    }
+
+    /**
+     * Sets the position of the Chameleon.
+     *
+     * This updates both the position cache and the physics body.
+     *
+     * @param pos The new position
+     */
+    public void setPosition(Vector2 pos) {
+        setPosition(pos.x, pos.y);
+    }
+
     /**
      * Creates a new Traci avatar with the given physics data
      *

@@ -128,6 +128,9 @@ public class PhysicsController implements ContactListener {
             float currentAngle = angle + angleOffset;
             float customRadius = computeRadiusForAngle(angleOffset);
             Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
+            if (obstacle.getPosition() == null) {
+                return;
+            }
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
             ArrayList<Object> array = new ArrayList<>();
             RayCastCallback callback = new RayCastCallback() {
@@ -264,28 +267,28 @@ public class PhysicsController implements ContactListener {
         return new Goal(goalPoints, units, settings,id);
     }
 
-    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
-        float x1 = x + boxRad;
-        float y1 = y - boxRad;
-        float x2 = x + boxRad;
-        float y2 = y + boxRad;
-        float x3 = x - boxRad;
-        float y3 = y + boxRad;
-        float x4 = x - boxRad;
-        float y4 = y - boxRad;
-
-        float[] gratePoints = new float[8];
-        gratePoints[0] = x1;
-        gratePoints[1] = y1;
-        gratePoints[2] = x2;
-        gratePoints[3] = y2;
-        gratePoints[4] = x3;
-        gratePoints[5] = y3;
-        gratePoints[6] = x4;
-        gratePoints[7] = y4;
-
-        return new Grate(gratePoints, units, settings);
-    }
+//    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
+//        float x1 = x + boxRad;
+//        float y1 = y - boxRad;
+//        float x2 = x + boxRad;
+//        float y2 = y + boxRad;
+//        float x3 = x - boxRad;
+//        float y3 = y + boxRad;
+//        float x4 = x - boxRad;
+//        float y4 = y - boxRad;
+//
+//        float[] gratePoints = new float[8];
+//        gratePoints[0] = x1;
+//        gratePoints[1] = y1;
+//        gratePoints[2] = x2;
+//        gratePoints[3] = y2;
+//        gratePoints[4] = x3;
+//        gratePoints[5] = y3;
+//        gratePoints[6] = x4;
+//        gratePoints[7] = y4;
+//
+//        return new Grate(gratePoints, units, settings);
+//    }
 
 
     /**
