@@ -7,6 +7,8 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.Affine2;
@@ -43,6 +45,8 @@ public class MenuMode implements Screen, InputProcessor {
 
     /** Draw the outline for determining */
     private ShapeRenderer shapeRenderer;
+    private BitmapFont font;
+
 
     /** Internal class for creating a circular bound */
     private class CircleBound {
@@ -92,6 +96,9 @@ public class MenuMode implements Screen, InputProcessor {
         active = true;
 
         shapeRenderer = new ShapeRenderer();
+        font = new BitmapFont(); // You can also load custom fonts if needed
+        font.setColor(Color.BLACK); // Set to your desired color
+        font.getData().setScale(4f); // Scale to fit the button nicely
 
     }
 
@@ -112,7 +119,7 @@ public class MenuMode implements Screen, InputProcessor {
      */
     private void draw() {
         // Cornell colors
-        ScreenUtils.clear( 0.702f, 0.1255f, 0.145f,1.0f );
+        ScreenUtils.clear( 0.294f, 0.149f, 0.851f, 0.44f );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
@@ -143,6 +150,15 @@ public class MenuMode implements Screen, InputProcessor {
 
             batch.draw(texture, x, y, buttonSize, buttonSize);
 
+            // Draw the level number
+            String levelText = String.valueOf(i + 1);
+            GlyphLayout layout = new GlyphLayout(font, levelText);
+            float textWidth = layout.width;
+            float textHeight = layout.height;
+
+            font.draw(batch, levelText,
+                x + buttonSize / 2 - textWidth / 2,
+                y + buttonSize / 2 + textHeight / 2); // Centered
         }
 
         batch.end();
