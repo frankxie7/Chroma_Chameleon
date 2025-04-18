@@ -1,5 +1,9 @@
 package chroma.model;
 
+import chroma.controller.AIController;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2; import com.badlogic.gdx.graphics.Color;
@@ -18,11 +22,9 @@ import java.util.List;
 
 public class Enemy extends ObstacleSprite {
     public enum Type {
-        GUARD, SWEEPER, SNIFFER, CAMERA
+        GUARD, SWEEPER, CAMERA
     }
 
-    private float detectionRange;
-    private float fov;
     private Vector2 position;
     private float bodyWidth;
     private float bodyHeight;
@@ -33,8 +35,6 @@ public class Enemy extends ObstacleSprite {
 
     /** The factor to multiply by the input */
     private float force;
-    /** The amount to slow the character down */
-    private float damping;
     /** The maximum character speed */
     private float maxspeed;
 
@@ -45,6 +45,13 @@ public class Enemy extends ObstacleSprite {
     /** Which direction is the character facing */
     private boolean faceRight;
 
+    // DETECTION RANGE and FOV:
+    private float baseDetectionRange;
+    private float alertDetectionRange;
+    private float cameraFOV = 60;
+    private float guardFOV = 135;
+
+    // ROTATION (CAMERA):
     private float rotation;
     private float startRotation;
     /** Min and Max angles for camera rotation */
@@ -59,14 +66,25 @@ public class Enemy extends ObstacleSprite {
     private final Vector2 forceCache = new Vector2();
     private final Affine2 flipCache = new Affine2();
 
+    // ENEMY TYPE
     private Enemy.Type type;
 
-    public Enemy(float[] position, String name, String type, boolean patrol, List<float[]> patrolPath, float detectionRange, float fov, float startRotation, float rotateAngle, float units, JsonValue data) {
+    // ANIMATIONS:
+    private Animation<TextureRegion> alertAnim;
+    private int animationFrame = -1;
+    private float drawScale;
+
+    public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath, float startRotation, float rotateAngle, float units, JsonValue data, Animation<TextureRegion> enemyAlertAnim) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
-        this.detectionRange = detectionRange;
-        this.fov = fov;
+        if (this.type == Type.CAMERA) {
+            this.baseDetectionRange = 7;
+            this.alertDetectionRange = 7;
+        } else {
+            this.baseDetectionRange = 4;
+            this.alertDetectionRange = 7;
+        }
         this.startRotation = startRotation;
         this.rotation = startRotation;
         this.minRotation = startRotation - rotateAngle % 360;
@@ -75,6 +93,7 @@ public class Enemy extends ObstacleSprite {
         JsonValue debugInfo = data.get("debug");
         float s = data.getFloat("size");
         float size = s * units;
+        drawScale = data.getFloat("drawScale");
 
         if (this.type == Type.CAMERA) {
             this.position = new Vector2(position[0], position[1]);
@@ -90,7 +109,6 @@ public class Enemy extends ObstacleSprite {
             obstacle.setFixedRotation(true);
             obstacle.setPhysicsUnits(units);
             obstacle.setUserData(this);
-            obstacle.setName(name);
 
             // Filter allows collisions with everything except other enemies
             Filter enemyFilter = new Filter();
@@ -103,10 +121,11 @@ public class Enemy extends ObstacleSprite {
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
         maxspeed = data.getFloat("maxspeed", 0);
-        damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
 
         faceRight = true;
+
+        alertAnim = enemyAlertAnim;
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
@@ -127,8 +146,9 @@ public class Enemy extends ObstacleSprite {
     public float getForce() { return force; }
     public float getMaxSpeed() { return maxspeed; }
     public void setMaxSpeed(float value) { this.maxspeed = value; }
-    public float getDetectionRange() { return detectionRange; }
-    public float getFov() { return fov; }
+    public float getBaseDetectionRange() { return baseDetectionRange; }
+    public float getAlertDetectionRange() { return alertDetectionRange; }
+    public float getFov() { return type == Type.CAMERA ? cameraFOV : guardFOV; }
     public Type getType() { return type; }
     public float getStartRotation() { return startRotation; }
     public Vector2 getPosition() { return (type == Type.CAMERA) ? position : obstacle.getPosition(); }
@@ -136,6 +156,10 @@ public class Enemy extends ObstacleSprite {
     public float getHeight() { return bodyHeight; }
     public boolean getPatrol() { return patrol; }
     public List<float[]> getPatrolPath() { return patrolPath; }
+    public Animation<TextureRegion> getAlertAnimation() { return alertAnim; }
+    public int getAlertAnimationFrame() { return animationFrame; }
+    public void setAlertAnimationFrame(int index) { this.animationFrame = index; }
+    public float getDrawScale() { return drawScale; }
 
     public float getRotation() {
         if (type == Type.CAMERA) {
@@ -209,6 +233,25 @@ public class Enemy extends ObstacleSprite {
             flipCache.setToScaling( -1,1 );
         }
         super.draw(batch,flipCache);
+
+        if (animationFrame != -1) {
+            TextureRegion frame = alertAnim.getKeyFrames()[animationFrame];
+
+            float drawWidth = frame.getRegionWidth() * drawScale;
+            float drawHeight = frame.getRegionHeight() * drawScale;
+            float px = obstacle.getX() * obstacle.getPhysicsUnits();
+            float py = obstacle.getY() * obstacle.getPhysicsUnits();
+
+            float hoverOffsetPixels = 40f; // pixels above enemy
+
+            batch.draw(frame,
+                px - drawWidth / 2,
+                py - drawHeight / 2 + hoverOffsetPixels,
+                drawWidth / 2, drawHeight / 2,
+                drawWidth, drawHeight,
+                1, 1,
+                0);
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
@@ -276,8 +277,8 @@ public class GameplayController implements Screen {
         int id = 0;
         for(BackgroundTile machine : level.getMachineTiles()){
             Rectangle rec = machine.getBounds();
-            System.out.println(scale);
-            System.out.println(rec.getX());
+//            System.out.println(scale);
+//            System.out.println(rec.getX());
 
             float y = (rec.getY() / 32) + 0.2f;
             float x = (rec.getX() / 32) + 0.2f;
@@ -349,17 +350,8 @@ public class GameplayController implements Screen {
         boolean anyChasing = false;
         for (AIController ai : aiControllers) {
             ai.update(dt);
-            if (ai.getPlayerDetected()) {
+            if (ai.getState() == AIController.State.CHASE) {
                 anyChasing = true;
-            }
-        }
-        if (anyChasing) {
-            for (AIController ai : aiControllers) {
-                if (ai.getEnemy().getType() != Enemy.Type.CAMERA) {
-                    ai.setState(AIController.State.CHASE);
-                } else if (!ai.getPlayerDetected()) {
-                    ai.setState(AIController.State.ALERT);
-                }
             }
         }
 
@@ -839,6 +831,32 @@ public class GameplayController implements Screen {
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
                 sprite.draw(batch);
+            }
+        }
+
+        for (AIController ai : aiControllers) {
+            if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {
+                int frameIndex = ai.getEnemy().getAlertAnimationFrame(); // you set this from the AI logic
+
+                if (frameIndex != -1) {
+                    TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
+
+                    float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale();
+                    float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale();
+
+                    float px = ai.getEnemy().getPosition().x * units;
+                    float py = ai.getEnemy().getPosition().y * units;
+
+                    float hoverOffsetPixels = 40f;  // same as the enemies
+
+                    batch.draw(frame,
+                        px - drawWidth / 2,
+                        py - drawHeight / 2 + hoverOffsetPixels,
+                        drawWidth / 2, drawHeight / 2,
+                        drawWidth, drawHeight,
+                        1, 1,
+                        0);
+                }
             }
         }
 
