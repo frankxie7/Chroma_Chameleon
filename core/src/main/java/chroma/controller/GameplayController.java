@@ -331,6 +331,14 @@ public class GameplayController implements Screen {
             reset();
         }
         if (input.didExit()) {
+            listener.exitScreen(this, EXIT_QUIT);
+            return false;
+        }
+        if (input.didMenu()) {
+            listener.exitScreen(this, EXIT_MAP);
+            return false;
+        }
+        if (input.didExit()) {
             return false;
         }
 
