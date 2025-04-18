@@ -31,7 +31,8 @@
   "jsons"  : {
     "platform-constants": "constants/constants.json",
     "level-1-constants": "constants/level1.json",
-    "test16_1": "constants/test16_1.json"
+    "test16_1": "constants/test16_2.json",
+    "grate_test": "constants/grate_test.json"
   },
   "soundfx" : {
   },
