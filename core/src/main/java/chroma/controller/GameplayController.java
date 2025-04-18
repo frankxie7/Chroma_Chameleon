@@ -268,6 +268,10 @@ public class GameplayController implements Screen {
             physics.addObject(wall);
         }
 
+        for (Grate grates : level.getGrates()) {
+            physics.addObject(grates);
+        }
+
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());

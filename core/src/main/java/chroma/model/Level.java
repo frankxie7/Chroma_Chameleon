@@ -90,8 +90,7 @@ public class Level {
                 ty = layerHeight - 1 - ty;                            // flip Y origin
 
                 if (GRATE_GIDS.contains(gid)) {
-                    Grate grate = new Grate(region, units);
-                    grate.setPosition(tx, ty);
+                    Grate grate = new Grate(region, units, tx, ty);
                     grates.add(grate);
                 } else {
                     // create BackgroundTile with the region
