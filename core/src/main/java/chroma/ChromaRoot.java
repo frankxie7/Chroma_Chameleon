@@ -181,8 +181,14 @@ public class ChromaRoot extends Game implements ScreenListener {
             // Quit the main application
             Gdx.app.exit();
 
+        } else if (exitCode == GameplayController.EXIT_MAP) {
+            //Transition from gameplay to menu
+            controllers = null;
+            selecting = new MenuMode("assets.json", batch);
+            selecting.setScreenListener(this);
+            setScreen(selecting);
         }
-        //Transition from gameplay to menu
+
 
     }
 }

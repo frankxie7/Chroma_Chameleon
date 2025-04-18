@@ -46,6 +46,7 @@ public class GameplayController implements Screen {
     public static final int EXIT_QUIT = 100;
     public static final int EXIT_NEXT = 101;
     public static final int EXIT_PREV = 102;
+    public static final int EXIT_MAP = 103;
     public static final int EXIT_COUNT = 180;
 
     private boolean debug;
@@ -330,6 +331,11 @@ public class GameplayController implements Screen {
             reset();
         }
         if (input.didExit()) {
+            listener.exitScreen(this, EXIT_QUIT);
+            return false;
+        }
+        if (input.didMenu()) {
+            listener.exitScreen(this, EXIT_MAP);
             return false;
         }
 
