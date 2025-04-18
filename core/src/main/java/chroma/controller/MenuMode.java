@@ -31,6 +31,24 @@ public class MenuMode implements Screen, InputProcessor {
 
     private ScreenListener listener;
 
+    /** Whether or not this player mode is still active */
+    private boolean active;
+
+    /** Current level number */
+    private int currLevel;
+
+    /** The current state of the button */
+    private int pressState;
+
+    /**
+     * Returns true if all assets are loaded and the player is ready to go.
+     *
+     * @return true if the player is ready to go
+     */
+    public boolean isReady() {
+        return pressState == 2;
+    }
+
     public MenuMode(String assetFile, SpriteBatch batch) {
         this.batch = batch;
 
@@ -49,9 +67,14 @@ public class MenuMode implements Screen, InputProcessor {
         this.directory = new AssetDirectory(assetFile);
         directory.loadAssets();
         directory.finishLoading();
+
+        active = true;
     }
 
-    @Override public void dispose() {
+    /**
+     * Called when this screen should release all resources.
+     */
+    public void dispose() {
         internal.unloadAssets();
         internal.dispose();
     }
@@ -94,20 +117,35 @@ public class MenuMode implements Screen, InputProcessor {
         batch.end();
     }
 
-
-    public void setScreenListener(ScreenListener listener) {
-        this.listener = listener;
-    }
-
-    @Override
-    public void show() {}
-
-    @Override
+    // ADDITIONAL SCREEN METHODS
+    /**
+     * Called when the Screen should render itself.
+     *
+     * We defer to the other methods update() and draw(). However, it is VERY
+     * important that we only quit AFTER a draw.
+     *
+     * @param delta Number of seconds since last animation frame
+     */
     public void render(float delta) {
-        draw();
+        if (active) {
+            draw();
+        }
+
+        // We are are ready, notify our listener
+        if (isReady() && listener != null) {
+            listener.exitScreen(this, currLevel);
+        }
     }
 
-    @Override
+    /**
+     * Called when the Screen is resized.
+     *
+     * This can happen at any point during a non-paused state but will never
+     * happen before a call to show().
+     *
+     * @param width  The new width in pixels
+     * @param height The new height in pixels
+     */
     public void resize(int width, int height) {
         this.width = width;
         this.height = height;
@@ -120,35 +158,90 @@ public class MenuMode implements Screen, InputProcessor {
         }
     }
 
-    @Override
+    /**
+     * Called when this screen becomes the current screen for a Game.
+     */
+    public void show() { active = true;}
+
+    /**
+     * Called when this screen is no longer the current screen for a Game.
+     */
+    public void hide() {
+        // Useless if called in outside animation loop
+        active = false;
+    }
+
+    /**
+     * Sets the ScreenListener for this mode
+     *
+     * The ScreenListener will respond to requests to quit.
+     */
+    public void setScreenListener(ScreenListener listener) {
+        this.listener = listener;
+    }
+
+    // PROCESSING PLAYER INPUT
+    /**
+     * Called when the screen was touched or a mouse button was pressed.
+     *
+     * This method checks to see if the click is in the bounds of the play button.
+     * If so, it signals the that the button has been pressed and is currently down.
+     * Any mouse button is accepted.
+     *
+     * @param screenX the x-coordinate of the mouse on the screen
+     * @param screenY the y-coordinate of the mouse on the screen
+     * @param pointer the button or touch finger number
+     * @return whether to hand the event to other listeners.
+     */
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (pressState == 2) {
+            return true;
+        }
+
         Vector3 touch = new Vector3(screenX, screenY, 0);
         camera.unproject(touch);
 
         for (int i = 0; i < bounds.length; i++) {
             if (bounds[i].contains(touch.x, touch.y)) {
-                if (listener != null) {
-                    int currLevel = i + 1;
-                    listener.exitScreen(this, currLevel);
-                }
-                return true;
+                currLevel = i + 1;
+                pressState = 1;
+                return false;
             }
         }
         return false;
     }
 
-    @Override public boolean keyDown(int keycode) { return false; }
-    @Override public boolean keyUp(int keycode) { return false; }
-    @Override public boolean keyTyped(char character) { return false; }
-    @Override public boolean touchUp(int screenX, int screenY, int pointer, int button) { return false; }
-    @Override public boolean touchDragged(int screenX, int screenY, int pointer) { return false; }
-    @Override public boolean mouseMoved(int screenX, int screenY) { return false; }
+    /**
+     * Called when a finger was lifted or a mouse button was released.
+     *
+     * This method checks to see if the play button is currently pressed down.
+     * If so, it signals the that the player is ready to go.
+     *
+     * @param screenX the x-coordinate of the mouse on the screen
+     * @param screenY the y-coordinate of the mouse on the screen
+     * @param pointer the button or touch finger number
+     * @return whether to hand the event to other listeners.
+     */
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        if (pressState == 1) {
+            pressState = 2;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean keyDown(int keycode) { return true; }
+    public boolean keyUp(int keycode) { return true; }
+    public boolean keyTyped(char character) { return true; }
+
+    public boolean touchDragged(int screenX, int screenY, int pointer) { return true; }
+    public boolean mouseMoved(int screenX, int screenY) { return true; }
     public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
         return true;
     }
-    @Override public boolean scrolled(float amountX, float amountY) { return false; }
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    public boolean scrolled(float amountX, float amountY) { return true; }
+    public void pause() {}
+    public void resume() {}
+
 
 }

@@ -151,6 +151,8 @@ public class ChromaRoot extends Game implements ScreenListener {
 
         } else if (screen == selecting) {
             levelSelector.setCurrentLevel(exitCode);
+            selecting.dispose();
+            selecting = null;
 
             // Create array of gameplay controllers (could be multiple levels or just one)
             controllers = new GameplayController[1];
