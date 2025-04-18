@@ -90,8 +90,7 @@ public class Level {
                 ty = layerHeight - 1 - ty;                            // flip Y origin
 
                 if (GRATE_GIDS.contains(gid)) {
-                    Grate grate = new Grate(region, units);
-                    grate.setPosition(tx, ty);
+                    Grate grate = new Grate(region, units, tx, ty);
                     grates.add(grate);
                 } else {
                     // create BackgroundTile with the region
@@ -183,19 +182,17 @@ public class Level {
         enemies = new ArrayList<>();
         JsonValue enemiesData = globalConstants.get("enemies");
         if (enemiesData != null) {
-            Texture enemyTex = directory.getEntry("platform-traci", Texture.class);
+            Texture enemyTex = directory.getEntry("enemy", Texture.class);
+            Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
+            Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.1f);
             JsonValue enemyPositions = enemiesData.get("positions");
-            JsonValue enemyNames = enemiesData.get("names");
             JsonValue enemyType = enemiesData.get("types");
             JsonValue enemyPatrol = enemiesData.get("patrols");
             JsonValue enemyPatrolPath = enemiesData.get("patrol_paths");
-            JsonValue enemyDetectionRange = enemiesData.get("detection-range");
-            JsonValue enemyFOV = enemiesData.get("fov");
             JsonValue enemyStartRotation = enemiesData.get("startRotation");
             JsonValue enemyRotateAngles = enemiesData.get("rotateAngle");
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords = enemyPositions.get(i).asFloatArray();
-                String name = enemyNames.get(i).asString();
                 String type = enemyType.get(i).asString();
 
                 boolean patrol = enemyPatrol.get(i).asBoolean();
@@ -204,13 +201,9 @@ public class Level {
                 for (JsonValue point : patrolPath) {
                     patrolPathList.add(point.asFloatArray()); // Convert each sub-array to float[]
                 }
-
-                float detectionRange = enemyDetectionRange.get(i).asFloat();
-                float fov = enemyFOV.get(i).asFloat();
                 float startRotation = enemyStartRotation.get(i).asFloat();
                 float rotateAngle = enemyRotateAngles.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, name, type, patrol, patrolPathList, detectionRange,
-                    fov, startRotation, rotateAngle, units, enemiesData);
+                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList, startRotation, rotateAngle, units, enemiesData, enemyAlertAnim);
                 enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }

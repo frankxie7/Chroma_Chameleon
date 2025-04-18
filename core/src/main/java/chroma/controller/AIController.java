@@ -39,13 +39,13 @@ public class AIController {
     private Goal[] goals;
     private State state;
 
-    // Base detection range and dynamic detection range.
-    private float detectionRange;
+    // Camera and detection
     private float fov;
-    private float rotationSpeedWander = 45f; // Degrees per second
+    private float rotationSpeedPatrol = 45f; // Degrees per second
     private float rotationSpeedAlert = 240f;
     //    private float rotationSpeedChase = 240f;
     private boolean rotatingClockwise = true;
+    private float detectionRange;
 
     // GOAL:
     private Vector2 target;
@@ -62,6 +62,12 @@ public class AIController {
     private float alertLength = 3f;
     private float alertTimer = alertLength;
 
+    // SUSPICIOUS:
+    private float suspiciousMaxSpeed = 2f;
+    //    private float awarenessLevel = 0f;  // from 0 to 1
+    private float detectionTimer = 0f;
+    private float detectionThreshold = 1.25f;
+
     // WANDER:
     private float wanderMaxSpeed = 5f;
     private float timeToChangeTarget = 2f;
@@ -74,7 +80,6 @@ public class AIController {
     private int patrolIndex = 0; // Track the current waypoint index
 
     private boolean playerDetected = false;
-    private boolean wasChasingOrAlert = false;
 
     private NavGraph graph = new NavGraph();
 
@@ -90,9 +95,8 @@ public class AIController {
         this.player = level.getAvatar();
         this.walls = level.getWalls();
         this.goals = physics.getGoalList();
-        this.detectionRange = enemy.getDetectionRange();
         this.fov = enemy.getFov();
-        state = State.WANDER;
+        state = patrol ? State.PATROL : State.WANDER;
         pickNewWanderTarget();
 
         float worldWidth = gameplay.getWorldWidth();
@@ -127,7 +131,10 @@ public class AIController {
             return false;
         }
 
-        return true;
+        Object hitObject = hitFixture.getBody().getUserData();
+
+        // Ignore enemies during visibility/path checks
+        return !(hitObject instanceof Enemy);
     }
 
     private boolean isBlocked(Vector2 position) {
@@ -357,10 +364,16 @@ public class AIController {
     }
 
     public void update(float delta) {
+//        enemy.setScale(scale);
         Vector2 enemyPos = enemy.getPosition();
         Vector2 playerPos = player.getPosition();
         if (enemyPos == null || playerPos == null) {
             return;
+        }
+        if (detectionTimer > 0) {
+            detectionRange = enemy.getAlertDetectionRange();
+        } else {
+            detectionRange = enemy.getBaseDetectionRange();
         }
 
         playerDetected = false;
@@ -423,26 +436,49 @@ public class AIController {
             return;
         }
 
-        if (playerDetected || gameplay.isGlobalChase()) {
-//            System.out.println("Player detected: " + playerDetected + ", GlobalChase: " + gameplay.isGlobalChase());
-            Vector2 lastSpotted = new Vector2(playerPos);
-            player.setLastSeen(lastSpotted);
-            wasChasingOrAlert = true;
-            state = State.CHASE;
-        } else if (alertTimer < alertLength) {
-            state = State.ALERT;
-        } else {
-            state = patrol ? State.PATROL : State.WANDER;
+//        System.out.println("State: " + state + ", detected: " + playerDetected + ", timer: " + detectionTimer);
+
+//        System.out.println(playerDetected && detectionTimer >= detectionThreshold);
+
+        // Detection logic first: always grows/shrinks no matter the state
+        if (playerDetected) {
+            detectionTimer = Math.min(detectionThreshold + 0.5f, detectionTimer + delta);
+        } else if (alertTimer >= alertLength) {
+            detectionTimer = Math.max(0, detectionTimer - delta);
         }
 
+        // State switching logic after detection is updated
         if (state == State.CHASE) {
+            Vector2 lastSpotted = new Vector2(playerPos);
+            player.setLastSeen(lastSpotted);
             chaseState(delta, enemyPos, playerPos);
+            if (!playerDetected) {
+                state = State.ALERT;
+                alertTimer = 0;
+                detectionTimer = detectionThreshold;  // lock it at max during ALERT
+            }
         } else if (state == State.ALERT) {
             alertState(delta, enemyPos);
+            if (alertTimer >= alertLength) {
+                state = patrol ? State.PATROL : State.WANDER;
+            }
+            if (playerDetected && detectionTimer >= detectionThreshold) {
+                state = State.CHASE;
+            }
         } else if (state == State.PATROL) {
             patrolState(delta, enemyPos);
-        } else {
+            if (detectionTimer >= detectionThreshold) {
+                state = State.CHASE;
+            } else if (gameplay.isGlobalChase()) {
+                state = State.ALERT;
+                alertTimer = 0;
+                detectionTimer = detectionThreshold;
+            }
+        } else { // WANDER
             wanderState(delta, enemyPos);
+            if (detectionTimer >= detectionThreshold) {
+                state = State.CHASE;
+            }
         }
         // Ensure the enemy updates its physics forces properly
         enemy.applyForce();
@@ -451,6 +487,7 @@ public class AIController {
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
         alertTimer = 0;
+        enemy.setAlertAnimationFrame(12);
         enemy.setMaxSpeed(chaseMaxSpeed);
         target = playerPos;
         if (!isLineBlocked(enemyPos, target)) {
@@ -466,6 +503,7 @@ public class AIController {
     }
     private void alertState(float delta, Vector2 enemyPos) {
         alertTimer += delta;
+        enemy.setAlertAnimationFrame(11);
         enemy.setMaxSpeed(alertMaxSpeed);
         target = player.getLastSeen();
         if (!isLineBlocked(enemyPos, target)) {
@@ -480,7 +518,17 @@ public class AIController {
         }
     }
     private void patrolState(float delta, Vector2 enemyPos) {
+        int frame = MathUtils.clamp(
+                (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
+        );
+        if (detectionTimer == 0) {
+            frame = -1;
+        }
+        enemy.setAlertAnimationFrame(frame);
         enemy.setMaxSpeed(wanderMaxSpeed);
+        if (detectionTimer > 0) {
+            enemy.setMaxSpeed(suspiciousMaxSpeed);
+        }
         target = graph.getNearestWalkableNode(new Vector2(patrolPath.get(patrolIndex)[0], patrolPath.get(patrolIndex)[1]));
         if (!isLineBlocked(enemyPos, target)) {
             moveTowards(target, wanderSpeed);
@@ -510,11 +558,12 @@ public class AIController {
             enemy.setVerticalMovement(0);
         }
     }
+
     private void handleCamera(float delta) {
         float rotationSpeed = getRotationSpeed();
         float minRotation = enemy.getMinRotation();
         float maxRotation = enemy.getMaxRotation();
-        float newRotation = (enemy.getRotation() + (float)Math.toRadians(360)) % ((float)Math.toRadians(360)); // Keep rotation within [0,360]
+        float newRotation = (enemy.getRotation() + (float) Math.toRadians(360)) % ((float) Math.toRadians(360)); // Keep rotation within [0,360]
         boolean wrapsAround = minRotation > maxRotation; // Does range cross 0°?
 
         if (rotatingClockwise) {
@@ -547,12 +596,12 @@ public class AIController {
                 }
             }
         }
-        newRotation = (newRotation + (float)Math.toRadians(360)) % ((float)Math.toRadians(360)); // Keep rotation within [0,360]
+        newRotation = (newRotation + (float) Math.toRadians(360)) % ((float) Math.toRadians(360)); // Keep rotation within [0,360]
 
+        Vector2 enemyPos = enemy.getPosition();
+        Vector2 playerPos = player.getPosition();
         if (state == State.CHASE) {
-            Vector2 enemyPos = enemy.getPosition();
-            Vector2 playerPos = player.getPosition();
-
+            enemy.setAlertAnimationFrame(12);
             if (enemyPos != null && playerPos != null) {
                 Vector2 toPlayer = playerPos.cpy().sub(enemyPos);
                 float angleToPlayer = (float) Math.atan2(toPlayer.y, toPlayer.x); // In radians
@@ -566,27 +615,53 @@ public class AIController {
                     boolean inRange = angleToPlayer >= minRotation && angleToPlayer <= maxRotation;
                     clampedAngle = inRange ? angleToPlayer : MathUtils.clamp(angleToPlayer, minRotation, maxRotation);
                 }
-
                 newRotation = clampedAngle;
             }
+        } else if (state == State.ALERT) {
+            enemy.setAlertAnimationFrame(11);
+        } else {
+            int frame = MathUtils.clamp(
+                    (int) ((detectionTimer / (detectionThreshold / 2)) * 11f), 0, 11
+            );
+            if (detectionTimer == 0) {
+                frame = -1;
+            }
+            enemy.setAlertAnimationFrame(frame);
         }
         enemy.setRotation(newRotation);
 
+        // Detection logic first: always grows/shrinks no matter the state
         if (playerDetected) {
-            state = State.CHASE;
-        } else if (alertTimer < alertLength) {
-            state = State.ALERT;
-        } else {
-            state = State.WANDER;
+            detectionTimer = Math.min(detectionThreshold / 2, detectionTimer + delta);
+        } else if (alertTimer >= alertLength) {
+            detectionTimer = Math.max(0, detectionTimer - delta);
         }
 
-        if (state == State.CHASE) {
-            alertTimer = 0f;
+        if (state == State.CHASE){
+            Vector2 lastSpotted = new Vector2(playerPos);
+            player.setLastSeen(lastSpotted);
+            if (detectionTimer < detectionThreshold / 2) {
+                state = State.ALERT;
+                alertTimer = 0f;
+            }
         } else if (state == State.ALERT) {
             alertTimer += delta;
+            if (gameplay.isGlobalChase()) {
+                alertTimer = 0f;
+            }
+            if (detectionTimer >= detectionThreshold / 2 && playerDetected) {
+                state = State.CHASE;
+            } else if (detectionTimer == 0) {
+                state = State.PATROL;
+            }
+        } else {
+            if (gameplay.isGlobalChase()) {
+                state = State.ALERT;
+            } else if (detectionTimer >= detectionThreshold / 2 && playerDetected) {
+                state = State.CHASE;
+            }
         }
     }
-
     private float closestBound(float angle, float min, float max) {
         float distToMin = angleDistance(angle, min);
         float distToMax = angleDistance(angle, max);
@@ -602,9 +677,9 @@ public class AIController {
                 return 0;
             case ALERT:
                 return (float)Math.toRadians(rotationSpeedAlert);
-            case WANDER:
+            case PATROL:
             default:
-                return (float)Math.toRadians(rotationSpeedWander);
+                return (float)Math.toRadians(rotationSpeedPatrol);
         }
     }
 
@@ -619,7 +694,7 @@ public class AIController {
                     Vector2 sprayPos = spray.getPosition();
 //                    System.out.println("Spray: " + sprayPos);
 //                    System.out.println("Dist: " + enemy.getPosition().dst(sprayPos));
-                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= detectionRange) {
+                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= enemy.getBaseDetectionRange()) {
                         cleaningTimer = 0f;
                         spray.setExpired();; // however you handle removing objects
                     }
@@ -648,7 +723,7 @@ public class AIController {
 //        for (NavNode node : graph.nodes) {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
 //        }
-//
+
 //        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
 //            shapeRenderer.setColor(Color.YELLOW);
@@ -662,13 +737,11 @@ public class AIController {
 //            shapeRenderer.setColor(Color.BLUE);
 //            shapeRenderer.rect(lastVisible.x * scale - 5f, lastVisible.y * scale - 10f, 10f, 10f);
 //        }
-
         shapeRenderer.end();
 
         drawEnemyVision(camera);
     }
     public void drawEnemyVision(OrthographicCamera camera) {
-
         shapeRenderer.setProjectionMatrix(camera.combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);

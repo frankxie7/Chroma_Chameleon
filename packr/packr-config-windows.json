@@ -1,0 +1,11 @@
+{
+  "platform": "windows",
+  "jdk": "/Users/cooperproctor/Downloads/jdk-21.0.7.jdk/Contents/Home/",
+  "executable": "Chroma Chameleon",
+  "classpath": ["Chroma_Chameleon.jar"],
+  "mainclass": "chroma.lwjgl3.Lwjgl3Launcher",
+  "vmargs": ["-Xmx1G"],
+  "resources": ["/Users/cooperproctor/3152 Game Dev/Chroma_Chameleon/assets/"],
+  "output": "/Users/cooperproctor/Desktop/ChromaBuildMac",
+  "icon": "/Users/cooperproctor/Downloads/chroma_icon.png"
+}

@@ -418,8 +418,6 @@ public class Chameleon extends ObstacleSprite {
             0);
     }
 
-
-
     /**
      * Draws the outline of the physics object.
      *

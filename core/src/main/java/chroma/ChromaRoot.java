@@ -151,16 +151,18 @@ public class ChromaRoot extends Game implements ScreenListener {
 
         } else if (screen == selecting) {
             levelSelector.setCurrentLevel(exitCode);
+            selecting.dispose();
+            selecting = null;
 
             // Create array of gameplay controllers (could be multiple levels or just one)
             controllers = new GameplayController[1];
             controllers[0] = new GameplayController(directory, levelSelector);
 
             // Initialize them
-            for (GameplayController controller : controllers) {
-                controller.setScreenListener(this);
-                controller.setSpriteBatch(batch);
-                controller.reset();  // If your class has a 'reset' method
+            for (int ii = 0; ii < controllers.length; ii++) {
+                controllers[ii].setScreenListener(this);
+                controllers[ii].setSpriteBatch(batch);
+                controllers[ii].reset();  // If your class has a 'reset' method
             }
 
             current = 0;
