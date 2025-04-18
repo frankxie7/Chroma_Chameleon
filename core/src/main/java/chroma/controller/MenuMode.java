@@ -7,6 +7,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.utils.JsonValue;
@@ -27,7 +28,7 @@ public class MenuMode implements Screen, InputProcessor {
 
     private int width, height;
     private float scale;
-    private Rectangle[] bounds;
+    private CircleBound[] bounds;
 
     private ScreenListener listener;
 
@@ -39,6 +40,26 @@ public class MenuMode implements Screen, InputProcessor {
 
     /** The current state of the button */
     private int pressState;
+
+    /** Draw the outline for determining */
+    private ShapeRenderer shapeRenderer;
+
+    /** Internal class for creating a circular bound */
+    private class CircleBound {
+        public float x, y, radius;
+
+        public CircleBound(float x, float y, float radius) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+        }
+
+        public boolean contains(float px, float py) {
+            float dx = px - x;
+            float dy = py - y;
+            return dx * dx + dy * dy <= radius * radius;
+        }
+    }
 
     /**
      * Returns true if all assets are loaded and the player is ready to go.
@@ -59,7 +80,7 @@ public class MenuMode implements Screen, InputProcessor {
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        bounds = new Rectangle[10];
+        bounds = new CircleBound[constants.getInt("numButtons")];
 
         affine = new Affine2();
         Gdx.input.setInputProcessor(this);
@@ -69,6 +90,9 @@ public class MenuMode implements Screen, InputProcessor {
         directory.finishLoading();
 
         active = true;
+
+        shapeRenderer = new ShapeRenderer();
+
     }
 
     /**
@@ -97,9 +121,11 @@ public class MenuMode implements Screen, InputProcessor {
         int numCols = constants.getInt("numCols");
         int numRows = constants.getInt("numRows");
         int numButtons = constants.getInt("numButtons");
-        float buttonScale = constants.getFloat("button.scale");
+        float buttonScale = constants.getFloat("button.scale") ;
+        float boundScale = constants.getFloat("bound.scale") ;
 
         float buttonSize = height * buttonScale; // you can tweak this
+        float radius = buttonSize * boundScale;
         float hSpacing = (width - numCols * buttonSize) / (numCols + 1); // horizontal spacing
         float vSpacing = (height - numRows * buttonSize) / (numRows + 1); // vertical spacing
 
@@ -110,11 +136,28 @@ public class MenuMode implements Screen, InputProcessor {
             float x = hSpacing + col * (buttonSize + hSpacing);
             float y = height - (vSpacing + (row + 1) * buttonSize + row * vSpacing);
 
-            bounds[i] = new Rectangle(x, y, buttonSize, buttonSize);
+            bounds[i] = new CircleBound(x + buttonSize / 2 , y + buttonSize / 2, radius);
+
+            Color tint = (i == currLevel-1 ? Color.GRAY : Color.WHITE);
+            batch.setColor( tint );
+
             batch.draw(texture, x, y, buttonSize, buttonSize);
+
         }
 
         batch.end();
+
+        // Begin shape rendering
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Line for outline
+        shapeRenderer.setColor(Color.YELLOW); // any debug color
+
+        for (int i = 0; i < bounds.length; i++) {
+            CircleBound cb = bounds[i];
+            shapeRenderer.circle(cb.x, cb.y, cb.radius);
+        }
+
+        shapeRenderer.end();
     }
 
     // ADDITIONAL SCREEN METHODS
