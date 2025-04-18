@@ -26,11 +26,15 @@
     "wall-down": "platform/tile025.png",
     "background-tile": "platform/tile043.png",
     "wall-top": "platform/tile061.png",
-    "goalTileTemp": "platform/tile088.png"
+    "goalTileTemp": "platform/tile088.png",
+    "tileset":   "shared/tileset.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
-    "level-1-constants": "constants/level1.json"
+    "level-1-constants": "constants/level1.json",
+    "test16_1": "constants/test16_1.json",
+    "test16_2": "constants/test16_2.json",
+    "grate_test": "constants/grate_test.json"
   },
   "soundfx" : {
   },

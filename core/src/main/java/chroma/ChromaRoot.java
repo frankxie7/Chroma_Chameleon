@@ -1,11 +1,15 @@
 package chroma;
 
 import chroma.controller.GameplayController;
+import chroma.controller.LevelSelector;
 import chroma.controller.LoadingMode;
+import chroma.controller.MenuMode;
+import chroma.model.Level;
 import com.badlogic.gdx.*;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.*;
+import java.awt.Menu;
 
 /**
  * {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms.
@@ -21,6 +25,12 @@ public class ChromaRoot extends Game implements ScreenListener {
 
     /** Scene for the asset loading screen (if still used) */
     private LoadingMode loading;
+
+    /** Scene for level selecting screen */
+    private MenuMode selecting;
+
+    /** LevelSelector for backend logic */
+    private LevelSelector levelSelector;
 
     /** Current index of the active gameplay screen (if you plan to have more than one) */
     private int current;
@@ -64,6 +74,12 @@ public class ChromaRoot extends Game implements ScreenListener {
             loading = null;
         }
 
+        // Dispose the selecting screen
+        if (selecting != null) {
+            selecting.dispose();
+            selecting = null;
+        }
+
         // Dispose gameplay controllers
         if (controllers != null) {
             for (int ii = 0; ii < controllers.length; ii++) {
@@ -98,6 +114,10 @@ public class ChromaRoot extends Game implements ScreenListener {
             loading.resize(width, height);
         }
 
+        if (selecting != null) {
+            selecting.resize(width, height);
+        }
+
         // Pass size changes to each gameplay controller
         if (controllers != null) {
             for (int ii = 0; ii < controllers.length; ii++) {
@@ -117,15 +137,26 @@ public class ChromaRoot extends Game implements ScreenListener {
      * @param exitCode The state of the screen upon exit
      */
     public void exitScreen(Screen screen, int exitCode) {
-        // Transition from loading → gameplay
+        // Transition from loading → menu
         if (screen == loading) {
             directory = loading.getAssets();
             loading.dispose();
             loading = null;
 
+            levelSelector = new LevelSelector(directory);
+
+            selecting = new MenuMode("assets.json", batch);
+            selecting.setScreenListener(this);
+            setScreen(selecting);
+
+        } else if (screen == selecting) {
+            levelSelector.setCurrentLevel(exitCode);
+            selecting.dispose();
+            selecting = null;
+
             // Create array of gameplay controllers (could be multiple levels or just one)
             controllers = new GameplayController[1];
-            controllers[0] = new GameplayController(directory);
+            controllers[0] = new GameplayController(directory, levelSelector);
 
             // Initialize them
             for (int ii = 0; ii < controllers.length; ii++) {
@@ -139,18 +170,27 @@ public class ChromaRoot extends Game implements ScreenListener {
 
             // Handling transitions inside gameplay
         } else if (exitCode == GameplayController.EXIT_NEXT) {
-            current = (current + 1) % controllers.length;
+            levelSelector.nextLevel();
             controllers[current].reset();
             setScreen(controllers[current]);
 
         } else if (exitCode == GameplayController.EXIT_PREV) {
-            current = (current + controllers.length - 1) % controllers.length;
+            levelSelector.prevLevel();
             controllers[current].reset();
             setScreen(controllers[current]);
 
         } else if (exitCode == GameplayController.EXIT_QUIT) {
             // Quit the main application
             Gdx.app.exit();
+
+        } else if (exitCode == GameplayController.EXIT_MAP) {
+            //Transition from gameplay to menu
+            controllers = null;
+            selecting = new MenuMode("assets.json", batch);
+            selecting.setScreenListener(this);
+            setScreen(selecting);
         }
+
+
     }
 }

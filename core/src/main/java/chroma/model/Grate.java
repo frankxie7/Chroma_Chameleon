@@ -1,24 +1,28 @@
 package chroma.model;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2D;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
+import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Grate extends ObstacleSprite {
 
-    public Grate(float[] points, float units, JsonValue settings) {
+    public Grate(TextureRegion region, float units, float x, float y) {
+        super();
 
-        obstacle = new PolygonObstacle(points);
-        obstacle.setBodyType(BodyType.StaticBody);
+        obstacle = new BoxObstacle(x + 0.5f, y + 0.5f, 1.0f, 1.0f); // center tile
+        obstacle.setPhysicsUnits(units);
+        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);
         obstacle.setUserData(this);
         obstacle.setName("grate");
-        obstacle.setPhysicsUnits(units);
 
+        setTextureRegion(region);
+        mesh.set(-units / 2.0f, -units / 2.0f, units, units);
     }
 }

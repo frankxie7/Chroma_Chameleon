@@ -23,6 +23,7 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -43,9 +44,10 @@ import java.util.List;
 
 public class GameplayController implements Screen {
 
-    public static final int EXIT_QUIT = 0;
-    public static final int EXIT_NEXT = 1;
-    public static final int EXIT_PREV = 2;
+    public static final int EXIT_QUIT = 100;
+    public static final int EXIT_NEXT = 101;
+    public static final int EXIT_PREV = 102;
+    public static final int EXIT_MAP = 103;
     public static final int EXIT_COUNT = 180;
 
     private boolean debug;
@@ -137,11 +139,11 @@ public class GameplayController implements Screen {
 
 
 
-    public GameplayController(AssetDirectory directory) {
+    public GameplayController(AssetDirectory directory, LevelSelector levelSelector) {
         this.directory = directory;
         this.constants = directory.getEntry("platform-constants", JsonValue.class);
 
-        levelSelector = new LevelSelector(directory);
+        this.levelSelector = levelSelector;
         // Read world configuration from JSON
         JsonValue worldConf = constants.get("world");
         this.worldWidth = worldConf.get("bounds").getFloat(0);
@@ -209,7 +211,7 @@ public class GameplayController implements Screen {
         badMessage.setFont(displayFont);
 
         shapeRenderer = new ShapeRenderer();
-        shapeRenderer.setAutoShapeType(true);   // 允许在一次 begin 内切换类型
+        shapeRenderer.setAutoShapeType(true);
 
 
         goalMessage = new TextLayout();
@@ -224,6 +226,8 @@ public class GameplayController implements Screen {
      * Rebuilds the world state (physics, level objects, etc.).
      */
     public void reset() {
+
+
         // Dispose previous physics world if necessary
         if (physics != null) {
             physics.dispose();
@@ -240,6 +244,19 @@ public class GameplayController implements Screen {
         level = new Level(directory, units, levelSelector);
 
 
+//        for (Terrain wall : level.getWalls()) {
+//            physics.addObject(wall);
+//            PolygonObstacle body = (PolygonObstacle) wall.getObstacle();
+//            Body b = body.getBody();              // activatePhysics 后应不为 null
+//            Gdx.app.log("WALL",
+//                (b == null ? "❌ body=null " : "✅ body OK   ") +
+//                    "fixtures=" + (b == null ? "0" : b.getFixtureList().size) +
+//                    " pos=" + body.getPosition());
+//        }
+//        Gdx.app.log("RESET", "Walls in level = " + level.getWalls().size() +
+//            ", bodies in world = " + physics.getWorld().getBodyCount());
+
+
 //        for (BackgroundTile tile : level.getBackgroundTiles()) {
 //            physics.addObject(tile);
 //        }
@@ -247,41 +264,46 @@ public class GameplayController implements Screen {
 
 
         // Add all walls
+
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
+        }
+
+        for (Grate grates : level.getGrates()) {
+            physics.addObject(grates);
         }
 
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
         physics.addObject(level.getGoalDoor());
-        physics.addObject(player);// Place grates near the chameleon spawn position
-        Vector2 spawnPos = player.getObstacle().getPosition();
-        float grateSize = 0.25f;
-
-        int gridSize = 6;
-
-        float halfGrid = (gridSize - 1) / 2f;
-
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
-                float offsetX = (i - halfGrid) * grateSize;
-                float offsetY = (j - halfGrid) * grateSize;
-                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
-                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
-                physics.addObject(g);
-            }
-        }
+        physics.addObject(player);
+//        Vector2 spawnPos = player.getObstacle().getPosition();
+//        float grateSize = 0.25f;
+//
+//        int gridSize = 6;
+//
+//        float halfGrid = (gridSize - 1) / 2f;
+//
+//        for (int i = 0; i < gridSize; i++) {
+//            for (int j = 0; j < gridSize; j++) {
+//                float offsetX = (i - halfGrid) * grateSize;
+//                float offsetY = (j - halfGrid) * grateSize;
+//                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
+//                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
+//                physics.addObject(g);
+//            }
+//        }
 
 
         int id = 0;
-        for(BackgroundTile machine : level.getMachineTiles()){
+        for(BackgroundTile machine : level.getGoalTiles()){
             Rectangle rec = machine.getBounds();
 //            System.out.println(scale);
 //            System.out.println(rec.getX());
 
-            float y = (rec.getY() / 32) + 0.2f;
-            float x = (rec.getX() / 32) + 0.2f;
+            float y = (rec.getY() / 16) + 0.2f;
+            float x = (rec.getX() / 16) + 0.2f;
 
             physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,id);
         }
@@ -314,6 +336,14 @@ public class GameplayController implements Screen {
             reset();
         }
         if (input.didExit()) {
+            listener.exitScreen(this, EXIT_QUIT);
+            return false;
+        }
+        if (input.didMenu()) {
+            listener.exitScreen(this, EXIT_MAP);
+            return false;
+        }
+        if (input.didExit()) {
             return false;
         }
 
@@ -324,6 +354,15 @@ public class GameplayController implements Screen {
                 if (failed) {
                     reset();
                 } else if (complete && listener != null) {
+                    listener.exitScreen(this, EXIT_NEXT);
+                    return false;
+                }
+            } else {
+                // This handles proceeding to next level or previous level if this level is done
+                if (input.didRetreat()) {
+                    listener.exitScreen(this, EXIT_PREV);
+                    return false;
+                } else if (input.didAdvance()) {
                     listener.exitScreen(this, EXIT_NEXT);
                     return false;
                 }
@@ -631,6 +670,10 @@ public class GameplayController implements Screen {
 
                 bombFireTimer = bombFireDelay;
             }
+            if (bombQueue.size == 0) {
+                bombState = BombSkillState.COOLDOWN;
+                cooldownTimer = BOMB_COOLDOWN;
+            }
         }
     }
 
@@ -748,9 +791,14 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
+        if (level.getGrates() != null) {
+            for (Grate grate : level.getGrates()) {
+                grate.draw(batch);
+            }
+        }
         // Draw goal tiles
-        if (level.getMachineTiles() != null) {
-            for (BackgroundTile tile : level.getMachineTiles()) {
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
                 tile.draw(batch);
             }
         }
@@ -990,7 +1038,7 @@ public class GameplayController implements Screen {
 
         // 1) Compute the uniform scale factor from world→screen
         //    so that worldHeight always fits the new window height
-        units = 32;
+        units = 16;
 
         // 2) The InputController scale for screen→world
         //    scale.x = (float) screenWidth / worldWidth

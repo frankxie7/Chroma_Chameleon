@@ -24,7 +24,7 @@ public class LevelSelector {
         this.directory = directory;
         // Define the level JSON files.
         levelFiles = new String[] {
-            "level-1-constants",
+            "test16_1", "test16_2","grate_test"
         };
         currentLevelIndex = 0;
     }
@@ -77,6 +77,18 @@ public class LevelSelector {
         return false;
     }
 
+    /**
+     * Returns to the previous level if available.
+     *
+     * @return true if returned to the previous level; false if there are no more levels.
+     */
+    public boolean prevLevel() {
+        if (currentLevelIndex > 0) {
+            currentLevelIndex --;
+            return true;
+        }
+        return false;
+    }
     /**
      * Resets the level selector to the first level.
      */

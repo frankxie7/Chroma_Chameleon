@@ -61,6 +61,9 @@ public class InputController {
     /** Whether the button to step back worlds was pressed. */
     private boolean prevPressed;
     private boolean prevPrevious;
+    /** Whether the button to step back worlds was pressed. */
+    private boolean menuPressed;
+    private boolean menuPrevious;
     /** Whether the primary action button was pressed. */
     private boolean primePressed;
     private boolean primePrevious;
@@ -204,6 +207,15 @@ public class InputController {
     }
 
     /**
+     * Returns true if the player wants to go to the previous level.
+     *
+     * @return true if the player wants to go to the previous level.
+     */
+    public boolean didMenu() {
+        return menuPressed && !menuPrevious;
+    }
+
+    /**
      * Returns true if the player wants to go toggle the debug mode.
      *
      * @return true if the player wants to go toggle the debug mode.
@@ -291,6 +303,7 @@ public class InputController {
         exitPrevious = exitPressed;
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
+        menuPrevious = menuPressed;
         skillPrevious = skillPressed;
         leftPrevious  = leftPressed;
         rightPrevious = rightPressed;
@@ -360,6 +373,7 @@ public class InputController {
         secondPressed = (secondary && secondPressed) || (Gdx.input.isKeyPressed(Input.Keys.SPACE));
         prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
+        menuPressed = (secondary && menuPressed) || (Gdx.input.isKeyPressed(Input.Keys.M));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
         shiftPressed = (secondary && shiftPressed) || (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT));
         skillPressed = (secondary && skillPressed) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT);

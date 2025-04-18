@@ -15,6 +15,7 @@ import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -40,11 +41,12 @@ public class PhysicsController implements ContactListener {
     private boolean playerWithDoor = false;
 
     private int sprayContactCount = 0;
+    private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 40;
     //Length of the rays
-    private float rayLength = 4f;
+    private float rayLength = 5f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -126,30 +128,38 @@ public class PhysicsController implements ContactListener {
             float currentAngle = angle + angleOffset;
             float customRadius = computeRadiusForAngle(angleOffset);
             Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
+            if (obstacle.getPosition() == null) {
+                return;
+            }
             Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            ArrayList<Object> array = new ArrayList<>();
             RayCastCallback callback = new RayCastCallback() {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon) {
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Grate) {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
-                        Goal tile = (Goal) userData;
-                        tile.setFull();
+                        array.add(userData);
                         return -1f;
                     }
+                    array.add(userData);
                     endPoint.set(point);
                     return fraction;
                 }
             };
-//            Vector2 position = obstacle.getPosition();
-//            if(obstacle.isFacingRight()){
-//                position.x += 1/32f;
-//            }else{
-//                position.x -=1/32f;
-//            }
             world.rayCast(callback, obstacle.getPosition(), endPoint);
+
+            for(Object o : array.reversed()){
+                if(o instanceof Terrain){
+                    break;
+                }
+                if(o instanceof Goal){
+                    Goal g = (Goal) o;
+                    g.setFull();
+                }
+            }
             endpoints[i] = new Vector2(endPoint);
         }
     }
@@ -257,28 +267,28 @@ public class PhysicsController implements ContactListener {
         return new Goal(goalPoints, units, settings,id);
     }
 
-    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
-        float x1 = x + boxRad;
-        float y1 = y - boxRad;
-        float x2 = x + boxRad;
-        float y2 = y + boxRad;
-        float x3 = x - boxRad;
-        float y3 = y + boxRad;
-        float x4 = x - boxRad;
-        float y4 = y - boxRad;
-
-        float[] gratePoints = new float[8];
-        gratePoints[0] = x1;
-        gratePoints[1] = y1;
-        gratePoints[2] = x2;
-        gratePoints[3] = y2;
-        gratePoints[4] = x3;
-        gratePoints[5] = y3;
-        gratePoints[6] = x4;
-        gratePoints[7] = y4;
-
-        return new Grate(gratePoints, units, settings);
-    }
+//    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
+//        float x1 = x + boxRad;
+//        float y1 = y - boxRad;
+//        float x2 = x + boxRad;
+//        float y2 = y + boxRad;
+//        float x3 = x - boxRad;
+//        float y3 = y + boxRad;
+//        float x4 = x - boxRad;
+//        float y4 = y - boxRad;
+//
+//        float[] gratePoints = new float[8];
+//        gratePoints[0] = x1;
+//        gratePoints[1] = y1;
+//        gratePoints[2] = x2;
+//        gratePoints[3] = y2;
+//        gratePoints[4] = x3;
+//        gratePoints[5] = y3;
+//        gratePoints[6] = x4;
+//        gratePoints[7] = y4;
+//
+//        return new Grate(gratePoints, units, settings);
+//    }
 
 
     /**
@@ -347,6 +357,10 @@ public class PhysicsController implements ContactListener {
 
         final Fixture[] hitFixture = {null};
         world.rayCast((fixture, point, normal, fraction) -> {
+            Object o = fixture.getBody().getUserData();
+            if(o instanceof Spray || o instanceof Bomb){
+                return 0;
+            }
             hitFixture[0] = fixture;
             return fraction;
         }, start, end);
@@ -361,12 +375,23 @@ public class PhysicsController implements ContactListener {
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
 
+        if ((userDataA instanceof Chameleon && userDataB instanceof Grate) ||
+            (userDataA instanceof Grate && userDataB instanceof Chameleon)) {
+            grateContactCount++;
+            if (sprayContactCount > 0 || bombContactCount > 0) {
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+                player.setHidden(false);
+            }
+        }
+
         // Handle spray contacts
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
             sprayContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-            player.setHidden(true);
+            if (grateContactCount == 0) {
+                player.setHidden(true);
+            }
 //            System.out.println("Player entered spray; count = " + sprayContactCount);
         }
         // Handle bomb and goal collisons
@@ -382,7 +407,9 @@ public class PhysicsController implements ContactListener {
             (userDataA instanceof Bomb && userDataB instanceof Chameleon)) {
             bombContactCount++;
             Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-            player.setHidden(true);
+            if (grateContactCount == 0) {
+                player.setHidden(true);
+            }
         }
 
         // Check enemy collisions, etc.
@@ -408,6 +435,16 @@ public class PhysicsController implements ContactListener {
 
         Object userDataA = fixtureA.getBody().getUserData();
         Object userDataB = fixtureB.getBody().getUserData();
+
+        if ((userDataA instanceof Chameleon && userDataB instanceof Grate) ||
+            (userDataA instanceof Grate && userDataB instanceof Chameleon)) {
+            grateContactCount--;
+            if (grateContactCount < 0) grateContactCount = 0;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            if (grateContactCount == 0 && (sprayContactCount > 0 || bombContactCount > 0)) {
+                player.setHidden(true);
+            }
+        }
 
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
@@ -440,8 +477,15 @@ public class PhysicsController implements ContactListener {
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
-
-
+        if ((a instanceof Goal && b instanceof Spray) ||
+            (a instanceof Spray && b instanceof Goal)) {
+            Goal g = a instanceof Goal ? (Goal) a : (Goal) b;
+            g.setFull();
+        }
+        if ((a instanceof Spray && b instanceof Chameleon) ||
+            (a instanceof Chameleon && b instanceof Spray)) {
+            contact.setEnabled(false);
+        }
     }
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
