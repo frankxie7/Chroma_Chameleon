@@ -80,7 +80,7 @@ public class GameplayController implements Screen {
 
     private PhysicsController physics;
     private Level level;
-    private int numGoals = 672;
+    private int numGoals;
     private LevelSelector levelSelector;
 
     private List<AIController> aiControllers;
@@ -234,6 +234,11 @@ public class GameplayController implements Screen {
             physics.dispose();
         }
         float gravityY = constants.get("world").getFloat("gravity", -10f);
+
+        //level must be defined above physics to get number of goals
+
+        level = new Level(directory, units, levelSelector);
+        numGoals = level.getGoalTiles().size() * 16;
         physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
@@ -242,7 +247,7 @@ public class GameplayController implements Screen {
         targetZoom = ZOOM_DEFAULT;
         bombState = BombSkillState.IDLE;
         // Build the level with the current `units`
-        level = new Level(directory, units, levelSelector);
+
 
 
         // Add all walls
@@ -283,8 +288,6 @@ public class GameplayController implements Screen {
         int id = 0;
         for(BackgroundTile machine : level.getGoalTiles()){
             Rectangle rec = machine.getBounds();
-//            System.out.println(scale);
-//            System.out.println(rec.getX());
 
             float y = (rec.getY() / 16) + 0.2f;
             float x = (rec.getX() / 16) + 0.2f;

@@ -235,7 +235,6 @@ public class PhysicsController implements ContactListener {
             for(int col = 0; col < gridSize; col++){
                 float x = center.x + row * width;
                 float y = center.y + col * width;
-                boolean edge = row == gridSize - 1 || col == gridSize - 1;
                 Goal tile = createTile(x, y, width, units, settings,id);
                 goalList[index] = tile;
                 addObject(tile);
@@ -513,7 +512,6 @@ public class PhysicsController implements ContactListener {
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
-//            System.out.println(numFilled);
         }
         return (float)numFilled / goalList.length > 0.5;
     }
