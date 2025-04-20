@@ -1,7 +1,6 @@
 package chroma.model;
 
 import chroma.controller.LevelSelector;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -31,6 +30,7 @@ public class Level {
     private List<Bomb> bombs;
     private List<Spray> sprays;
     private List<Grate> grates;
+    private List<Collision> collision;
 
 
 
@@ -55,6 +55,7 @@ public class Level {
         bombs           = new ArrayList<>();
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
+        collision = new ArrayList<>();
         grates = new ArrayList<>();
 
 
@@ -116,7 +117,8 @@ public class Level {
             JsonValue data = goalTileData.get("data");
             for (int i = 0; i < data.size; i++) {
                 int gid = data.getInt(i);
-                if (gid == 0) continue;                                 // skip empty
+                if (gid == 0) continue; // skip empty
+
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
@@ -131,6 +133,8 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 goalTiles.add(tile);
+
+
             }
         }
         // Parse the "walls" tile layer and build a list of Terrain tiles
@@ -158,7 +162,8 @@ public class Level {
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
                     float[] coords = createCoords(tx, ty);
-                    Terrain wall = new Terrain(region,coords, units);
+                    Terrain wall = new Terrain(region,units);
+                    wall.setPosition(tx, ty);
                     walls.add(wall);
 //                    wall.setTexture(region.getTexture());
                 }
@@ -188,10 +193,40 @@ public class Level {
                 int tileValue = data.getInt(i);
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
-                    float[] coords = createCoords(tx, ty);
-                    Terrain wall = new Terrain(region,coords, units);
+                    Terrain wall = new Terrain(region,units);
+                    wall.setPosition(tx, ty);
                     walls.add(wall);
-//                    wall.setTexture(region.getTexture());
+                }
+            }
+        }
+        //This is the new collision layer it differs from Terrain and Background
+        //As it is an actual physics object
+        JsonValue collisionData = findLayer(constants, "collision");
+        if (collisionData != null && collisionData.has("data")) {
+//            walls = new ArrayList<>();
+
+            int layerWidth  = collisionData.getInt("width");
+            int layerHeight = collisionData.getInt("height");
+            JsonValue data  = collisionData.get("data");
+
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                           // skip empty tiles
+
+                // compute tile coordinates in grid
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                        // flip Y origin
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                     // no matching region
+                int tileValue = data.getInt(i);
+                // create a 1×1 tile-based Collision at (tx,ty)
+                if (tileValue != 0) {
+                    float[] coords = createCoords(tx, ty);
+                    Collision block = new Collision(coords, units);
+                    collision.add(block);
                 }
             }
         }
@@ -298,6 +333,8 @@ public class Level {
     public List<Terrain> getWalls() {
         return walls;
     }
+
+    public List<Collision> getCollision(){return collision;}
 
     public List<BackgroundTile> getBackgroundTiles() {
         return backgroundTiles;

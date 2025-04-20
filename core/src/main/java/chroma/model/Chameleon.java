@@ -416,7 +416,9 @@ public class Chameleon extends ObstacleSprite {
             drawWidth, drawHeight,
             1, 1,
             0);
+        batch.setColor(Color.WHITE);
     }
+
 
     /**
      * Draws the outline of the physics object.

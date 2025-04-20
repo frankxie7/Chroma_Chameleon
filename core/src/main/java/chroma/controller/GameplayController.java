@@ -239,6 +239,7 @@ public class GameplayController implements Screen {
 
         level = new Level(directory, units, levelSelector);
         numGoals = level.getGoalTiles().size() * 16;
+        System.out.println(numGoals);
         physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
@@ -251,7 +252,7 @@ public class GameplayController implements Screen {
 
 
         // Add all walls
-        for (Terrain wall : level.getWalls()) {
+        for (Collision wall : level.getCollision()) {
             physics.addObject(wall);
         }
 
@@ -285,14 +286,13 @@ public class GameplayController implements Screen {
 //        }
 
 
-        int id = 0;
         for(BackgroundTile machine : level.getGoalTiles()){
             Rectangle rec = machine.getBounds();
 
             float y = (rec.getY() / 16) + 0.2f;
             float x = (rec.getX() / 16) + 0.2f;
 
-            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,id);
+            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants);
         }
 
 
@@ -664,14 +664,6 @@ public class GameplayController implements Screen {
             physics.resetCollisionFlags();
         }
         physics.update(dt);
-        Goal[] goals = physics.getGoalList();
-        int filled = 0;
-        for (Goal g : goals) {
-            if (g != null && g.isFull()) {
-                filled++;
-            }
-        }
-        Gdx.app.log("GoalsDebug", "Painted goals: " + filled + " / " + goals.length);
     }
 
     /**
@@ -738,12 +730,20 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        // Draw all physics objects other than bombs
+
         // Draw tiled background
         if (level.getBackgroundTiles() != null) {
             for (BackgroundTile tile : level.getBackgroundTiles()) {
                 tile.draw(batch);
             }
         }
+
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
                 grate.draw(batch);
@@ -772,18 +772,19 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
-        // Draw all physics objects other than bombs
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() == null || (sprite.getName() != null && !sprite.getName().equals("bomb")  && !sprite.getName().equals("spray"))) {
-                sprite.draw(batch);
-            }
-        }
+
+
         for (ObstacleSprite sprite : physics.objects) {
             if ("bomb".equals(sprite.getName())) {
                 Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
                 if (bomb != null && bomb.isFlying()) {
                     bomb.draw(batch);
                 }
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("spray")) {
+                sprite.draw(batch);
             }
         }
         // ───── new bomb ──────────────────────────
@@ -831,6 +832,17 @@ public class GameplayController implements Screen {
 //        }
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
+                sprite.draw(batch);
+            }
+        }
+
+        if(level.getWalls() != null){
+            for (Terrain tile : level.getWalls()) {
+                tile.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("goal")) {
                 sprite.draw(batch);
             }
         }

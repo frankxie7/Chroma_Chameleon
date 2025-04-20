@@ -34,7 +34,7 @@ public class AIController {
     private Enemy enemy;
     private Type type;
     private Chameleon player;
-    private List<Terrain> walls; // list of walls for pathfindinga
+    private List<Collision> collisions; // list of walls for pathfindinga
     private List<Terrain> platforms;
     private Goal[] goals;
     private State state;
@@ -93,7 +93,7 @@ public class AIController {
         this.patrolPath = enemy.getPatrolPath();
         this.type = enemy.getType();
         this.player = level.getAvatar();
-        this.walls = level.getWalls();
+        this.collisions = level.getCollision();
         this.goals = physics.getGoalList();
         this.fov = enemy.getFov();
         state = patrol ? State.PATROL : State.WANDER;
@@ -138,7 +138,7 @@ public class AIController {
     }
 
     private boolean isBlocked(Vector2 position) {
-        for (Terrain wall : walls) {
+        for (Collision wall : collisions) {
             if (wall.contains(position)) {
                 return true;
             }

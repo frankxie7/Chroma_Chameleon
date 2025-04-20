@@ -160,7 +160,7 @@ public class PhysicsController implements ContactListener {
             world.rayCast(callback, obstacle.getPosition(), endPoint);
 
             for(Object o : array.reversed()){
-                if(o instanceof Terrain){
+                if(o instanceof Collision){
                     break;
                 }
                 if(o instanceof Goal){
@@ -230,12 +230,12 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
+    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
                 float x = center.x + row * width;
                 float y = center.y + col * width;
-                Goal tile = createTile(x, y, width, units, settings,id);
+                Goal tile = createTile(x, y, width, units, settings);
                 goalList[index] = tile;
                 addObject(tile);
                 index+=1;
@@ -254,7 +254,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings,int id){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -271,7 +271,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints, units, settings,id);
+        return new Goal(goalPoints, units, settings);
     }
 
 //    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
@@ -513,6 +513,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
+        System.out.println(numFilled);
         return (float)numFilled / goalList.length > 0.5;
     }
 

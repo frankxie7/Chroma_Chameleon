@@ -29,7 +29,6 @@ public class Goal extends ObstacleSprite {
     float units;
     float[] points;
     private Poly2 poly;
-    private int id;
 
     /**
      * Creates a new Spray object from the given points and world unit scale.
@@ -38,7 +37,7 @@ public class Goal extends ObstacleSprite {
      * @param units    The physics scale factor (pixels per world unit).
      * @param settings Additional settings from a JSON config (unused here).
      */
-    public Goal(float[] points, float units, JsonValue settings,int id) {
+    public Goal(float[] points, float units, JsonValue settings) {
         // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
         obstacle.setBodyType(BodyType.StaticBody);
@@ -47,7 +46,7 @@ public class Goal extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         this.units = units;
         this.points = points;
-        this.id = id;
+
 
         // Filter allows collisions with everything except other enemies
         Filter goalFilter = new Filter();
