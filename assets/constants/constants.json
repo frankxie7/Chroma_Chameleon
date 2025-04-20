@@ -13,9 +13,9 @@
     "inner"     : [1.2, 0.8],
     "size"      : 1.0,
     "drawScale": 0.8,
-    "force"     : 40.0,
+    "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 6.0,
+    "maxspeed"  : 8.0,
     "shot_cool" : 40,
     "sensor": {
       "shrink" : 0.6,

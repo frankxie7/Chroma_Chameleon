@@ -382,7 +382,7 @@ public class Chameleon extends ObstacleSprite {
     @Override
     public void draw(SpriteBatch batch) {
         // Save the current color of the batch
-        Color target = isHidden() ? Color.PURPLE : Color.WHITE;
+        Color target = isHidden() ? Color.PINK : Color.WHITE;
         batch.setColor(target);
         // Update the mesh vertex colors dynamically.
         int count = mesh.vertexCount();

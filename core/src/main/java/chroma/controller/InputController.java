@@ -408,6 +408,12 @@ public class InputController {
         clampPosition(bounds);
     }
 
+    /** true while the mouse left button is being held down */
+    public boolean isLeftHeld() {
+        return Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+    }
+
+
     /**
      * Clamps the cursor position so that it does not go outside the window
      *
