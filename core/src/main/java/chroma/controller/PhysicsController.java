@@ -57,6 +57,7 @@ public class PhysicsController implements ContactListener {
     private Goal[] goalList;
     //Index
     private int index;
+    private Door goalDoor;
 
     public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
@@ -76,6 +77,10 @@ public class PhysicsController implements ContactListener {
     }
 
     public Goal[] getGoalList(){ return goalList; }
+
+    public void setGoalDoor(Door door) {
+        this.goalDoor = door;
+    }
 
     public void addObject(ObstacleSprite obj) {
         objects.add(obj);
@@ -113,6 +118,9 @@ public class PhysicsController implements ContactListener {
             } else {
                 spr.update(dt);
             }
+        }
+        if (goalDoor != null && !goalDoor.isOpen() && goalsFull()) {
+            goalDoor.open();
         }
     }
 
@@ -507,7 +515,7 @@ public class PhysicsController implements ContactListener {
             }
 //            System.out.println(numFilled);
         }
-        return (float)numFilled / goalList.length > 0.9;
+        return (float)numFilled / goalList.length > 0.5;
     }
 
 

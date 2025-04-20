@@ -1,82 +1,89 @@
-/*
- * Door.java
- *
- * This class is a ObstacleSprite referencing the "win door". All it does is
- * override the constructor. We do this for organizational purposes. Otherwise
- * we have to put a lot of initialization code in the scene, and that just makes
- * the scene too long and unreadable.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author:  Walker M. White
- * Version: 2/8/2025
- */
- package chroma.model;
+package chroma.model;
 
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import edu.cornell.gdiac.graphics.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.utils.JsonValue;
-import edu.cornell.gdiac.assets.ParserUtils;
-import edu.cornell.gdiac.physics2.BoxObstacle;
+import com.badlogic.gdx.physics.box2d.Filter;
+import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 /**
- * The win door.
- *
- * An ObstacleSprite is a sprite (specifically a textured mesh) that is
- * connected to a obstacle. It is designed to be the same size as the
- * physics object, and it tracks the physics object, matching its position
- * and angle at all times.
- *
- * The reason we use a textured mesh instead of a image is because it allows
- * us more control over the size and shape of the image. We will talk about
- * how to use these later in class. For now, just notice how we create meshes.
- *
- * The associated obstacle is a sensor. That means that collisions will be
- * detected, but nothing happens to the game physics. Instead, we decide the
- * result of the collision.
+ * Door with frame-based animations, drawn manually due to lack of setRegion().
+ * Closed door loops closedAnim; on open(), plays openAnim once and becomes sensor.
  */
 public class Door extends ObstacleSprite {
+    private final Animation<TextureRegion> closedAnim;
+    private final Animation<TextureRegion> openAnim;
+    private boolean opened = false;
 
-    /**
-     * Creates a door with the given physics units and settings
-     *
-     * The physics units are used to size the mesh relative to the physics
-     * body. All other attributes are defined by the JSON file
-     *
-     * @param units     The physics units
-     * @param settings  The door physics constants
-     */
-    public Door(float units, JsonValue settings) {
-        super();
+    private float animTime = 0f;
+    private TextureRegion currentFrame;
 
-        float x = settings.get("pos").getFloat(0);
-        float y = settings.get("pos").getFloat(1);
-        float s = settings.getFloat("size");
-        float size = s * units;
+    private final float units;      // physicsUnits
+    private static final float SIZE = 4f; // door size in world units
 
-        obstacle = new BoxObstacle(x, y, s, s);
-        obstacle.setPhysicsUnits(units);
-        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
+    public Door(float units,
+        Animation<TextureRegion> closedAnim,
+        Animation<TextureRegion> openAnim,
+        Vector2 center) {
+        this.units      = units;
+        this.closedAnim = closedAnim;
+        this.openAnim   = openAnim;
+
+        // Build 4×4‑unit static polygon
+        float half = SIZE / 2f;
+        float[] verts = { -half, -half,  half, -half,  half, half,  -half, half };
+        PolygonObstacle poly = new PolygonObstacle(verts);
+        poly.setBodyType(BodyDef.BodyType.StaticBody);
+        poly.setPhysicsUnits(units);
+        poly.setPosition(center);
+        poly.setUserData(this);
+        poly.setName("door");
+        Filter filter = new Filter(); filter.groupIndex = -1;
+        poly.setFilterData(filter);
+        this.obstacle = poly;
         obstacle.setSensor(true);
-        obstacle.setUserData(this);
-        obstacle.setName("goal");
 
-        debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
-
-        mesh.set(-size / 2.0f, -size / 2.0f, size, size);
+        currentFrame = closedAnim.getKeyFrame(0f, true);
+        mesh.set(-half, -half, half*2, half*2);
     }
 
     /**
-     * Returns the primary fixture associated with this door.
-     *
-     * @return the first fixture from the physics body, or null if not available.
+     * Trigger door opening: switch to openAnim and set sensor
      */
-    public Fixture getFixture() {
-        if (obstacle.getBody() != null && obstacle.getBody().getFixtureList().size > 0) {
-            return obstacle.getBody().getFixtureList().first();
+    public void open() {
+        if (!opened) {
+            opened = true;
+            animTime = 0f;
+            // allow player pass through
+            obstacle.getBody().getFixtureList().first().setSensor(true);
         }
-        return null;
+    }
+
+    public boolean isOpen() {
+        return opened;
+    }
+
+    @Override
+    public void update(float dt) {
+        animTime += dt;
+        if (opened) {
+            currentFrame = openAnim.getKeyFrame(animTime, false);
+        } else {
+            currentFrame = closedAnim.getKeyFrame(animTime, true);
+        }
+        super.update(dt);
+    }
+
+    public void draw(SpriteBatch batch) {
+        float px = obstacle.getX() * units;
+        float py = obstacle.getY() * units;
+        float w  = SIZE * units;
+        float h  = SIZE * units;
+        batch.draw(currentFrame,
+            px - w/2, py - h/2,
+            w, h);
     }
 }

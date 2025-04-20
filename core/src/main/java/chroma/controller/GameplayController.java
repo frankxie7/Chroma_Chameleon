@@ -244,6 +244,7 @@ public class GameplayController implements Screen {
         // Build the level with the current `units`
         level = new Level(directory, units, levelSelector);
 
+
         // Add all walls
         for (Terrain wall : level.getWalls()) {
             physics.addObject(wall);
@@ -256,7 +257,10 @@ public class GameplayController implements Screen {
         // Add key objects to the physics world
         player = level.getAvatar();
         player.setPaint(player.getMaxPaint());
-        physics.addObject(level.getGoalDoor());
+        if (level.getGoalDoor() != null) {
+            physics.setGoalDoor(level.getGoalDoor());
+            physics.addObject(level.getGoalDoor());
+        }
         physics.addObject(player);
 //        Vector2 spawnPos = player.getObstacle().getPosition();
 //        float grateSize = 0.25f;
@@ -374,9 +378,6 @@ public class GameplayController implements Screen {
             }
         }
 
-        if(physics.goalsFull()){
-
-        }
         globalChase = anyChasing;
 
         // Update the state of aiming
@@ -418,7 +419,6 @@ public class GameplayController implements Screen {
                 }
             }
         }
-
         for (ObstacleSprite obj : toRemove) {
             physics.removeObject(obj);
         }
@@ -661,6 +661,14 @@ public class GameplayController implements Screen {
             physics.resetCollisionFlags();
         }
         physics.update(dt);
+        Goal[] goals = physics.getGoalList();
+        int filled = 0;
+        for (Goal g : goals) {
+            if (g != null && g.isFull()) {
+                filled++;
+            }
+        }
+        Gdx.app.log("GoalsDebug", "Painted goals: " + filled + " / " + goals.length);
     }
 
     /**
@@ -744,9 +752,9 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-
-
-
+        if (level.getGoalDoor() != null) {
+        level.getGoalDoor().draw(batch);
+}
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {

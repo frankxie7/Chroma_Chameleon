@@ -1,6 +1,7 @@
 package chroma.model;
 
 import chroma.controller.LevelSelector;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -24,6 +25,7 @@ public class Level {
     private Chameleon avatar;
     private List<Enemy> enemies;
     private List<Terrain> walls;
+    private List<Terrain> wallsTop;
     private List<BackgroundTile> backgroundTiles;
     private List<BackgroundTile> goalTiles;
     private List<Bomb> bombs;
@@ -162,15 +164,76 @@ public class Level {
                 }
             }
         }
+        // Parse the "walls" tile layer and build a list of Terrain tiles
+        JsonValue wallsTopData = findLayer(constants, "walls-top");
+        if (wallsTopData != null && wallsTopData.has("data")) {
+//            walls = new ArrayList<>();
+
+            int layerWidth  = wallsTopData.getInt("width");
+            int layerHeight = wallsTopData.getInt("height");
+            JsonValue data  = wallsTopData.get("data");
+
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                           // skip empty tiles
+
+                // compute tile coordinates in grid
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                        // flip Y origin
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                     // no matching region
+                int tileValue = data.getInt(i);
+                // create a 1×1 tile-based Terrain at (tx,ty)
+                if (tileValue != 0) {
+                    float[] coords = createCoords(tx, ty);
+                    Terrain wall = new Terrain(region,coords, units);
+                    walls.add(wall);
+//                    wall.setTexture(region.getTexture());
+                }
+            }
+        }
 
 
 
-        // Create the goal door
-        Texture goalTex = directory.getEntry("shared-goal", Texture.class);
-        JsonValue goalData = globalConstants.get("goal");
-        goalDoor = new Door(units, goalData);
-        goalDoor.setTexture(goalTex);
-        goalDoor.getObstacle().setName("goal");
+        // ---------- Door ----------
+        JsonValue doorLayer = findLayer(constants, "door");
+        if (doorLayer != null && doorLayer.has("data")) {
+            JsonValue doorData = doorLayer.get("data");
+            int layerWidth  = doorLayer.getInt("width");
+            int layerHeight = doorLayer.getInt("height");
+
+            List<Vector2> doorTiles = new ArrayList<>();
+            for (int i = 0; i < doorData.size; i++) {
+                if (doorData.getInt(i) == 0) continue;
+                int tx = i % layerWidth;
+                int ty = layerHeight - 1 - (i / layerWidth);
+                doorTiles.add(new Vector2(tx, ty));
+            }
+
+            if (!doorTiles.isEmpty()) {
+                int minX = doorTiles.stream().mapToInt(v -> (int)v.x).min().getAsInt();
+                int minY = doorTiles.stream().mapToInt(v -> (int)v.y).min().getAsInt();
+
+                Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
+
+                Texture ventSheet = directory.getEntry("vent", Texture.class);
+
+                TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
+
+                Animation<TextureRegion> closedAnim = new Animation<>(1f, frames[0]);
+                closedAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+                Animation<TextureRegion> openAnim = new Animation<>(0.075f, frames);
+                openAnim.setPlayMode(Animation.PlayMode.NORMAL);
+
+                goalDoor = new Door(units, closedAnim, openAnim, doorCenter);
+                goalDoor.getObstacle().setName("door");
+            }
+        }
+
 
         // Create the chameleon (player) using animation
         JsonValue chamData = globalConstants.get("chameleon");
