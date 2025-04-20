@@ -70,7 +70,8 @@ public class GameplayController implements Screen {
 
     private Chameleon player;
     private float splatterCost = 3f;
-    private float bombCost = 0.1f;
+    private static final float BOMB_INITIAL_COST    = 4f;
+    private static final float BOMB_SUBSEQUENT_COST = 0.5f;
 
 
 
@@ -379,7 +380,7 @@ public class GameplayController implements Screen {
         globalChase = anyChasing;
 
         // Update the state of aiming
-        player.setAiming(input.didAim() && player.hasEnoughPaint(bombCost));
+        player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_INITIAL_COST));
 
         for (Bomb b : level.getBombs()) {
             b.update(dt);
@@ -487,7 +488,7 @@ public class GameplayController implements Screen {
         switch (bombState) {
             case IDLE:
                 player.setMaxSpeed(1f);
-                if (skillKey && player.hasEnoughPaint(bombCost)) {
+                if (skillKey && player.hasEnoughPaint(BOMB_INITIAL_COST)) {
                     bombState       = BombSkillState.CHARGING;
                     aimRangeCurrent = RANGE_MIN;
                     targetZoom      = ZOOM_DEFAULT;
@@ -560,10 +561,19 @@ public class GameplayController implements Screen {
 
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
-        Vector2 firstPix = clampBombPos(raw,aimRangeCurrent);
+        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
+
+        if (player.hasEnoughPaint(BOMB_INITIAL_COST)) {
+            player.setPaint(player.getPaint() - BOMB_INITIAL_COST);
+        } else {
+            bombState       = BombSkillState.IDLE;
+            aimRangeCurrent = RANGE_MIN;
+            targetZoom      = ZOOM_DEFAULT;
+            return;
+        }
+
         lastPlanned.set(firstPix);
         planned.add(firstPix.cpy().scl(1f/units));
-
         bombState = BombSkillState.PAINTING;
     }
 
@@ -572,12 +582,17 @@ public class GameplayController implements Screen {
     private void updatePainting() {
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
-        Vector2 clampedScreen = clampBombPos(raw,aimRangeCurrent);
+        Vector2 clampedScreen = clampBombPos(raw, aimRangeCurrent);
 
-        if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX &&
-            planned.size < MAX_PLANNED) {
-            planned.add(clampedScreen.cpy().scl(1f / units));
-            lastPlanned.set(clampedScreen);
+        if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
+            && planned.size < MAX_PLANNED) {
+            if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
+                player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
+                planned.add(clampedScreen.cpy().scl(1f/units));
+                lastPlanned.set(clampedScreen);
+            } else {
+                firePlannedBombs();
+            }
         }
     }
 
@@ -588,17 +603,9 @@ public class GameplayController implements Screen {
             bombState = BombSkillState.IDLE;
             return;
         }
-
-        float totalCost = bombCost * n;
-        if (!player.hasEnoughPaint(totalCost)) {
-            planned.clear();
-            bombState = BombSkillState.IDLE;
-            return;
-        }
         for (Vector2 target : planned) {
             bombQueue.addLast(target);
         }
-        player.setPaint(player.getPaint() - totalCost);
         planned.clear();
         bombFireTimer = bombFireDelay;
         bombState = BombSkillState.FIRING;
