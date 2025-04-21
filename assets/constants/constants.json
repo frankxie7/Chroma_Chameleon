@@ -39,7 +39,7 @@
   "positions": [[11.0, 15.0],[5.0,15.0]],
   "startRotation": [0,0],
   "rotateAngle": [0,0],
-  "inner": [0.8, 0.95],
+  "inner": [0.5, 0.7],
   "size": 3.0,
   "drawScale": 2.0,
   "force": 10.0,
@@ -65,7 +65,7 @@
   "positions": [[10.0, 12.0]],
   "startRotation": [0],
   "rotateAngle": [0],
-  "inner": [0.8, 0.95],
+  "inner": [0.5, 0.7],
   "size": 3.0,
   "drawScale": 2.0,
   "force": 10.0,
@@ -80,7 +80,33 @@
     "sensor": "#ff0000ff",
     "tolerance": 0.05
   }
-}
+},
+    "level_hard" : {
+      "names": ["enemy1","enemy2"],
+      "types": ["GUARD","CAMERA"],
+      "patrols": [false,false],
+      "patrol_paths": [
+        [[11.0, 15.0],[5.0,15.0]]
+      ],
+      "positions": [[18.0, 18.0]],
+      "startRotation": [0],
+      "rotateAngle": [0],
+      "inner": [0.5, 0.7],
+      "size": 3.0,
+      "drawScale": 2.0,
+      "force": 10.0,
+      "damping": 40.0,
+      "maxspeed": 5.0,
+      "sensor": {
+        "shrink": 0.9,
+        "height": 0.05
+      },
+      "debug": {
+        "avatar": "#ffff00ff",
+        "sensor": "#ff0000ff",
+        "tolerance": 0.05
+      }
+    }
   },
   "bomb": {
     "size"      : 2.0,

@@ -29,7 +29,8 @@
     "level_3": "constants/level_3_test.json",
     "level_4": "constants/level_4.json",
     "test" : "constants/test.json",
-    "bomblevel" : "constants/bomblevel.json"
+    "bomblevel" : "constants/bomblevel.json",
+    "level_hard" : "constants/level_hard.json"
   },
   "soundfx" : {
   },
