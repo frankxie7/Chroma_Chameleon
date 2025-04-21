@@ -1,12 +1,7 @@
 package chroma.model;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Box2D;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
@@ -15,7 +10,7 @@ public class Grate extends ObstacleSprite {
     public Grate(TextureRegion region, float units, float x, float y) {
         super();
 
-        obstacle = new BoxObstacle(x + 0.5f, y + 0.5f, 1.0f, 1.0f); // center tile
+        obstacle = new BoxObstacle(x + 0.5f, y + 0.5f, 1.0f, 1.0f);
         obstacle.setPhysicsUnits(units);
         obstacle.setBodyType(BodyDef.BodyType.StaticBody);
         obstacle.setSensor(true);
