@@ -10,9 +10,9 @@
   },
   "chameleon" : {
     "pos"       : [5.0, 5.0],
-    "inner"     : [2.5, 1.1],
+    "inner"     : [1.8, 0.8],
     "size"      : 1.0,
-    "drawScale": 0.5,
+    "drawScale": 0.55,
     "force"     : 80.0,
     "damping"   : 80.0,
     "maxspeed"  : 8.0,
@@ -28,23 +28,23 @@
     }
   },
   "enemies" : {
-"bomblevel" : {
+"level2" : {
   "names": ["enemy1","enemy2"],
   "types": ["GUARD","GUARD"],
   "patrols": [true,true],
   "patrol_paths": [
-    [[11.0, 15.0], [20.0, 15.0]],
-    [[2.0,15.0], [10.0,15.0]]
+    [[12.0, 15.0], [12.0,3.0]],
+    [[17.0, 15.0], [17.0,3.0]]
   ],
-  "positions": [[11.0, 15.0],[5.0,15.0]],
+  "positions": [[12.0, 15.0],[17.0,3.0]],
   "startRotation": [0,0],
   "rotateAngle": [0,0],
-  "inner": [0.5, 0.7],
-  "size": 3.0,
+  "inner": [0.5, 0.65],
+  "size": 3.2,
   "drawScale": 2.0,
   "force": 10.0,
-  "damping": 40.0,
-  "maxspeed": 5.0,
+  "damping": 80.0,
+  "maxspeed": 9.0,
   "sensor": {
     "shrink": 0.9,
     "height": 0.05
@@ -65,12 +65,12 @@
   "positions": [[10.0, 12.0]],
   "startRotation": [0],
   "rotateAngle": [0],
-  "inner": [0.5, 0.7],
-  "size": 3.0,
+  "inner": [0.5, 0.65],
+  "size": 3.2,
   "drawScale": 2.0,
   "force": 10.0,
-  "damping": 40.0,
-  "maxspeed": 5.0,
+  "damping": 80.0,
+  "maxspeed": 9.0,
   "sensor": {
     "shrink": 0.9,
     "height": 0.05

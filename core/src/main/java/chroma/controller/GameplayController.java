@@ -521,7 +521,7 @@ public class GameplayController implements Screen {
                 break;
 
             case PAINTING:
-                player.setMaxSpeed(0.2f);
+                player.setMaxSpeed(1f);
                 if (in.didSkill()) {
                     planned.clear();
                     bombState = BombSkillState.IDLE;
@@ -742,11 +742,7 @@ public class GameplayController implements Screen {
             }
         }
 
-        if (level.getGrates() != null) {
-            for (Grate grate : level.getGrates()) {
-                grate.draw(batch);
-            }
-        }
+
         // Draw goal tiles
         if (level.getGoalTiles() != null) {
             for (BackgroundTile tile : level.getGoalTiles()) {
@@ -780,41 +776,13 @@ public class GameplayController implements Screen {
                 }
             }
         }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("spray")) {
-                sprite.draw(batch);
+        if (level.getGrates() != null) {
+            for (Grate grate : level.getGrates()) {
+                grate.draw(batch);
             }
         }
 
-
-//        // Draw the aiming
-//        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
-//        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-//        if (player.isAiming()) {
-//            drawAimRange(aimTex);
-//        }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
-                sprite.draw(batch);
-            }
-        }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
-                sprite.draw(batch);
-            }
-        }
-
-        if(level.getWalls() != null){
-            for (Terrain tile : level.getWalls()) {
-                tile.draw(batch);
-            }
-        }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("goal")) {
-                sprite.draw(batch);
-            }
-        }
-// ───── new bomb ──────────────────────────
+        // ───── new bomb ──────────────────────────
         if (bombState == BombSkillState.CHARGING ||
             bombState == BombSkillState.READY    ||
             bombState == BombSkillState.PAINTING) {
@@ -850,6 +818,35 @@ public class GameplayController implements Screen {
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
+
+//        // Draw the aiming
+//        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
+//        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        if (player.isAiming()) {
+//            drawAimRange(aimTex);
+//        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
+                sprite.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
+                sprite.draw(batch);
+            }
+        }
+
+        if(level.getWalls() != null){
+            for (Terrain tile : level.getWalls()) {
+                tile.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("goal")) {
+                sprite.draw(batch);
+            }
+        }
+
 
         for (AIController ai : aiControllers) {
             if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {
