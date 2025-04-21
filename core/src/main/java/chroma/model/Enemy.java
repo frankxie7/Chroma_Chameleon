@@ -109,6 +109,7 @@ public class Enemy extends ObstacleSprite {
             obstacle.setFixedRotation(true);
             obstacle.setPhysicsUnits(units);
             obstacle.setUserData(this);
+            obstacle.setName("enemy");
 
             // Filter allows collisions with everything except other enemies
             Filter enemyFilter = new Filter();

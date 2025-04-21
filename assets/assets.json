@@ -26,7 +26,8 @@
     "level-1-constants": "constants/level_alpha.json",
     "level_1": "constants/level_1_test.json",
     "level_2": "constants/level_2_test_grate.json",
-    "test" : "constants/test.json"
+    "test" : "constants/test.json",
+    "bomblevel" : "constants/bomblevel.json"
   },
   "soundfx" : {
   },

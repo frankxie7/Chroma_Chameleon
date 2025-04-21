@@ -239,7 +239,6 @@ public class GameplayController implements Screen {
 
         level = new Level(directory, units, levelSelector);
         numGoals = level.getGoalTiles().size() * 16;
-        System.out.println(numGoals);
         physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
@@ -843,6 +842,11 @@ public class GameplayController implements Screen {
         }
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("goal")) {
+                sprite.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
                 sprite.draw(batch);
             }
         }
