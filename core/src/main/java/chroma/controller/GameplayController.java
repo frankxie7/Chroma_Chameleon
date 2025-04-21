@@ -742,11 +742,7 @@ public class GameplayController implements Screen {
             }
         }
 
-        if (level.getGrates() != null) {
-            for (Grate grate : level.getGrates()) {
-                grate.draw(batch);
-            }
-        }
+
         // Draw goal tiles
         if (level.getGoalTiles() != null) {
             for (BackgroundTile tile : level.getGoalTiles()) {
@@ -780,11 +776,12 @@ public class GameplayController implements Screen {
                 }
             }
         }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("spray")) {
-                sprite.draw(batch);
+        if (level.getGrates() != null) {
+            for (Grate grate : level.getGrates()) {
+                grate.draw(batch);
             }
         }
+
         // ───── new bomb ──────────────────────────
         if (bombState == BombSkillState.CHARGING ||
             bombState == BombSkillState.READY    ||

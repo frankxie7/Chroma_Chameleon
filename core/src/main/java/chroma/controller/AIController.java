@@ -413,7 +413,7 @@ public class AIController {
                     Object userData = fixture.getBody().getUserData();
 
                     // Skip transparent objects like spray, bomb, or goal
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal) {
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Door) {
                         return -1f;  // Continue the ray without stopping
                     }
 
