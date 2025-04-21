@@ -24,7 +24,7 @@ public class LevelSelector {
         this.directory = directory;
         // Define the level JSON files.
         levelFiles = new String[] {
-            "test", "level_2"
+            "test", "level_2", "level_3","level_4"
         };
         currentLevelIndex = 0;
     }
