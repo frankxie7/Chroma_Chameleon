@@ -32,15 +32,19 @@ public class Level {
     private List<Grate> grates;
     private List<Collision> collision;
 
-
-
     /**
      * gid →  corresponding tile
      */
     private Map<Integer, TextureRegion> tileRegions;
 
-    private static final Set<Integer> GRATE_GIDS = Set.of(659, 662, 664, 697, 702, 737, 849, 851, 854);
-
+    private static final Set<Integer> GRATE_GIDS = Set.of(
+        659, 660, 661, 662, 663, 664,
+        697, 698, 699, 700, 701, 702,
+        735, 736, 737, 738, 739, 740,
+        773, 774, 775, 776, 777, 778,
+        811, 812, 813, 814, 815, 816,
+        849, 850, 851, 852, 853, 854
+    );
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
      *
