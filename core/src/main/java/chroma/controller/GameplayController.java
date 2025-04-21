@@ -729,11 +729,7 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(Color.DARK_GRAY);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
+
         // Draw all physics objects other than bombs
 
         // Draw tiled background
@@ -769,12 +765,6 @@ public class GameplayController implements Screen {
 
 
 
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("spray")) {
-                sprite.draw(batch);
-            }
-        }
-
 
 //        // Draw the aiming
 //        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
@@ -793,17 +783,7 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-        // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("goal")) {
-                sprite.draw(batch);
-            }
-        }
+
 
         for (AIController ai : aiControllers) {
             if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {
@@ -841,6 +821,14 @@ public class GameplayController implements Screen {
                 }
             }
         }
+        // Draw goal tiles
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        batch.setColor(Color.WHITE);
+        batch.setTexture(null);
         // ───── new bomb ──────────────────────────
         if (bombState == BombSkillState.CHARGING ||
             bombState == BombSkillState.READY    ||
@@ -884,22 +872,14 @@ public class GameplayController implements Screen {
 //        if (player.isAiming()) {
 //            drawAimRange(aimTex);
 //        }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
-                sprite.draw(batch);
-            }
-        }
 
-        if(level.getWalls() != null){
-            for (Terrain tile : level.getWalls()) {
-                tile.draw(batch);
-            }
-        }
+
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("goal")) {
                 sprite.draw(batch);
             }
         }
+
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {
                 sprite.draw(batch);
