@@ -368,6 +368,9 @@ public class PhysicsController implements ContactListener {
             if(o instanceof Spray || o instanceof Bomb){
                 return 0;
             }
+            if(o instanceof Grate || o instanceof Door){
+                return -1;
+            }
             hitFixture[0] = fixture;
             return fraction;
         }, start, end);

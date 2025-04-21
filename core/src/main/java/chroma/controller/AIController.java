@@ -52,10 +52,10 @@ public class AIController {
 
     // ENEMY SPEED:
     private float wanderSpeed = 1f;
-    private float chaseSpeed = 1.5f;
+    private float chaseSpeed = 1000f;
 
     // CHASE:
-    private float chaseMaxSpeed = 7.5f;
+    private float chaseMaxSpeed = 1000f;
 
     // ALERT:
     private float alertMaxSpeed = 6f;
@@ -63,10 +63,10 @@ public class AIController {
     private float alertTimer = alertLength;
 
     // SUSPICIOUS:
-    private float suspiciousMaxSpeed = 2f;
+    private float suspiciousMaxSpeed = 1f;
     //    private float awarenessLevel = 0f;  // from 0 to 1
     private float detectionTimer = 0f;
-    private float detectionThreshold = 0.6f;
+    private float detectionThreshold = 0.5f;
 
     // WANDER:
     private float wanderMaxSpeed = 5f;
@@ -427,7 +427,7 @@ public class AIController {
 
                 // After the raycast, check what is at the end of the ray
                 // If the ray ends at the player, detect the player
-                if (rayHit.epsilonEquals(playerPos, 1f)) {  // Use epsilonEquals for tolerance
+                if (rayHit.epsilonEquals(playerPos, 4f)) {  // Use epsilonEquals for tolerance
                     playerDetected = true;
                     break;  // Stop as soon as the player is detected
                 }
@@ -774,7 +774,7 @@ public class AIController {
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
 
-                if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
+                if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
                     return -1f; // Skip transparent
                 }
 
