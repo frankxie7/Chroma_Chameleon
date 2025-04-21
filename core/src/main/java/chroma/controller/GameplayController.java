@@ -726,7 +726,7 @@ public class GameplayController implements Screen {
      * Main draw method.
      */
     private void draw(float dt) {
-        ScreenUtils.clear(Color.DARK_GRAY);
+        ScreenUtils.clear(new Color(0.10f, 0.12f, 0.15f, 1f));
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
