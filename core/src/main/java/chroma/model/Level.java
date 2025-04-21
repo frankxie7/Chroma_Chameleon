@@ -369,6 +369,8 @@ public class Level {
         // load the full tileset image
         Texture tileset = dir.getEntry("tileset", Texture.class);
 
+        tileset.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        tileset.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         // split into small regions
         TextureRegion[][] grid = TextureRegion.split(tileset, tileSize, tileSize);
 
