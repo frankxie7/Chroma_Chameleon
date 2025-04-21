@@ -239,7 +239,6 @@ public class GameplayController implements Screen {
 
         level = new Level(directory, units, levelSelector);
         numGoals = level.getGoalTiles().size() * 16;
-        System.out.println(numGoals);
         physics = new PhysicsController(gravityY,numGoals, directory);
 
         complete = false;
@@ -874,6 +873,63 @@ public class GameplayController implements Screen {
             camera.unproject(raw);
             Vector2 curPix = clampBombPos(raw,aimRangeCurrent);
             batch.draw(ghost, curPix.x - s/2, curPix.y - s/2, s, s);
+        }
+
+        batch.setColor(Color.WHITE);
+        batch.setTexture(null);
+
+//        // Draw the aiming
+//        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
+//        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        if (player.isAiming()) {
+//            drawAimRange(aimTex);
+//        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
+                sprite.draw(batch);
+            }
+        }
+
+        if(level.getWalls() != null){
+            for (Terrain tile : level.getWalls()) {
+                tile.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("goal")) {
+                sprite.draw(batch);
+            }
+        }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
+                sprite.draw(batch);
+            }
+        }
+
+        for (AIController ai : aiControllers) {
+            if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {
+                int frameIndex = ai.getEnemy().getAlertAnimationFrame(); // you set this from the AI logic
+
+                if (frameIndex != -1) {
+                    TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
+
+                    float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale();
+                    float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale();
+
+                    float px = ai.getEnemy().getPosition().x * units;
+                    float py = ai.getEnemy().getPosition().y * units;
+
+                    float hoverOffsetPixels = 40f;  // same as the enemies
+
+                    batch.draw(frame,
+                        px - drawWidth / 2,
+                        py - drawHeight / 2 + hoverOffsetPixels,
+                        drawWidth / 2, drawHeight / 2,
+                        drawWidth, drawHeight,
+                        1, 1,
+                        0);
+                }
+            }
         }
 
         batch.setColor(Color.WHITE);

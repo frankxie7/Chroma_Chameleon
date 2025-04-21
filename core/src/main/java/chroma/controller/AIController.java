@@ -124,19 +124,22 @@ public class AIController {
 
     // Checks if a straight line from start to end is blocked by any wall.
     private boolean isLineBlocked(Vector2 start, Vector2 end) {
-        Fixture hitFixture = physics.raycast(start, end);
+        if (start.dst(end) != 0) {
+            Fixture hitFixture = physics.raycast(start, end);
 
-        // If nothing is hit, return false (line is not blocked)
-        if (hitFixture == null) {
+            // If nothing is hit, return false (line is not blocked)
+            if (hitFixture == null) {
+                return false;
+            }
+
+            Object hitObject = hitFixture.getBody().getUserData();
+
+            // Ignore enemies during visibility/path checks
+            return !(hitObject instanceof Enemy);
+        } else {
             return false;
         }
-
-        Object hitObject = hitFixture.getBody().getUserData();
-
-        // Ignore enemies during visibility/path checks
-        return !(hitObject instanceof Enemy);
     }
-
     private boolean isBlocked(Vector2 position) {
         for (Collision wall : collisions) {
             if (wall.contains(position)) {
@@ -778,8 +781,9 @@ public class AIController {
                 rayHitWorld.set(point);
                 return fraction;
             };
-
-            physics.getWorld().rayCast(callback, enemyWorldPos, rayEndWorld);
+            if(enemyWorldPos.dst(rayEndWorld) != 0){
+                physics.getWorld().rayCast(callback, enemyWorldPos, rayEndWorld);
+            }
 
             // SCALE back up for screen drawing
             Vector2 screenHit = new Vector2(rayHitWorld.x * scale, rayHitWorld.y * scale);

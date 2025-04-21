@@ -513,8 +513,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        System.out.println(numFilled);
-        return (float)numFilled / goalList.length > 0.5;
+        return (float)numFilled / goalList.length > 0.9;
     }
 
 
