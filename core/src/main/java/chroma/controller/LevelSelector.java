@@ -95,4 +95,6 @@ public class LevelSelector {
     public void reset() {
         currentLevelIndex = 0;
     }
+
+    public String[] getLevelFiles(){return levelFiles;}
 }
