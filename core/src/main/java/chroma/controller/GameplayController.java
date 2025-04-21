@@ -521,7 +521,7 @@ public class GameplayController implements Screen {
                 break;
 
             case PAINTING:
-                player.setMaxSpeed(1f);
+                player.setMaxSpeed(0.2f);
                 if (in.didSkill()) {
                     planned.clear();
                     bombState = BombSkillState.IDLE;
