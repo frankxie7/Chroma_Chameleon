@@ -31,6 +31,7 @@ public class Level {
     private List<Spray> sprays;
     private List<Grate> grates;
     private List<Collision> collision;
+    private String[] levelfiles;
 
 
 
@@ -59,6 +60,7 @@ public class Level {
         grates = new ArrayList<>();
 
 
+
         // levels.json
         // level files
         JsonValue constants = selector.loadCurrentLevel();
@@ -67,6 +69,8 @@ public class Level {
         JsonValue globalConstants = directory.getEntry("platform-constants", JsonValue.class);
 
         initTileRegions(directory, 16);
+
+        levelfiles = selector.getLevelFiles();
 
         //background
         JsonValue backgroundData = findLayer(constants, "background");
@@ -278,7 +282,8 @@ public class Level {
 
         // Create enemies
         enemies = new ArrayList<>();
-        JsonValue enemiesData = globalConstants.get("enemies");
+        String name = levelfiles[selector.getCurrentLevel() - 1];
+        JsonValue enemiesData = globalConstants.get("enemies").get(name);
         if (enemiesData != null) {
             Texture enemyTex = directory.getEntry("enemy", Texture.class);
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);

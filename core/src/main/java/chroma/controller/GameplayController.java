@@ -734,7 +734,6 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-        // Draw all physics objects other than bombs
 
         // Draw tiled background
         if (level.getBackgroundTiles() != null) {
@@ -834,6 +833,11 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
+                sprite.draw(batch);
+            }
+        }
 
         if(level.getWalls() != null){
             for (Terrain tile : level.getWalls()) {
@@ -845,11 +849,7 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
-                sprite.draw(batch);
-            }
-        }
+
 
         for (AIController ai : aiControllers) {
             if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {

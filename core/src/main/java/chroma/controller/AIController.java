@@ -66,7 +66,7 @@ public class AIController {
     private float suspiciousMaxSpeed = 2f;
     //    private float awarenessLevel = 0f;  // from 0 to 1
     private float detectionTimer = 0f;
-    private float detectionThreshold = 1.25f;
+    private float detectionThreshold = 1f;
 
     // WANDER:
     private float wanderMaxSpeed = 5f;
