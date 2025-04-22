@@ -119,7 +119,7 @@ public class MenuMode implements Screen, InputProcessor {
      */
     private void draw() {
         // Background colors
-        ScreenUtils.clear( 0.38f, 0.475f, 0.49f, 0.878f );
+        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );

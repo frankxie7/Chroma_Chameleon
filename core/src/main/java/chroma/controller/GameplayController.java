@@ -13,6 +13,8 @@ import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -654,6 +656,7 @@ public class GameplayController implements Screen {
                 Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
                 Texture bulletTex   = directory.getEntry("platform-bullet",  Texture.class);
                 Texture splatterTex = directory.getEntry("bomb-splatter",    Texture.class);
+                splatterTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
                     playerPos, vel, target,
@@ -779,6 +782,8 @@ public class GameplayController implements Screen {
         if (level.getGoalDoor() != null) {
         level.getGoalDoor().draw(batch);
 }
+        batch.flush();
+        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {
@@ -788,6 +793,8 @@ public class GameplayController implements Screen {
                 }
             }
         }
+        batch.flush();
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
                 sprite.draw(batch);
