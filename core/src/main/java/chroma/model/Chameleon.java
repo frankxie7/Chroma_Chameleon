@@ -77,6 +77,9 @@ public class Chameleon extends ObstacleSprite {
     private boolean hidden;
     private Vector2 lastSeen;
     private boolean faceRight = true;
+    private boolean faceUp = false;
+    private boolean faceLeft = false;
+    private boolean faceDown = false;
     private enum Direction { UP, DOWN, LEFT, RIGHT }
     private Direction lastDirection = Direction.RIGHT;
 
@@ -208,6 +211,18 @@ public class Chameleon extends ObstacleSprite {
      */
     public boolean isFacingRight() {
         return faceRight;
+    }
+
+    public boolean isFaceUp(){
+        return faceUp;
+    }
+
+    public boolean isFaceLeft(){
+        return faceLeft;
+    }
+
+    public boolean isFaceDown(){
+        return faceDown;
     }
 
     public void setPosition(float x, float y) {
@@ -370,15 +385,29 @@ public class Chameleon extends ObstacleSprite {
 
         if (hmove > 0) {
             faceRight = true;
+            faceUp = false;
+            faceLeft = false;
+            faceDown = false;
             lastDirection = Direction.RIGHT;
             obstacle.setAngle(0f);
         } else if (hmove < 0) {
             faceRight = false;
+            faceUp = false;
+            faceLeft = true;
+            faceDown = false;
             lastDirection = Direction.LEFT;
             obstacle.setAngle(0f);
         } else if (vmove > 0) {
+            faceRight = false;
+            faceLeft = false;
+            faceDown = false;
+            faceUp = true;
             lastDirection = Direction.UP;
         } else if (vmove < 0) {
+            faceUp = false;
+            faceDown = true;
+            faceLeft = false;
+            faceRight = false;
             lastDirection = Direction.DOWN;
         }
 
