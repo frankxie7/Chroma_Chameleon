@@ -537,7 +537,7 @@ public class GameplayController implements Screen {
                 break;
 
             case PAINTING:
-                player.setMaxSpeed(0.2f);
+                player.setMaxSpeed(0f);
 
                 if (!player.isBombPlaying()) {     // animation done
                     bombState     = BombSkillState.COOLDOWN;

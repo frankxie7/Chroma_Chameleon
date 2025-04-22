@@ -22,7 +22,8 @@
     "enemyAlertSheet": "platform/enemy-alert.png",
     "tileset-export": "platform/tileset-export.png",
     "tileset":   "shared/tileset.png",
-    "vent":   "platform/vent.png"
+    "vent":   "platform/vent.png",
+    "spray": "platform/spray.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
