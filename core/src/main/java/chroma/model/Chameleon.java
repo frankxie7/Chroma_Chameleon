@@ -87,6 +87,11 @@ public class Chameleon extends ObstacleSprite {
     private float animTime;
     private TextureRegion currentFrame;
 
+    private Animation<TextureRegion> bombAnim;
+    private float  bombAnimTime  = 0f;
+    private boolean bombPlaying  = false;
+    private boolean bombPaused = false;
+
     private float drawScale;
     /**
      * Returns the posiiton of the Chameleon
@@ -340,6 +345,8 @@ public class Chameleon extends ObstacleSprite {
     public void update(float dt) {
         InputController input = InputController.getInstance();
 
+
+
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
@@ -354,20 +361,27 @@ public class Chameleon extends ObstacleSprite {
         } else {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
-        // Update orientation based on current velocity
-//        updateOrientation();
+
+        stepBombAnim(dt);
+        if (bombPlaying) {
+            super.update(dt);
+            return;
+        }
 
         if (hmove > 0) {
             faceRight = true;
             lastDirection = Direction.RIGHT;
+            obstacle.setAngle(0f);
         } else if (hmove < 0) {
             faceRight = false;
             lastDirection = Direction.LEFT;
+            obstacle.setAngle(0f);
         } else if (vmove > 0) {
             lastDirection = Direction.UP;
         } else if (vmove < 0) {
             lastDirection = Direction.DOWN;
         }
+
 
         if (hmove == 0 && vmove == 0) {
             switch (lastDirection) {
@@ -388,8 +402,10 @@ public class Chameleon extends ObstacleSprite {
             animTime += dt;
             if (Math.abs(vmove) > Math.abs(hmove)) {
                 if (vmove > 0) {
+                    obstacle.setAngle(1.57f);
                     currentFrame = upWalkAnim.getKeyFrame(animTime, true);
                 } else {
+                    obstacle.setAngle(1.57f);
                     currentFrame = downWalkAnim.getKeyFrame(animTime, true);
                 }
             } else {
@@ -398,6 +414,7 @@ public class Chameleon extends ObstacleSprite {
         }
         // Then call the superclass update
         super.update(dt);
+        stepBombAnim(dt);
     }
 
     /**
@@ -423,6 +440,7 @@ public class Chameleon extends ObstacleSprite {
         // Create an Affine2 transform for rotation
         Affine2 transform = new Affine2();
         transform.setToRotation(orientation);
+
 
 //        Rectangle bounds = mesh.computeBounds();
         float drawWidth  = currentFrame.getRegionWidth() * drawScale;
@@ -492,6 +510,65 @@ public class Chameleon extends ObstacleSprite {
                 orientation = (float) Math.toDegrees(Math.atan2(vel.y, vel.x));
             }
         }
+    }
+
+    // ② 公共接口
+    public void setBombAnimation(Animation<TextureRegion> anim){
+        this.bombAnim = anim;
+    }
+
+    private void stepBombAnim(float dt) {
+        if (!bombPlaying || bombAnim == null) { return; }
+        if (!bombPaused) {
+            bombAnimTime += dt;
+        }
+        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
+        if (bombAnim.isAnimationFinished(bombAnimTime)) {
+            bombPlaying  = false;
+            bombAnimTime = 0f;
+            bombPaused   = false;
+            resetToIdleFrame();
+        }
+    }
+    private void resetToIdleFrame() {
+        animTime = 0f;
+        switch (lastDirection) {
+            case UP:
+                currentFrame = upWalkAnim.getKeyFrame(0f, false);
+                break;
+            case DOWN:
+                currentFrame = downWalkAnim.getKeyFrame(0f, false);
+                break;
+            default:
+                currentFrame = walkAnim.getKeyFrame(0f, false);
+                break;
+        }
+    }
+    public void startBombAnimation() {
+        bombPlaying  = true;
+        bombPaused   = false;    // reset pause
+        bombAnimTime = 0f;
+    }
+    public boolean isBombPlaying() {
+        return bombPlaying;
+    }
+    public void pauseBombAnimation() {
+        bombPaused = true;
+    }
+
+    public void resumeBombAnimation() {
+        bombPaused = false;
+    }
+    public void advanceBombFrame(int maxFrame) {
+        if (!bombPlaying || bombAnim == null) return;
+
+        float frameDur   = bombAnim.getFrameDuration();
+        int   currIndex  = (int)(bombAnimTime / frameDur);
+        if (currIndex >= maxFrame) return;                 // already at cap
+
+        bombAnimTime = Math.min(bombAnimTime + frameDur,
+            maxFrame * frameDur);
+        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
     }
 
     /**
