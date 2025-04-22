@@ -199,9 +199,9 @@ public class Enemy extends ObstacleSprite {
         targetVelocity.set(getMovement(), getVerticalMovement());
 
         // Normalize if needed
-        if (targetVelocity.len() > 1) {
-            targetVelocity.nor();
-        }
+//        if (targetVelocity.len() > 1) {
+//            targetVelocity.nor();
+//        }
 
         // Scale by force and apply smoothing
         targetVelocity.scl(getForce());
@@ -212,7 +212,7 @@ public class Enemy extends ObstacleSprite {
         // Apply the interpolated force
         body.applyForce(currentVelocity, pos, true);
 
-        body.setLinearDamping(0.5f);
+        body.setLinearDamping(0.9f);
 
         // Apply damping to slow down gradually
 
