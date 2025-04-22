@@ -55,8 +55,8 @@ public class Chameleon extends ObstacleSprite {
     /** Whether we are actively aiming */
     private boolean isAiming;
 
-    private float maxPaint = 50f;
-    private float currentPaint = 50f;
+    private float maxPaint = 25f;
+    private float currentPaint = 25f;
 
     /** The outline of the sensor obstacle */
     private Path2 sensorOutline;
@@ -79,6 +79,8 @@ public class Chameleon extends ObstacleSprite {
     private boolean faceRight = true;
 
     private Animation<TextureRegion> walkAnim;
+    private Animation<TextureRegion> upWalkAnim;
+    private Animation<TextureRegion> downWalkAnim;
     private float animTime;
     private TextureRegion currentFrame;
 
@@ -229,7 +231,7 @@ public class Chameleon extends ObstacleSprite {
      * @param units     The physics units
      * @param data      The physics constants for Traci
      */
-    public Chameleon(float units, JsonValue data, Animation<TextureRegion> animation) {
+    public Chameleon(float units, JsonValue data, Animation<TextureRegion> animation, Animation<TextureRegion> upWalkAnim, Animation<TextureRegion> downWalkAnim) {
         this.data = data;
         JsonValue debugInfo = data.get("debug");
 
@@ -276,6 +278,8 @@ public class Chameleon extends ObstacleSprite {
 //        }
 
         this.walkAnim = animation;
+        this.upWalkAnim = upWalkAnim;
+        this.downWalkAnim = downWalkAnim;
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
         currentFrame = frames[6];
@@ -359,12 +363,18 @@ public class Chameleon extends ObstacleSprite {
         if (hmove == 0 && vmove == 0) {
             TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
             currentFrame = frames[6];
-            animTime += dt;
-            currentFrame = walkAnim.getKeyFrame(animTime, true);
             animTime = 6;
         } else {
             animTime += dt;
-            currentFrame = walkAnim.getKeyFrame(animTime, true);
+            if (Math.abs(vmove) > Math.abs(hmove)) {
+                if (vmove > 0) {
+                    currentFrame = upWalkAnim.getKeyFrame(animTime, true);
+                } else {
+                    currentFrame = downWalkAnim.getKeyFrame(animTime, true);
+                }
+            } else {
+                currentFrame = walkAnim.getKeyFrame(animTime, true);
+            }
         }
         // Then call the superclass update
         super.update(dt);
