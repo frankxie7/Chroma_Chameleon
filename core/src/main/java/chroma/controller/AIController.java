@@ -52,10 +52,10 @@ public class AIController {
 
     // ENEMY SPEED:
     private float wanderSpeed = 1f;
-    private float chaseSpeed = 1000f;
+    private float chaseSpeed = 1.5f;
 
     // CHASE:
-    private float chaseMaxSpeed = 1000f;
+    private float chaseMaxSpeed = 10f;
 
     // ALERT:
     private float alertMaxSpeed = 6f;
@@ -421,7 +421,7 @@ public class AIController {
                     Object userData = fixture.getBody().getUserData();
 
                     // Skip transparent objects like spray, bomb, or goal
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Door) {
+                    if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Door) {
                         return -1f;  // Continue the ray without stopping
                     }
 
@@ -435,7 +435,7 @@ public class AIController {
 
                 // After the raycast, check what is at the end of the ray
                 // If the ray ends at the player, detect the player
-                if (rayHit.epsilonEquals(playerPos, 4f)) {  // Use epsilonEquals for tolerance
+                if (rayHit.epsilonEquals(playerPos, 1f)) {  // Use epsilonEquals for tolerance
                     playerDetected = true;
                     break;  // Stop as soon as the player is detected
                 }

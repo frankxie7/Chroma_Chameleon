@@ -16,6 +16,8 @@
     "paintBar": "platform/bar.png",
     "paintBar-overlay": "platform/paintbaroverlay.png",
     "chameleonSheet": "platform/chameleon.png",
+    "chameleonUpWalk": "platform/up_walk.png",
+    "chameleonDownWalk": "platform/down_walk.png",
     "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
     "enemySideSheet": "platform/enemy-side-anim.png",
