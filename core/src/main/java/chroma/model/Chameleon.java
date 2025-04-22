@@ -77,6 +77,9 @@ public class Chameleon extends ObstacleSprite {
     private boolean hidden;
     private Vector2 lastSeen;
     private boolean faceRight = true;
+    private enum Direction { UP, DOWN, LEFT, RIGHT }
+    private Direction lastDirection = Direction.RIGHT;
+
 
     private Animation<TextureRegion> walkAnim;
     private Animation<TextureRegion> upWalkAnim;
@@ -356,14 +359,31 @@ public class Chameleon extends ObstacleSprite {
 
         if (hmove > 0) {
             faceRight = true;
+            lastDirection = Direction.RIGHT;
         } else if (hmove < 0) {
             faceRight = false;
+            lastDirection = Direction.LEFT;
+        } else if (vmove > 0) {
+            lastDirection = Direction.UP;
+        } else if (vmove < 0) {
+            lastDirection = Direction.DOWN;
         }
 
         if (hmove == 0 && vmove == 0) {
-            TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-            currentFrame = frames[6];
-            animTime = 6;
+            switch (lastDirection) {
+                case UP:
+                    currentFrame = upWalkAnim.getKeyFrame(0, false); // first idle up frame
+                    break;
+                case DOWN:
+                    currentFrame = downWalkAnim.getKeyFrame(0, false); // first idle down frame
+                    break;
+                case LEFT:
+                case RIGHT:
+                    TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
+                    currentFrame = frames[6];
+                    break;
+            }
+            animTime = 0;
         } else {
             animTime += dt;
             if (Math.abs(vmove) > Math.abs(hmove)) {
