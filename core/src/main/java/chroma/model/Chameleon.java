@@ -371,9 +371,11 @@ public class Chameleon extends ObstacleSprite {
         if (hmove > 0) {
             faceRight = true;
             lastDirection = Direction.RIGHT;
+            obstacle.setAngle(0f);
         } else if (hmove < 0) {
             faceRight = false;
             lastDirection = Direction.LEFT;
+            obstacle.setAngle(0f);
         } else if (vmove > 0) {
             lastDirection = Direction.UP;
         } else if (vmove < 0) {
@@ -400,8 +402,10 @@ public class Chameleon extends ObstacleSprite {
             animTime += dt;
             if (Math.abs(vmove) > Math.abs(hmove)) {
                 if (vmove > 0) {
+                    obstacle.setAngle(1.57f);
                     currentFrame = upWalkAnim.getKeyFrame(animTime, true);
                 } else {
+                    obstacle.setAngle(1.57f);
                     currentFrame = downWalkAnim.getKeyFrame(animTime, true);
                 }
             } else {
