@@ -24,6 +24,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -768,14 +769,7 @@ public class GameplayController implements Screen {
         }
 
 
-        for (ObstacleSprite sprite : physics.objects) {
-            if ("bomb".equals(sprite.getName())) {
-                Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
-                if (bomb != null && bomb.isFlying()) {
-                    bomb.draw(batch);
-                }
-            }
-        }
+
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
                 grate.draw(batch);
@@ -813,6 +807,8 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+
+
 
 // ───── new bomb ──────────────────────────
         if (bombState == BombSkillState.CHARGING ||
@@ -874,7 +870,14 @@ public class GameplayController implements Screen {
                 }
             }
         }
-
+        for (ObstacleSprite sprite : physics.objects) {
+            if ("bomb".equals(sprite.getName())) {
+                Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
+                if (bomb != null && bomb.isFlying()) {
+                    bomb.draw(batch);
+                }
+            }
+        }
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
