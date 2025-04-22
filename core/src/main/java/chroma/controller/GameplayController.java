@@ -127,8 +127,8 @@ public class GameplayController implements Screen {
     private static final float RANGE_MIN      = 5f;
     private static final float RANGE_MAX      = 20f;
     private static final float RANGE_GROWTH   = 12f;
-    private static final float ZOOM_DEFAULT = 0.5f;
-    private static final float ZOOM_OUT_MAX = 0.75f;
+    private static final float ZOOM_DEFAULT = 0.3f;
+    private static final float ZOOM_OUT_MAX = 0.45f;
     private static final float ZOOM_LERP    = 5f;
 
 
