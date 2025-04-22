@@ -5,13 +5,13 @@
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
-		"play":     {
-			"file" : "loading/play.png",
+	"play": {
+	    "file" : "platform/bullet.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
 		},
         "buttons": {
-          "file" : "loading/play.png"
+            "file" : "platform/bomb_splatter.png"
         }
 	},
     "jsons" : {
@@ -19,8 +19,8 @@
         "height" : 576,
         "bar.width" : 0.66,
         "bar.height" : 0.25,
-        "button.scale" : 0.3,
-        "bound.scale" : 0.23,
+        "button.scale" : 0.2,
+        "bound.scale" : 0.5,
         "numButtons": 10,
         "numRows": 2,
         "numCols": 5

@@ -118,20 +118,21 @@ public class MenuMode implements Screen, InputProcessor {
      * We will talk about why we prefer this in lecture.
      */
     private void draw() {
-        // Cornell colors
-        ScreenUtils.clear( 0.294f, 0.149f, 0.851f, 0.44f );
+        // Background colors
+        ScreenUtils.clear( 0.38f, 0.475f, 0.49f, 0.878f );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        Texture texture = internal.getEntry("play",Texture.class);
+        Texture initTexture = internal.getEntry("play",Texture.class);
+        Texture splatter = internal.getEntry("buttons", Texture.class);
         int numCols = constants.getInt("numCols");
         int numRows = constants.getInt("numRows");
         int numButtons = constants.getInt("numButtons");
         float buttonScale = constants.getFloat("button.scale") ;
         float boundScale = constants.getFloat("bound.scale") ;
 
-        float buttonSize = height * buttonScale; // you can tweak this
+        float buttonSize = height * buttonScale;
         float radius = buttonSize * boundScale;
         float hSpacing = (width - numCols * buttonSize) / (numCols + 1); // horizontal spacing
         float vSpacing = (height - numRows * buttonSize) / (numRows + 1); // vertical spacing
@@ -145,9 +146,10 @@ public class MenuMode implements Screen, InputProcessor {
 
             bounds[i] = new CircleBound(x + buttonSize / 2 , y + buttonSize / 2, radius);
 
-            Color tint = (i == currLevel-1 ? Color.GRAY : Color.WHITE);
-            batch.setColor( tint );
+//            Color tint = (i == currLevel-1 ? Color.GRAY : Color.WHITE);
+//            batch.setColor( tint );
 
+            Texture texture = i == currLevel - 1 ? splatter: initTexture;
             batch.draw(texture, x, y, buttonSize, buttonSize);
 
             // Draw the level number
@@ -163,17 +165,17 @@ public class MenuMode implements Screen, InputProcessor {
 
         batch.end();
 
-        // Begin shape rendering
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Line for outline
-        shapeRenderer.setColor(Color.YELLOW); // any debug color
-
-        for (int i = 0; i < bounds.length; i++) {
-            CircleBound cb = bounds[i];
-            shapeRenderer.circle(cb.x, cb.y, cb.radius);
-        }
-
-        shapeRenderer.end();
+        // Begin shape rendering for debug
+//        shapeRenderer.setProjectionMatrix(camera.combined);
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Line for outline
+//        shapeRenderer.setColor(Color.YELLOW); // any debug color
+//
+//        for (int i = 0; i < bounds.length; i++) {
+//            CircleBound cb = bounds[i];
+//            shapeRenderer.circle(cb.x, cb.y, cb.radius);
+//        }
+//
+//        shapeRenderer.end();
     }
 
     // ADDITIONAL SCREEN METHODS
