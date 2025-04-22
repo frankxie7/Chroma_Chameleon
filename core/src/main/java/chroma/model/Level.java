@@ -31,16 +31,21 @@ public class Level {
     private List<Spray> sprays;
     private List<Grate> grates;
     private List<Collision> collision;
-
-
+    private String[] levelfiles;
 
     /**
      * gid →  corresponding tile
      */
     private Map<Integer, TextureRegion> tileRegions;
 
-    private static final Set<Integer> GRATE_GIDS = Set.of(659, 662, 664, 697, 702, 737, 849, 851, 854);
-
+    private static final Set<Integer> GRATE_GIDS = Set.of(
+        659, 660, 661, 662, 663, 664,
+        697, 698, 699, 700, 701, 702,
+        735, 736, 737, 738, 739, 740,
+        773, 774, 775, 776, 777, 778,
+        811, 812, 813, 814, 815, 816,
+        849, 850, 851, 852, 853, 854
+    );
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
      *
@@ -59,6 +64,7 @@ public class Level {
         grates = new ArrayList<>();
 
 
+
         // levels.json
         // level files
         JsonValue constants = selector.loadCurrentLevel();
@@ -67,6 +73,8 @@ public class Level {
         JsonValue globalConstants = directory.getEntry("platform-constants", JsonValue.class);
 
         initTileRegions(directory, 16);
+
+        levelfiles = selector.getLevelFiles();
 
         //background
         JsonValue backgroundData = findLayer(constants, "background");
@@ -278,7 +286,8 @@ public class Level {
 
         // Create enemies
         enemies = new ArrayList<>();
-        JsonValue enemiesData = globalConstants.get("enemies");
+        String name = levelfiles[selector.getCurrentLevel() - 1];
+        JsonValue enemiesData = globalConstants.get("enemies").get(name);
         if (enemiesData != null) {
             Texture enemyTex = directory.getEntry("enemy", Texture.class);
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
@@ -376,6 +385,8 @@ public class Level {
         // load the full tileset image
         Texture tileset = dir.getEntry("tileset", Texture.class);
 
+        tileset.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        tileset.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         // split into small regions
         TextureRegion[][] grid = TextureRegion.split(tileset, tileSize, tileSize);
 

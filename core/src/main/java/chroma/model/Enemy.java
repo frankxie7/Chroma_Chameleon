@@ -89,7 +89,7 @@ public class Enemy extends ObstacleSprite {
             this.baseDetectionRange = 7;
             this.alertDetectionRange = 7;
         } else {
-            this.baseDetectionRange = 4;
+            this.baseDetectionRange = 5;
             this.alertDetectionRange = 7;
         }
         this.startRotation = startRotation;
