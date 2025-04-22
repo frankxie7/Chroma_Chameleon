@@ -268,18 +268,18 @@ public class Enemy extends ObstacleSprite {
         degrees = (degrees + 360) % 360;  // normalize
 
         // You can adjust this range depending on how "front" vs "side" should behave
-        boolean isSide = (degrees > 45 && degrees < 135) || (degrees > 225 && degrees < 315);
+        boolean isFront = (degrees > 45 && degrees < 135) || (degrees > 225 && degrees < 315);
 
-        Animation<TextureRegion> activeAnim = isSide ? sideAnim : frontAnim;
+        Animation<TextureRegion> activeAnim = isFront ? frontAnim : sideAnim;
 
         int frameIndex = activeAnim.getKeyFrameIndex(animTime);
 
-        if (isSide) {
-            sideFrame = frameIndex;
-            frontFrame = -1;  // disable front when side is active
-        } else {
+        if (isFront) {
             frontFrame = frameIndex;
-            sideFrame = -1;
+            sideFrame = -1;  // disable front when side is active
+        } else {
+            sideFrame = frameIndex;
+            frontFrame = -1;
         }
 
         // Update faceRight for flipping (side animations only — you might skip this for front)
@@ -319,50 +319,50 @@ public class Enemy extends ObstacleSprite {
                 0);
         }
 
-        if (blueRedTime != 0) {
-            TextureRegion frame = blueRedAnim.getKeyFrame(blueRedTime);
+//        if (blueRedTime != 0) {
+//            TextureRegion frame = blueRedAnim.getKeyFrame(blueRedTime);
+//
+//            float drawWidth = frame.getRegionWidth() * drawScale;
+//            float drawHeight = frame.getRegionHeight() * drawScale;
+//            float px = obstacle.getX() * obstacle.getPhysicsUnits();
+//            float py = obstacle.getY() * obstacle.getPhysicsUnits();
+//
+//            batch.draw(frame,
+//                px - drawWidth / 2, py - drawHeight / 2,
+//                drawWidth / 2, drawHeight / 2,
+//                drawWidth, drawHeight,
+//                1, 1,
+//                0);
+//        }
 
-            float drawWidth = frame.getRegionWidth() * drawScale;
-            float drawHeight = frame.getRegionHeight() * drawScale;
-            float px = obstacle.getX() * obstacle.getPhysicsUnits();
-            float py = obstacle.getY() * obstacle.getPhysicsUnits();
+        TextureRegion frame = null;
 
-            batch.draw(frame,
-                px - drawWidth / 2, py - drawHeight / 2,
-                drawWidth / 2, drawHeight / 2,
-                drawWidth, drawHeight,
-                1, 1,
-                0);
+        if (sideFrame != -1) {
+            frame = sideAnim.getKeyFrames()[sideFrame];
+        } else if (frontFrame != -1) {
+            frame = frontAnim.getKeyFrames()[frontFrame];
         }
 
-//        TextureRegion frame = null;
-//
-//        if (sideFrame != -1) {
-//            frame = sideAnim.getKeyFrames()[sideFrame];
-//        } else if (frontFrame != -1) {
-//            frame = frontAnim.getKeyFrames()[frontFrame];
-//        }
-//
-//        if (frame == null) return;
-//
-//        float drawWidth = frame.getRegionWidth() * drawScale;
-//        float drawHeight = frame.getRegionHeight() * drawScale;
-//        float px = obstacle.getX() * obstacle.getPhysicsUnits();
-//        float py = obstacle.getY() * obstacle.getPhysicsUnits();
-//
-//        if (faceRight) {
-//            if (frame.isFlipX()) frame.flip(true, false);
-//        } else {
-//            if (!frame.isFlipX()) frame.flip(true, false);
-//        }
-//
-//        batch.draw(frame,
-//            px - drawWidth / 2,
-//            py - drawHeight / 2,
-//            drawWidth / 2, drawHeight / 2,
-//            drawWidth, drawHeight,
-//            1, 1,
-//            0);
+        if (frame == null) return;
+
+        float drawWidth = bodyWidth * obstacle.getPhysicsUnits();
+        float drawHeight = bodyHeight * obstacle.getPhysicsUnits();
+        float px = obstacle.getX() * obstacle.getPhysicsUnits();
+        float py = obstacle.getY() * obstacle.getPhysicsUnits();
+
+        if (!faceRight) {
+            if (frame.isFlipX()) frame.flip(true, false);
+        } else {
+            if (!frame.isFlipX()) frame.flip(true, false);
+        }
+
+        batch.draw(frame,
+            px - drawWidth / 2,
+            py - drawHeight / 2,
+            drawWidth / 2, drawHeight / 2,
+            drawWidth * 2, drawHeight,
+            1, 1,
+            0);
     }
 
     @Override

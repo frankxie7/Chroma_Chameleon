@@ -406,7 +406,7 @@ public class AIController {
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
             float halfFOV = (float) Math.toRadians(fov / 2);
-            int numRays = (int) (fov / 5);
+            int numRays = (int) fov;
             float angleStep = (halfFOV * 2) / (numRays - 1);
 
             for (int i = 0; i < numRays; i++) {
@@ -487,9 +487,6 @@ public class AIController {
                 state = State.ALERT;
                 alertTimer = 0;
                 detectionTimer = detectionThreshold;
-                blueRedPlayingForward = true;
-                blueRedPlayingBackward = false;
-                blueRedTime = 0f;
             }
         } else {
             wanderState(delta, enemyPos);
@@ -498,6 +495,10 @@ public class AIController {
                 blueRedPlayingForward = true;
                 blueRedPlayingBackward = false;
                 blueRedTime = 0f;
+            } else if (gameplay.isGlobalChase()) {
+                state = State.ALERT;
+                alertTimer = 0;
+                detectionTimer = detectionThreshold;
             }
         }
         // Ensure the enemy updates its physics forces properly
