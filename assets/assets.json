@@ -17,6 +17,9 @@
     "paintBar-overlay": "platform/paintbaroverlay.png",
     "chameleonSheet": "platform/chameleon.png",
     "enemyAlertSheet": "platform/enemy-alert.png",
+    "enemyBlueRedSheet": "platform/blue-to-red.png",
+    "enemySideSheet": "platform/enemy-side-anim.png",
+    "enemyFrontSheet": "platform/enemy-front-anim.png",
     "tileset-export": "platform/tileset-export.png",
     "tileset":   "shared/tileset.png",
     "vent":   "platform/vent.png"

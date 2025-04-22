@@ -85,6 +85,12 @@ public class AIController {
 
     private float scale;
 
+    // BLUE RED ANIMATION:
+    private boolean blueRedPlayingForward = false;
+    private boolean blueRedPlayingBackward = false;
+    private float blueRedTime = 0f;
+    private float blueRedDuration;
+
     public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
         this.gameplay = gameplayController;
         this.physics = physicsController;
@@ -107,6 +113,8 @@ public class AIController {
 //        float screenHeight = camera.viewportHeight;
 //        this.scale = screenHeight / worldHeight;
         this.scale = gameplay.getUnits();
+
+        blueRedDuration = enemy.getBlueRedAnimation().getAnimationDuration();
 
         // Build navigation graph
         buildGraph(worldWidth, worldHeight);
@@ -434,14 +442,11 @@ public class AIController {
             }
         }
 
+        // Camera updates separately
         if (type == Type.CAMERA) {
             handleCamera(delta);
             return;
         }
-
-//        System.out.println("State: " + state + ", detected: " + playerDetected + ", timer: " + detectionTimer);
-
-//        System.out.println(playerDetected && detectionTimer >= detectionThreshold);
 
         // Detection logic first: always grows/shrinks no matter the state
         if (playerDetected) {
@@ -464,6 +469,9 @@ public class AIController {
             alertState(delta, enemyPos);
             if (alertTimer >= alertLength) {
                 state = patrol ? State.PATROL : State.WANDER;
+                blueRedPlayingBackward = true;
+                blueRedPlayingForward = false;
+                blueRedTime = blueRedDuration;
             }
             if (playerDetected && detectionTimer >= detectionThreshold) {
                 state = State.CHASE;
@@ -472,20 +480,45 @@ public class AIController {
             patrolState(delta, enemyPos);
             if (detectionTimer >= detectionThreshold) {
                 state = State.CHASE;
+                blueRedPlayingForward = true;
+                blueRedPlayingBackward = false;
+                blueRedTime = 0f;
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
                 alertTimer = 0;
                 detectionTimer = detectionThreshold;
+                blueRedPlayingForward = true;
+                blueRedPlayingBackward = false;
+                blueRedTime = 0f;
             }
-        } else { // WANDER
+        } else {
             wanderState(delta, enemyPos);
             if (detectionTimer >= detectionThreshold) {
                 state = State.CHASE;
+                blueRedPlayingForward = true;
+                blueRedPlayingBackward = false;
+                blueRedTime = 0f;
             }
         }
         // Ensure the enemy updates its physics forces properly
         enemy.applyForce();
         enemy.update(delta);
+
+        // Animation
+        if (blueRedPlayingForward) {
+            blueRedTime += delta;
+            if (blueRedTime >= blueRedDuration) {
+                blueRedTime = blueRedDuration;
+                blueRedPlayingForward = false;
+            }
+        } else if (blueRedPlayingBackward) {
+            blueRedTime -= delta;
+            if (blueRedTime <= 0f) {
+                blueRedTime = 0f;
+                blueRedPlayingBackward = false;
+            }
+        }
+        enemy.setBlueRedTime(blueRedTime);
     }
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {

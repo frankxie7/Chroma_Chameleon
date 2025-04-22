@@ -1,11 +1,9 @@
 package chroma.model;
 
-import chroma.controller.AIController;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2; import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -71,10 +69,19 @@ public class Enemy extends ObstacleSprite {
 
     // ANIMATIONS:
     private Animation<TextureRegion> alertAnim;
-    private int animationFrame = -1;
+    private int alertFrame;
+    private Animation<TextureRegion> blueRedAnim;
+    private float blueRedTime;
+    private Animation<TextureRegion> frontAnim;
+    private int frontFrame;
+    private Animation<TextureRegion> sideAnim;
+    private int sideFrame;
+    private float animTime;
     private float drawScale;
 
-    public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath, float startRotation, float rotateAngle, float units, JsonValue data, Animation<TextureRegion> enemyAlertAnim) {
+    public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath, float startRotation,
+                 float rotateAngle, float units, JsonValue data, Animation<TextureRegion> enemyAlertAnim,
+                 Animation<TextureRegion> enemyBlueRedAnim, Animation<TextureRegion> enemyFrontAnim, Animation<TextureRegion> enemySideAnim) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -127,6 +134,15 @@ public class Enemy extends ObstacleSprite {
         faceRight = true;
 
         alertAnim = enemyAlertAnim;
+        alertFrame = -1;
+        blueRedAnim = enemyBlueRedAnim;
+        blueRedTime = 0;
+        frontAnim = enemyFrontAnim;
+        frontFrame = -1;
+        sideAnim = enemySideAnim;
+        sideFrame = -1;
+
+        animTime = 0;
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
@@ -158,8 +174,10 @@ public class Enemy extends ObstacleSprite {
     public boolean getPatrol() { return patrol; }
     public List<float[]> getPatrolPath() { return patrolPath; }
     public Animation<TextureRegion> getAlertAnimation() { return alertAnim; }
-    public int getAlertAnimationFrame() { return animationFrame; }
-    public void setAlertAnimationFrame(int index) { this.animationFrame = index; }
+    public int getAlertAnimationFrame() { return alertFrame; }
+    public void setAlertAnimationFrame(int index) { this.alertFrame = index; }
+    public Animation<TextureRegion> getBlueRedAnimation() { return blueRedAnim; }
+    public void setBlueRedTime(float index) { this.blueRedTime = index; }
     public float getDrawScale() { return drawScale; }
 
     public float getRotation() {
@@ -224,7 +242,54 @@ public class Enemy extends ObstacleSprite {
         }
     }
 
-    public void update(float delta) { super.update(delta); }
+    public void update(float delta) {
+        updateAnimation(delta);
+        super.update(delta);
+    }
+    public void updateAnimation(float delta) {
+        animTime += delta;
+
+        if (obstacle == null || obstacle.getBody() == null) {
+            return;
+        }
+
+        Vector2 velocity = obstacle.getBody().getLinearVelocity();
+
+        if (velocity.len2() < 0.01f) {
+            // Standing still: set frame to first of the side or front anim (depends on your preference)
+            sideFrame = -1;
+            frontFrame = 0;
+            return;
+        }
+
+        // Determine facing angle
+        float angle = getRotation();  // This gives you a world-facing angle
+        float degrees = (float) Math.toDegrees(angle);
+        degrees = (degrees + 360) % 360;  // normalize
+
+        // You can adjust this range depending on how "front" vs "side" should behave
+        boolean isSide = (degrees > 45 && degrees < 135) || (degrees > 225 && degrees < 315);
+
+        Animation<TextureRegion> activeAnim = isSide ? sideAnim : frontAnim;
+
+        int frameIndex = activeAnim.getKeyFrameIndex(animTime);
+
+        if (isSide) {
+            sideFrame = frameIndex;
+            frontFrame = -1;  // disable front when side is active
+        } else {
+            frontFrame = frameIndex;
+            sideFrame = -1;
+        }
+
+        // Update faceRight for flipping (side animations only — you might skip this for front)
+        faceRight = velocity.x >= 0;
+    }
+
+    public void setBlueRedAnimationTime(float time) {
+        this.blueRedTime = MathUtils.clamp(time, 0f, blueRedAnim.getAnimationDuration());
+    }
+
 
     @Override
     public void draw(SpriteBatch batch) {
@@ -235,8 +300,8 @@ public class Enemy extends ObstacleSprite {
         }
         super.draw(batch,flipCache);
 
-        if (animationFrame != -1) {
-            TextureRegion frame = alertAnim.getKeyFrames()[animationFrame];
+        if (alertFrame != -1) {
+            TextureRegion frame = alertAnim.getKeyFrames()[alertFrame];
 
             float drawWidth = frame.getRegionWidth() * drawScale;
             float drawHeight = frame.getRegionHeight() * drawScale;
@@ -253,6 +318,51 @@ public class Enemy extends ObstacleSprite {
                 1, 1,
                 0);
         }
+
+        if (blueRedTime != 0) {
+            TextureRegion frame = blueRedAnim.getKeyFrame(blueRedTime);
+
+            float drawWidth = frame.getRegionWidth() * drawScale;
+            float drawHeight = frame.getRegionHeight() * drawScale;
+            float px = obstacle.getX() * obstacle.getPhysicsUnits();
+            float py = obstacle.getY() * obstacle.getPhysicsUnits();
+
+            batch.draw(frame,
+                px - drawWidth / 2, py - drawHeight / 2,
+                drawWidth / 2, drawHeight / 2,
+                drawWidth, drawHeight,
+                1, 1,
+                0);
+        }
+
+//        TextureRegion frame = null;
+//
+//        if (sideFrame != -1) {
+//            frame = sideAnim.getKeyFrames()[sideFrame];
+//        } else if (frontFrame != -1) {
+//            frame = frontAnim.getKeyFrames()[frontFrame];
+//        }
+//
+//        if (frame == null) return;
+//
+//        float drawWidth = frame.getRegionWidth() * drawScale;
+//        float drawHeight = frame.getRegionHeight() * drawScale;
+//        float px = obstacle.getX() * obstacle.getPhysicsUnits();
+//        float py = obstacle.getY() * obstacle.getPhysicsUnits();
+//
+//        if (faceRight) {
+//            if (frame.isFlipX()) frame.flip(true, false);
+//        } else {
+//            if (!frame.isFlipX()) frame.flip(true, false);
+//        }
+//
+//        batch.draw(frame,
+//            px - drawWidth / 2,
+//            py - drawHeight / 2,
+//            drawWidth / 2, drawHeight / 2,
+//            drawWidth, drawHeight,
+//            1, 1,
+//            0);
     }
 
     @Override
