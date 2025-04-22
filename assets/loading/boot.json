@@ -1,7 +1,7 @@
 {
 	"textures": {
         "splash": {
-            "file": "loading/splash.png",
+            "file": "loading/main_ph1.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
