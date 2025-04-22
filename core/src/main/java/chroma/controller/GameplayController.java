@@ -798,7 +798,11 @@ public class GameplayController implements Screen {
             }
         }
 
-
+        for (ObstacleSprite sprite : physics.objects) {
+            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
+                sprite.draw(batch);
+            }
+        }
         if(level.getWalls() != null){
             for (Terrain tile : level.getWalls()) {
                 tile.draw(batch);
@@ -809,11 +813,7 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("enemy")) {
-                sprite.draw(batch);
-            }
-        }
+
 // ───── new bomb ──────────────────────────
         if (bombState == BombSkillState.CHARGING ||
             bombState == BombSkillState.READY    ||
