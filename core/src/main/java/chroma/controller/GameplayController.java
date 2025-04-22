@@ -135,6 +135,8 @@ public class GameplayController implements Screen {
     private float cameraZoom      = ZOOM_DEFAULT;
     private float targetZoom      = ZOOM_DEFAULT;
 
+    private int baseWidth;      // window width at start‑up (pixels)
+    private int baseHeight;     // window height at start‑up (pixels)
 
     private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
 
@@ -217,6 +219,12 @@ public class GameplayController implements Screen {
 
 
         goalMessage = new TextLayout();
+        this.width  = Gdx.graphics.getWidth();
+        this.height = Gdx.graphics.getHeight();
+
+// remember the very first window size
+        baseWidth  = (int)this.width;
+        baseHeight = (int)this.height;
 
 
         // Now that everything is ready, build the level, etc.
@@ -385,7 +393,6 @@ public class GameplayController implements Screen {
 
         // Update the state of aiming
         player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_INITIAL_COST));
-
         for (Bomb b : level.getBombs()) {
             b.update(dt);
             // If you want to check collisions or do "landing" logic, do it here:
@@ -498,12 +505,15 @@ public class GameplayController implements Screen {
                 }
                 break;
 
-            case CHARGING:
-                player.setMaxSpeed(0.2f);
+            case CHARGING:                                   // ← no animation here
+                player.setMaxSpeed(0f);
                 if (in.isSkillHeld()) {
-                    aimRangeCurrent = Math.min(RANGE_MAX, aimRangeCurrent + RANGE_GROWTH * dt);
-                    float t         = (aimRangeCurrent - RANGE_MIN) / (RANGE_MAX - RANGE_MIN);
-                    targetZoom      = ZOOM_DEFAULT + (ZOOM_OUT_MAX - ZOOM_DEFAULT) * t;
+                    aimRangeCurrent = Math.min(RANGE_MAX,
+                        aimRangeCurrent + RANGE_GROWTH * dt);
+                    float t = (aimRangeCurrent - RANGE_MIN) /
+                        (RANGE_MAX - RANGE_MIN);
+                    targetZoom = ZOOM_DEFAULT +
+                        (ZOOM_OUT_MAX - ZOOM_DEFAULT) * t;
                 } else {
                     bombState  = BombSkillState.READY;
                     cameraZoom = targetZoom;
@@ -511,27 +521,36 @@ public class GameplayController implements Screen {
                 break;
 
             case READY:
-                player.setMaxSpeed(0.2f);
-                if (skillKey) {
-                    bombState = BombSkillState.IDLE;
-                    targetZoom = ZOOM_DEFAULT;
+                player.setMaxSpeed(0f);
+                if (in.didLeftClick()) {
+                    player.startBombAnimation();   // start fresh
+                    player.pauseBombAnimation();   // freeze at frame‑0
+                    bombState = BombSkillState.PAINTING;
+                    startPainting();               // first bomb + first frame
+                } else if (skillKey) {
+                    bombState       = BombSkillState.IDLE;
+                    targetZoom      = ZOOM_DEFAULT;
                     aimRangeCurrent = RANGE_MIN;
-                } else if (in.didLeftClick()) {
-                    startPainting();
                 }
                 break;
 
             case PAINTING:
-                player.setMaxSpeed(1f);
-                if (in.didSkill()) {
+                player.setMaxSpeed(0.2f);
+
+                if (!player.isBombPlaying()) {     // animation done
+                    bombState     = BombSkillState.COOLDOWN;
+                    cooldownTimer = BOMB_COOLDOWN;
+                }
+
+                if (in.didSkill()) {               // cancel
                     planned.clear();
-                    bombState = BombSkillState.IDLE;
+                    bombState       = BombSkillState.IDLE;
                     aimRangeCurrent = RANGE_MIN;
-                    targetZoom = ZOOM_DEFAULT;
-                } else if (!in.isLeftHeld()) {
-                    firePlannedBombs();
+                    targetZoom      = ZOOM_DEFAULT;
+                } else if (!in.isLeftHeld()) {     // mouse released
+                    firePlannedBombs();            // will resume animation
                 } else {
-                    updatePainting();
+                    updatePainting();              // add bombs / advance frame
                 }
                 break;
 
@@ -539,9 +558,9 @@ public class GameplayController implements Screen {
                 player.setMaxSpeed(1f);
                 cooldownTimer -= dt;
                 if (cooldownTimer <= 0f) {
-                    bombState = BombSkillState.IDLE;
+                    bombState       = BombSkillState.IDLE;
                     aimRangeCurrent = RANGE_MIN;
-                    targetZoom = ZOOM_DEFAULT;
+                    targetZoom      = ZOOM_DEFAULT;
                 }
                 break;
         }
@@ -550,6 +569,7 @@ public class GameplayController implements Screen {
             com.badlogic.gdx.Gdx.app.log("BombSkill", old + " -> " + bombState);
         }
     }
+
 
 
 
@@ -566,19 +586,21 @@ public class GameplayController implements Screen {
         camera.unproject(raw);
         Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
-        if (player.hasEnoughPaint(BOMB_INITIAL_COST)) {
-            player.setPaint(player.getPaint() - BOMB_INITIAL_COST);
-        } else {
+        if (!player.hasEnoughPaint(BOMB_INITIAL_COST)) {
             bombState       = BombSkillState.IDLE;
             aimRangeCurrent = RANGE_MIN;
             targetZoom      = ZOOM_DEFAULT;
             return;
         }
 
+        player.setPaint(player.getPaint() - BOMB_INITIAL_COST);
+
         lastPlanned.set(firstPix);
-        planned.add(firstPix.cpy().scl(1f/units));
-        bombState = BombSkillState.PAINTING;
+        planned.add(firstPix.cpy().scl(1f / units));
+
+        player.advanceBombFrame(7);         // first frame shown
     }
+
 
 
     /** decide if a new region is selected */
@@ -589,10 +611,13 @@ public class GameplayController implements Screen {
 
         if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
             && planned.size < MAX_PLANNED) {
+
             if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                 player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
-                planned.add(clampedScreen.cpy().scl(1f/units));
+                planned.add(clampedScreen.cpy().scl(1f / units));
                 lastPlanned.set(clampedScreen);
+
+                player.advanceBombFrame(7);      // one frame per bomb
             } else {
                 firePlannedBombs();
             }
@@ -601,6 +626,7 @@ public class GameplayController implements Screen {
 
     /** launch bomb & consume */
     private void firePlannedBombs() {
+        player.resumeBombAnimation();   // play the rest of the clip
         int n = planned.size;
         if (n == 0) {
             bombState = BombSkillState.IDLE;
@@ -938,25 +964,30 @@ public class GameplayController implements Screen {
     }
 
     /**
-     * Center the camera on the player and clamp to map bounds.
-     */
-    /**
-     * Center the camera on the player at all times (no boundaries).
+     * Keeps the camera centered on the player and guarantees that the
+     * visible world area stays the same even when the window is resized.
      */
     private void updateCamera() {
         Vector2 pos = player.getObstacle().getPosition();
-        camera.position.set(pos.x*units, pos.y*units, 0);
+        camera.position.set(pos.x * units, pos.y * units, 0);
 
-
+        // Smooth zoom for bomb skill
         if (bombState == BombSkillState.CHARGING) {
             cameraZoom = targetZoom;
         } else {
             cameraZoom += (targetZoom - cameraZoom) *
                 Math.min(1, ZOOM_LERP * Gdx.graphics.getDeltaTime());
         }
-        camera.zoom = cameraZoom;
+
+    /* -----------------------------------------------
+       Window‑size compensation
+       ----------------------------------------------- */
+        float zoomAdjust = (float) baseWidth / width;   // width is current window width
+        camera.zoom = cameraZoom * zoomAdjust;
+
         camera.update();
     }
+
 
     /**
      * The main render loop.
