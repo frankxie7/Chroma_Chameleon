@@ -139,7 +139,20 @@ public class PhysicsController implements ContactListener {
             if (obstacle.getPosition() == null) {
                 return;
             }
-            Vector2 endPoint = new Vector2(obstacle.getPosition()).add(direction.scl(customRadius));
+            Vector2 position = obstacle.getPosition().cpy();
+            if(obstacle.isFacingRight()) {
+                position.x = position.x + 1f;
+            }
+            if(obstacle.isFaceUp()){
+                position.y = position.y + 1f;
+            }
+            if(obstacle.isFaceLeft()){
+                position.x = position.x - 1f;
+            }
+            if(obstacle.isFaceDown()){
+                position.y = position.y - 0.9f;
+            }
+            Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
             ArrayList<Object> array = new ArrayList<>();
             RayCastCallback callback = new RayCastCallback() {
                 @Override
@@ -157,7 +170,7 @@ public class PhysicsController implements ContactListener {
                     return fraction;
                 }
             };
-            world.rayCast(callback, obstacle.getPosition(), endPoint);
+            world.rayCast(callback, position, endPoint);
 
             for(Object o : array.reversed()){
                 if(o instanceof Collision){
@@ -198,7 +211,19 @@ public class PhysicsController implements ContactListener {
         for (int i = 0; i < numRays - 1; i++) {
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
-                Vector2 v1 = avatar.getPosition();
+                Vector2 v1 = avatar.getPosition().cpy();
+                if(avatar.isFacingRight()){
+                    v1.x = v1.x + 1f;
+                }
+                if(avatar.isFaceLeft()){
+                    v1.x = v1.x - 1f;
+                }
+                if(avatar.isFaceUp()){
+                    v1.y = v1.y + 1f;
+                }
+                if(avatar.isFaceDown()){
+                    v1.y = v1.y - 0.9f;
+                }
                 Vector2 v2 = endpoints[i];
                 Vector2 v3 = endpoints[i + 1];
                 float x1 = v1.x;
