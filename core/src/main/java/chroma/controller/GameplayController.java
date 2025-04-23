@@ -127,8 +127,8 @@ public class GameplayController implements Screen {
     private static final float RANGE_MIN      = 5f;
     private static final float RANGE_MAX      = 20f;
     private static final float RANGE_GROWTH   = 12f;
-    private static final float ZOOM_DEFAULT = 0.5f;
-    private static final float ZOOM_OUT_MAX = 0.75f;
+    private static final float ZOOM_DEFAULT = 0.3f;
+    private static final float ZOOM_OUT_MAX = 0.45f;
     private static final float ZOOM_LERP    = 5f;
 
 
@@ -278,23 +278,6 @@ public class GameplayController implements Screen {
             physics.addObject(level.getGoalDoor());
         }
         physics.addObject(player);
-//        Vector2 spawnPos = player.getObstacle().getPosition();
-//        float grateSize = 0.25f;
-//
-//        int gridSize = 6;
-//
-//        float halfGrid = (gridSize - 1) / 2f;
-//
-//        for (int i = 0; i < gridSize; i++) {
-//            for (int j = 0; j < gridSize; j++) {
-//                float offsetX = (i - halfGrid) * grateSize;
-//                float offsetY = (j - halfGrid) * grateSize;
-//                Vector2 gratePos = new Vector2(spawnPos.x + offsetX, spawnPos.y + offsetY);
-//                Grate g = physics.createGrate(gratePos.x, gratePos.y, grateSize, units, constants);
-//                physics.addObject(g);
-//            }
-//        }
-
 
         for(BackgroundTile machine : level.getGoalTiles()){
             Rectangle rec = machine.getBounds();
@@ -537,7 +520,7 @@ public class GameplayController implements Screen {
                 break;
 
             case PAINTING:
-                player.setMaxSpeed(0.2f);
+                player.setMaxSpeed(0f);
 
                 if (!player.isBombPlaying()) {     // animation done
                     bombState     = BombSkillState.COOLDOWN;
@@ -779,9 +762,7 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-        if (level.getGoalDoor() != null) {
-        level.getGoalDoor().draw(batch);
-}
+
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         // Draw all bombs
@@ -801,12 +782,14 @@ public class GameplayController implements Screen {
             }
         }
 
-
-
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
                 grate.draw(batch);
             }
+        }
+
+        if (level.getGoalDoor() != null) {
+            level.getGoalDoor().draw(batch);
         }
 
 

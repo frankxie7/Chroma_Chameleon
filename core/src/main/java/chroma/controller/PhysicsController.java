@@ -158,7 +158,7 @@ public class PhysicsController implements ContactListener {
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Grate) {
+                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Grate || userData instanceof Door) {
                         return -1f;
                     }
                     if (userData instanceof Goal) {
@@ -423,6 +423,16 @@ public class PhysicsController implements ContactListener {
             }
         }
 
+
+        if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
+            (userDataA instanceof Door && userDataB instanceof Chameleon)) {
+            grateContactCount++;
+            if (sprayContactCount > 0 || bombContactCount > 0) {
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+                player.setHidden(false);
+            }
+        }
+
         // Handle spray contacts
         if ((userDataA instanceof Chameleon && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Chameleon)) {
@@ -484,6 +494,17 @@ public class PhysicsController implements ContactListener {
                 player.setHidden(true);
             }
         }
+
+        if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
+            (userDataA instanceof Door && userDataB instanceof Chameleon)) {
+            grateContactCount--;
+            if (grateContactCount < 0) grateContactCount = 0;
+            Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+            if (grateContactCount == 0 && (sprayContactCount > 0 || bombContactCount > 0)) {
+                player.setHidden(true);
+            }
+        }
+
 
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||
