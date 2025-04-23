@@ -389,19 +389,19 @@ public class AIController {
 
         playerDetected = false;
         boolean isCamera = type == Type.CAMERA;
-        boolean isSweeper = type == Type.SWEEPER;
+//        boolean isSweeper = type == Type.SWEEPER;
         float distanceToPlayer = enemyPos.dst(playerPos);
         boolean guardInRange = distanceToPlayer <= detectionRange;
-
-        // Sweeper does not chase or alert, only patrols and cleans paint
-        if (isSweeper) {
-            state = State.PATROL;
-            cleanNearbyPaint(delta);
-            patrolState(delta, enemyPos);
-            enemy.applyForce();
-            enemy.update(delta);
-            return;
-        }
+//
+//        // Sweeper does not chase or alert, only patrols and cleans paint
+//        if (isSweeper) {
+//            state = State.PATROL;
+//            cleanNearbyPaint(delta);
+//            patrolState(delta, enemyPos);
+//            enemy.applyForce();
+//            enemy.update(delta);
+//            return;
+//        }
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
@@ -411,9 +411,9 @@ public class AIController {
 
             for (int i = 0; i < numRays; i++) {
                 float rayAngle = angleLooking - halfFOV + (i * angleStep);
+
                 Vector2 direction = new Vector2((float) Math.cos(rayAngle), (float) Math.sin(rayAngle));
-                float rayLength = detectionRange;
-                Vector2 rayEnd = enemyPos.cpy().add(direction.scl(rayLength));
+                Vector2 rayEnd = enemyPos.cpy().add(direction.scl(detectionRange));
 
                 final Vector2 rayHit = rayEnd.cpy(); // Initialize the ray hit position
 
@@ -455,6 +455,8 @@ public class AIController {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
 
+//        System.out.println("State: " + state + ", alert: " + alertTimer + ", detection: " + detectionTimer);
+
         // State switching logic after detection is updated
         if (state == State.CHASE) {
             Vector2 lastSpotted = new Vector2(playerPos);
@@ -469,19 +471,19 @@ public class AIController {
             alertState(delta, enemyPos);
             if (alertTimer >= alertLength) {
                 state = patrol ? State.PATROL : State.WANDER;
-                blueRedPlayingBackward = true;
-                blueRedPlayingForward = false;
+//                blueRedPlayingBackward = true;
+//                blueRedPlayingForward = false;
                 blueRedTime = blueRedDuration;
             }
-            if (playerDetected && detectionTimer >= detectionThreshold) {
+            if (playerDetected && detectionTimer > detectionThreshold) {
                 state = State.CHASE;
             }
         } else if (state == State.PATROL) {
             patrolState(delta, enemyPos);
-            if (detectionTimer >= detectionThreshold) {
+            if (detectionTimer > detectionThreshold) {
                 state = State.CHASE;
-                blueRedPlayingForward = true;
-                blueRedPlayingBackward = false;
+//                blueRedPlayingForward = true;
+//                blueRedPlayingBackward = false;
                 blueRedTime = 0f;
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
@@ -490,10 +492,10 @@ public class AIController {
             }
         } else {
             wanderState(delta, enemyPos);
-            if (detectionTimer >= detectionThreshold) {
+            if (detectionTimer > detectionThreshold) {
                 state = State.CHASE;
-                blueRedPlayingForward = true;
-                blueRedPlayingBackward = false;
+//                blueRedPlayingForward = true;
+//                blueRedPlayingBackward = false;
                 blueRedTime = 0f;
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
@@ -635,6 +637,13 @@ public class AIController {
         }
         newRotation = (newRotation + (float) Math.toRadians(360)) % ((float) Math.toRadians(360)); // Keep rotation within [0,360]
 
+        // Detection logic first: always grows/shrinks no matter the state
+        if (playerDetected) {
+            detectionTimer = Math.min(detectionThreshold / 2, detectionTimer + delta);
+        } else if (alertTimer >= alertLength) {
+            detectionTimer = Math.max(0, detectionTimer - delta);
+        }
+
         Vector2 enemyPos = enemy.getPosition();
         Vector2 playerPos = player.getPosition();
         if (state == State.CHASE) {
@@ -658,7 +667,7 @@ public class AIController {
             enemy.setAlertAnimationFrame(11);
         } else {
             int frame = MathUtils.clamp(
-                    (int) ((detectionTimer / (detectionThreshold / 2)) * 11f), 0, 11
+                (int) ((detectionTimer / (detectionThreshold / 2)) * 11f), 0, 11
             );
             if (detectionTimer == 0) {
                 frame = -1;
@@ -667,17 +676,10 @@ public class AIController {
         }
         enemy.setRotation(newRotation);
 
-        // Detection logic first: always grows/shrinks no matter the state
-        if (playerDetected) {
-            detectionTimer = Math.min(detectionThreshold / 2, detectionTimer + delta);
-        } else if (alertTimer >= alertLength) {
-            detectionTimer = Math.max(0, detectionTimer - delta);
-        }
-
         if (state == State.CHASE){
             Vector2 lastSpotted = new Vector2(playerPos);
             player.setLastSeen(lastSpotted);
-            if (detectionTimer < detectionThreshold / 2) {
+            if (!playerDetected) {
                 state = State.ALERT;
                 alertTimer = 0f;
             }
@@ -694,6 +696,7 @@ public class AIController {
         } else {
             if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
+                alertTimer = 0f;
             } else if (detectionTimer >= detectionThreshold / 2 && playerDetected) {
                 state = State.CHASE;
             }

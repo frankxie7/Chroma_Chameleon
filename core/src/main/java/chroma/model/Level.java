@@ -297,11 +297,13 @@ public class Level {
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
             Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.1f);
             Texture enemyBlueRedSheet = directory.getEntry("enemyBlueRedSheet", Texture.class);
-            Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.1f);
+            Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.15f);
             Texture enemySideSheet = directory.getEntry("enemySideSheet", Texture.class);
-            Animation<TextureRegion> enemySideAnim = createAnimation(enemySideSheet, 8, 0.1f);
+            Animation<TextureRegion> enemySideAnim = createAnimation(enemySideSheet, 8, 0.15f);
             Texture enemyFrontSheet = directory.getEntry("enemyFrontSheet", Texture.class);
             Animation<TextureRegion> enemyFrontAnim = createAnimation(enemyFrontSheet, 12, 0.1f);
+            Texture enemyBackSheet = directory.getEntry("enemyBackSheet", Texture.class);
+            Animation<TextureRegion> enemyBackAnim = createAnimation(enemyBackSheet, 12, 0.1f);
             JsonValue enemyPositions = enemiesData.get("positions");
             JsonValue enemyType = enemiesData.get("types");
             JsonValue enemyPatrol = enemiesData.get("patrols");
@@ -321,7 +323,7 @@ public class Level {
                 float startRotation = enemyStartRotation.get(i).asFloat();
                 float rotateAngle = enemyRotateAngles.get(i).asFloat();
                 Enemy enemy = new Enemy(coords, type, patrol, patrolPathList, startRotation, rotateAngle, units,
-                    enemiesData, enemyAlertAnim, enemyBlueRedAnim, enemyFrontAnim, enemySideAnim);
+                    enemiesData, enemyAlertAnim, enemyBlueRedAnim, enemyFrontAnim, enemySideAnim, enemyBackAnim);
                 enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }

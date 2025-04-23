@@ -848,30 +848,25 @@ public class GameplayController implements Screen {
             batch.draw(ghost, curPix.x - s/2, curPix.y - s/2, s, s);
         }
 
-
         for (AIController ai : aiControllers) {
-            if (ai.getEnemy().getType() == Enemy.Type.CAMERA) {
-                int frameIndex = ai.getEnemy().getAlertAnimationFrame(); // you set this from the AI logic
+            int frameIndex = ai.getEnemy().getAlertAnimationFrame(); // you set this from the AI logic
 
-                if (frameIndex != -1) {
-                    TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
+            if (frameIndex != -1) {
+                TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
 
-                    float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale();
-                    float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale();
+                float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale();
+                float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale();
+                float px = ai.getEnemy().getPosition().x * units;
+                float py = ai.getEnemy().getPosition().y * units;
 
-                    float px = ai.getEnemy().getPosition().x * units;
-                    float py = ai.getEnemy().getPosition().y * units;
-
-                    float hoverOffsetPixels = 40f;  // same as the enemies
-
-                    batch.draw(frame,
-                        px - drawWidth / 2,
-                        py - drawHeight / 2 + hoverOffsetPixels,
-                        drawWidth / 2, drawHeight / 2,
-                        drawWidth, drawHeight,
-                        1, 1,
-                        0);
-                }
+                float hoverOffsetPixels = 40f;  // same as the enemies
+                batch.draw(frame,
+                    px - drawWidth / 2,
+                    py - drawHeight / 2 + hoverOffsetPixels,
+                    drawWidth / 2, drawHeight / 2,
+                    drawWidth, drawHeight,
+                    1, 1,
+                    0);
             }
         }
 
