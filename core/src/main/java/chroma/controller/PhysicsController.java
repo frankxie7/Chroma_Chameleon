@@ -16,6 +16,8 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 
 /**
@@ -46,7 +48,7 @@ public class PhysicsController implements ContactListener {
     //Number of rays to shoot
     private int numRays = 20;
     //Length of the rays
-    private float rayLength = 4f;
+    private float rayLength = 5f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -125,6 +127,19 @@ public class PhysicsController implements ContactListener {
     }
 
     /**
+     * RayCastHit s a simple class containing an object hit within a raycast and the fraction
+     */
+    static class RayCastHit {
+        public Object object;
+        public float fraction;
+
+        public RayCastHit(Object object, float fraction) {
+            this.object = object;
+            this.fraction = fraction;
+        }
+    }
+
+    /**
      * Shoots rays from the chameleon outward in a fan
      * @param obstacle the Chameleon
      * @param angle the angle to shoot the rays
@@ -140,46 +155,52 @@ public class PhysicsController implements ContactListener {
                 return;
             }
             Vector2 position = obstacle.getPosition().cpy();
+            //Depening on orientation change the position of our raycast
             if(obstacle.isFacingRight()) {
-                position.x = position.x + 1f;
+                position.x = position.x + 0.9f;
             }
             if(obstacle.isFaceUp()){
-                position.y = position.y + 1f;
+                position.y = position.y + 0.9f;
             }
             if(obstacle.isFaceLeft()){
-                position.x = position.x - 1f;
+                position.x = position.x - 0.9f;
             }
             if(obstacle.isFaceDown()){
                 position.y = position.y - 0.9f;
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
-            ArrayList<Object> array = new ArrayList<>();
+            ArrayList<Object> array = new ArrayList<>(60);
+
+            ArrayList<RayCastHit> hits = new ArrayList<>();
+
             RayCastCallback callback = new RayCastCallback() {
+
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    if (userData instanceof Spray || userData instanceof Bomb || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Grate || userData instanceof Door) {
-                        return -1f;
-                    }
+                    //If we are Goal or Collision add to list otherwise ignore
                     if (userData instanceof Goal) {
-                        array.add(userData);
+                        hits.add(new RayCastHit(userData,fraction));
                         return -1f;
-                    }
-                    if(userData instanceof Collision){
-                        array.add(userData);
+                    } else if(userData instanceof Collision){
+                        hits.add(new RayCastHit(userData,fraction));
+                    }else{
+                        return -1;
                     }
                     endPoint.set(point);
                     return fraction;
                 }
             };
             world.rayCast(callback, position, endPoint);
-
-            for(Object o : array.reversed()){
-                if(o instanceof Collision){
+            hits.sort(Comparator.comparingDouble(hit -> hit.fraction));
+            //Code to be made more efficient, need to sort list first as order of
+            //objects in hits is completely random because box2d is stupid
+            for(RayCastHit o : hits){
+                if(o.object instanceof Collision){
                     break;
                 }
-                if(o instanceof Goal){
-                    Goal g = (Goal) o;
+                if(o.object instanceof Goal){
+                    Goal g = (Goal) o.object;
                     g.setFull();
                 }
             }
@@ -215,13 +236,13 @@ public class PhysicsController implements ContactListener {
                 && endpoints[i] != null) {
                 Vector2 v1 = avatar.getPosition().cpy();
                 if(avatar.isFacingRight()){
-                    v1.x = v1.x + 1f;
+                    v1.x = v1.x + 0.9f;
                 }
                 if(avatar.isFaceLeft()){
-                    v1.x = v1.x - 1f;
+                    v1.x = v1.x - 0.9f;
                 }
                 if(avatar.isFaceUp()){
-                    v1.y = v1.y + 1f;
+                    v1.y = v1.y + 0.9f;
                 }
                 if(avatar.isFaceDown()){
                     v1.y = v1.y - 0.9f;
