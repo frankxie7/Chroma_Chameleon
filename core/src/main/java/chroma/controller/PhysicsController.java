@@ -44,9 +44,9 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 40;
+    private int numRays = 20;
     //Length of the rays
-    private float rayLength = 5f;
+    private float rayLength = 4f;
     //Endpoints of the rays
     private Vector2[] endpoints;
     //Points
@@ -165,7 +165,9 @@ public class PhysicsController implements ContactListener {
                         array.add(userData);
                         return -1f;
                     }
-                    array.add(userData);
+                    if(userData instanceof Collision){
+                        array.add(userData);
+                    }
                     endPoint.set(point);
                     return fraction;
                 }
@@ -224,6 +226,8 @@ public class PhysicsController implements ContactListener {
                 if(avatar.isFaceDown()){
                     v1.y = v1.y - 0.9f;
                 }
+                //Replace with for loop over endpoints array
+                //Replace points array with new data type
                 Vector2 v2 = endpoints[i];
                 Vector2 v3 = endpoints[i + 1];
                 float x1 = v1.x;
