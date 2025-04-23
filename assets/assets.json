@@ -18,6 +18,7 @@
     "chameleonSheet": "platform/chameleon.png",
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
+    "chameleonSkillSheet": "platform/character-animation.png",
     "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
     "enemySideSheet": "platform/enemy-side-anim.png",
@@ -25,7 +26,8 @@
     "enemyBackSheet": "platform/enemy-back-anim.png",
     "tileset-export": "platform/tileset-export.png",
     "tileset":   "shared/tileset.png",
-    "vent":   "platform/vent.png"
+    "vent":   "platform/vent.png",
+    "spray": "platform/spray.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
