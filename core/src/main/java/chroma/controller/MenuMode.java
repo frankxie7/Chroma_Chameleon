@@ -23,6 +23,7 @@ public class MenuMode implements Screen, InputProcessor {
     private AssetDirectory directory;
     private SpriteBatch batch;
 
+    /** Asset directory for assets used in this menu screen*/
     private AssetDirectory internal;
     private OrthographicCamera camera;
     private Affine2 affine;
@@ -30,7 +31,21 @@ public class MenuMode implements Screen, InputProcessor {
 
     private int width, height;
     private float scale;
-    private CircleBound[] bounds;
+
+    /** Number of buttons */
+    private int buttonNum;
+
+    /** The rectangle bounds for every button */
+    private Bound[] bounds;
+
+    /** The bounds for left and right arrows */
+    private Bound[] arrBounds;
+
+    /** The textures for every button */
+    private Texture[] buttonTexs;
+
+    /** The textures for every pressed button*/
+    private Texture[] buttonPressTexs;
 
     private ScreenListener listener;
 
@@ -43,25 +58,32 @@ public class MenuMode implements Screen, InputProcessor {
     /** The current state of the button */
     private int pressState;
 
+    /** Whether left arrow is pressed*/
+    private boolean leftPressed;
+    /** Whether right arrow is pressed*/
+    private boolean rightPressed;
+    /** Current page number*/
+    private int currPage;
+
     /** Draw the outline for determining */
     private ShapeRenderer shapeRenderer;
-    private BitmapFont font;
 
 
-    /** Internal class for creating a circular bound */
-    private class CircleBound {
-        public float x, y, radius;
+    /** Internal class for creating a rectangle bound */
+    private class Bound {
+        public float x, y, width, height;
 
-        public CircleBound(float x, float y, float radius) {
+        public Bound(float x, float y, float width, float height) {
             this.x = x;
             this.y = y;
-            this.radius = radius;
+            this.width = width;
+            this.height = height;
         }
 
         public boolean contains(float px, float py) {
             float dx = px - x;
             float dy = py - y;
-            return dx * dx + dy * dy <= radius * radius;
+            return px >= x && px <= x + width && py >= y && py <= y + height;
         }
     }
 
@@ -84,7 +106,15 @@ public class MenuMode implements Screen, InputProcessor {
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        bounds = new CircleBound[constants.getInt("numButtons")];
+        buttonNum = constants.getInt("numButtons");
+        bounds = new Bound[buttonNum];
+        arrBounds = new Bound[2];
+        buttonTexs = new Texture[buttonNum];
+        buttonPressTexs = new Texture[buttonNum];
+        for (int i = 1; i < buttonNum + 1; i++) {
+            buttonTexs[i-1] = internal.getEntry("button" + i, Texture.class);
+            buttonPressTexs[i-1] = internal.getEntry("buttonPress" + i, Texture.class);
+        }
 
         affine = new Affine2();
         Gdx.input.setInputProcessor(this);
@@ -94,11 +124,8 @@ public class MenuMode implements Screen, InputProcessor {
         directory.finishLoading();
 
         active = true;
-
+        currPage = 0;
         shapeRenderer = new ShapeRenderer();
-        font = new BitmapFont(); // You can also load custom fonts if needed
-        font.setColor(Color.BLACK); // Set to your desired color
-        font.getData().setScale(4f); // Scale to fit the button nicely
 
     }
 
@@ -124,45 +151,87 @@ public class MenuMode implements Screen, InputProcessor {
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        Texture initTexture = internal.getEntry("play",Texture.class);
-        Texture splatter = internal.getEntry("buttons", Texture.class);
+        // Draw background
+        Texture background = internal.getEntry("background", Texture.class);
+
+        // Get the width and height of the texture
+        int bgWidth = background.getWidth();
+        int bgHeight = background.getHeight();
+        // Calculate scale to fill the screen as much as possible while keeping aspect ratio
+        float bgScale = Math.min((float) width / bgWidth, (float) height / bgHeight);
+
+        // Compute the position to center the image on the screen
+        float w = (width - bgWidth * bgScale) / 2f;
+        float h = (height - bgHeight * bgScale) / 2f;
+        // Draw the texture centered on the screen
+        batch.draw(background, w, h, bgWidth * bgScale,  bgHeight * bgScale) ;
+
+        // Draw buttons
         int numCols = constants.getInt("numCols");
         int numRows = constants.getInt("numRows");
-        int numButtons = constants.getInt("numButtons");
+
         float buttonScale = constants.getFloat("button.scale") ;
         float boundScale = constants.getFloat("bound.scale") ;
 
-        float buttonSize = height * buttonScale;
-        float radius = buttonSize * boundScale;
-        float hSpacing = (width - numCols * buttonSize) / (numCols + 1); // horizontal spacing
-        float vSpacing = (height - numRows * buttonSize) / (numRows + 1); // vertical spacing
+//        float panelX = width * 0.33f;
+//        float panelY = height * 0.06f;
+//        float panelWidth = width * 0.32f;
+//        float panelHeight = height * 0.55f;
+//        float hSpacing = (panelWidth - numCols * buttonSize) / (numCols + 1); // horizontal spacing
+//        float vSpacing = (panelHeight - numRows * buttonSize) / (numRows + 1); // vertical spacing
+        Texture button = buttonTexs[0];
+        float buttonHeight = button.getHeight() * scale * buttonScale;
+        float buttonWidth = button.getWidth() * scale * buttonScale;
+        float boundHeight = buttonHeight * boundScale;
+        float boundWidth = buttonWidth * boundScale;
 
-        for (int i = 0; i < numButtons; i++) {
+        // First, calculate the total width occupied by all buttons and gaps
+        float hSpacing = (width * 0.2f - numCols * buttonWidth) / (numCols + 1);  // or compute it
+        float totalWidth = buttonWidth * numCols + hSpacing * (numCols - 1);
+
+        // Center of screen
+        float centerX = width / 2f;
+        // Starting X of the leftmost button (so column 1 ends up centered)
+        float startX = centerX - (totalWidth / 2f);
+
+        // Similarly, calculate vertical spacing to fit inside a vertical region (e.g., the central panel)
+        float panelTop = height * 0.5f; // adjust depending on where your panel starts
+        float vSpacing = (panelTop - numRows * buttonHeight) / (numRows + 1);
+
+
+        for (int i = 0; i < buttonNum; i++) {
             int row = i / numCols;
             int col = i % numCols;
 
-            float x = hSpacing + col * (buttonSize + hSpacing);
-            float y = height - (vSpacing + (row + 1) * buttonSize + row * vSpacing);
+//            float x = panelX + hSpacing + col * (buttonSize + hSpacing);
+//            float y = panelY + panelHeight - (vSpacing + (row + 1) * buttonSize + row * vSpacing);
 
-            bounds[i] = new CircleBound(x + buttonSize / 2 , y + buttonSize / 2, radius);
+            float x = startX + col * (buttonWidth + hSpacing);
+            float y = panelTop - ((row + 1) * vSpacing + row * buttonHeight);
 
-//            Color tint = (i == currLevel-1 ? Color.GRAY : Color.WHITE);
-//            batch.setColor( tint );
+            bounds[i] = new Bound(x, y, boundWidth*2, boundHeight*2);
 
-            Texture texture = i == currLevel - 1 ? splatter: initTexture;
-            batch.draw(texture, x, y, buttonSize, buttonSize);
-
-            // Draw the level number
-            String levelText = String.valueOf(i + 1);
-            GlyphLayout layout = new GlyphLayout(font, levelText);
-            float textWidth = layout.width;
-            float textHeight = layout.height;
-
-            font.draw(batch, levelText,
-                x + buttonSize / 2 - textWidth / 2,
-                y + buttonSize / 2 + textHeight / 2); // Centered
+            Texture texture = i == currLevel - 1 ? buttonPressTexs[currLevel-1]: buttonTexs[i];
+            batch.draw(texture, x, y, buttonWidth, buttonHeight);
         }
 
+        // Draw two arrows
+        Texture leftArrow = internal.getEntry("leftArrow", Texture.class);
+        Texture rightArrow = internal.getEntry("rightArrow", Texture.class);
+        Texture textureLeft = leftPressed ? leftArrow: leftArrow;
+        Texture textureRight = rightPressed ? rightArrow : rightArrow;
+        float arrScale = constants.getFloat("arrow.scale");
+        float arrWidth = leftArrow.getWidth() * scale * arrScale;
+        float arrHeight = leftArrow.getHeight() * scale * arrScale;
+
+        float arrY = bounds[4].y + boundHeight- arrHeight / 2f;
+        float arrL = bounds[3].x + boundWidth - arrWidth - buttonWidth / 2f - hSpacing;
+        float arrR = bounds[5].x + boundWidth + buttonWidth / 2f + hSpacing;
+
+        batch.draw(textureLeft, arrL, arrY, arrWidth, arrHeight);
+        batch.draw(textureRight, arrR, arrY, arrWidth, arrHeight);
+        arrBounds[0] = new Bound(arrL, arrY, arrWidth, arrHeight);
+        arrBounds[1] = new Bound(arrR, arrY, arrWidth, arrHeight);
         batch.end();
 
         // Begin shape rendering for debug
@@ -171,8 +240,13 @@ public class MenuMode implements Screen, InputProcessor {
 //        shapeRenderer.setColor(Color.YELLOW); // any debug color
 //
 //        for (int i = 0; i < bounds.length; i++) {
-//            CircleBound cb = bounds[i];
-//            shapeRenderer.circle(cb.x, cb.y, cb.radius);
+//            Bound cb = bounds[i];
+//            shapeRenderer.rect(cb.x, cb.y, cb.width, cb.height);
+//        }
+//
+//        for (int i = 0; i < arrBounds.length; i++) {
+//            Bound cb = arrBounds[i];
+//            shapeRenderer.rect(cb.x, cb.y, cb.width, cb.height);
 //        }
 //
 //        shapeRenderer.end();
@@ -241,6 +315,20 @@ public class MenuMode implements Screen, InputProcessor {
         this.listener = listener;
     }
 
+    /**
+     * Update the current page number based on the left, right arrows
+     */
+    private void updateCurrPage() {
+        if (leftPressed) {
+            currPage = Math.max(currPage-1, 0);
+
+            leftPressed = false;
+        } else if (rightPressed) {
+            currPage = Math.min(currPage+1, 2);
+            rightPressed = false;
+        }
+    }
+
     // PROCESSING PLAYER INPUT
     /**
      * Called when the screen was touched or a mouse button was pressed.
@@ -269,6 +357,12 @@ public class MenuMode implements Screen, InputProcessor {
                 return false;
             }
         }
+
+        if (arrBounds[0].contains(touch.x, touch.y)) {
+            leftPressed = true;
+        } else if (arrBounds[1].contains(touch.x, touch.y)) {
+            rightPressed = true;
+        }
         return false;
     }
 
@@ -286,6 +380,10 @@ public class MenuMode implements Screen, InputProcessor {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (pressState == 1) {
             pressState = 2;
+            return false;
+        }
+        if (leftPressed || rightPressed) {
+            updateCurrPage();
             return false;
         }
         return true;
