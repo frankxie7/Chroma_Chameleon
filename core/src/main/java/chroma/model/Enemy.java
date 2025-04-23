@@ -72,19 +72,21 @@ public class Enemy extends ObstacleSprite {
     private int alertFrame;
     private Animation<TextureRegion> blueRedAnim;
     private float blueRedTime;
-    private Animation<TextureRegion> frontAnim;
+    private Animation<TextureRegion> frontAnimBlue;
+    private Animation<TextureRegion> frontAnimRed;
     private int frontFrame;
-    private Animation<TextureRegion> sideAnim;
+    private Animation<TextureRegion> sideAnimBlue;
+    private Animation<TextureRegion> sideAnimRed;
     private int sideFrame;
-    private Animation<TextureRegion> backAnim;
+    private Animation<TextureRegion> backAnimBlue;
+    private Animation<TextureRegion> backAnimRed;
     private int backFrame;
     private float animTime;
+    boolean blue;
     private float drawScale;
 
     public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath, float startRotation,
-                 float rotateAngle, float units, JsonValue data, Animation<TextureRegion> enemyAlertAnim,
-                 Animation<TextureRegion> enemyBlueRedAnim, Animation<TextureRegion> enemyFrontAnim, Animation<TextureRegion> enemySideAnim,
-                 Animation<TextureRegion> enemyBackAnim) {
+                 float rotateAngle, float units, JsonValue data, Level.EnemyAnimations animations) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -136,18 +138,22 @@ public class Enemy extends ObstacleSprite {
 
         faceRight = true;
 
-        alertAnim = enemyAlertAnim;
+        alertAnim = animations.alertAnim;
         alertFrame = -1;
-        blueRedAnim = enemyBlueRedAnim;
+        blueRedAnim = animations.blueRedAnim;
         blueRedTime = 0;
-        frontAnim = enemyFrontAnim;
+        frontAnimBlue = animations.blueAnimations.frontAnim;
+        frontAnimRed = animations.redAnimations.frontAnim;
         frontFrame = -1;
-        sideAnim = enemySideAnim;
+        sideAnimBlue = animations.blueAnimations.sideAnim;
+        sideAnimRed = animations.redAnimations.sideAnim;
         sideFrame = -1;
-        backAnim = enemyBackAnim;
+        backAnimBlue = animations.blueAnimations.backAnim;
+        backAnimRed = animations.redAnimations.backAnim;
         backFrame = -1;
 
         animTime = 0;
+        blue = true;
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
@@ -183,6 +189,7 @@ public class Enemy extends ObstacleSprite {
     public void setAlertAnimationFrame(int index) { this.alertFrame = index; }
     public Animation<TextureRegion> getBlueRedAnimation() { return blueRedAnim; }
     public void setBlueRedTime(float index) { this.blueRedTime = index; }
+    public void setBlue(boolean value) { this.blue = value; }
     public float getDrawScale() { return drawScale; }
 
     public float getRotation() {
@@ -270,23 +277,22 @@ public class Enemy extends ObstacleSprite {
         float degrees = (float) Math.toDegrees(angle);
         degrees = (degrees + 360) % 360;  // normalize
 
-        // You can adjust this range depending on how "front" vs "side" should behave
         boolean isFront = (degrees > 225 && degrees < 315);
         boolean isBack = (degrees > 45 && degrees < 135);
-
-        Animation<TextureRegion> activeAnim = isFront ? frontAnim : sideAnim;
-
-        int frameIndex = activeAnim.getKeyFrameIndex(animTime);
+        int frameIndex;
 
         if (isFront) {
+            frameIndex = frontAnimBlue.getKeyFrameIndex(animTime);
             frontFrame = frameIndex;
             sideFrame = -1;
             backFrame = -1;
         } else if (isBack) {
+            frameIndex = backAnimBlue.getKeyFrameIndex(animTime);
             frontFrame = -1;
             sideFrame = -1;
             backFrame = frameIndex;
         } else {
+            frameIndex = sideAnimBlue.getKeyFrameIndex(animTime);
             frontFrame =-1;
             sideFrame = frameIndex;
             backFrame = -1;
@@ -302,13 +308,6 @@ public class Enemy extends ObstacleSprite {
 
     @Override
     public void draw(SpriteBatch batch) {
-//        if (faceRight) {
-//            flipCache.setToScaling( 1,1 );
-//        } else {
-//            flipCache.setToScaling( -1,1 );
-//        }
-//        super.draw(batch,flipCache);
-
 //        if (blueRedTime != 0) {
 //            TextureRegion frame = blueRedAnim.getKeyFrame(blueRedTime);
 //
@@ -328,11 +327,23 @@ public class Enemy extends ObstacleSprite {
         TextureRegion frame = null;
 
         if (sideFrame != -1) {
-            frame = new TextureRegion(sideAnim.getKeyFrames()[sideFrame]);
+            if (blue) {
+                frame = new TextureRegion(sideAnimBlue.getKeyFrames()[sideFrame]);
+            } else {
+                frame = new TextureRegion(sideAnimRed.getKeyFrames()[sideFrame]);
+            }
         } else if (frontFrame != -1) {
-            frame = new TextureRegion(frontAnim.getKeyFrames()[frontFrame]);
+            if (blue) {
+                frame = new TextureRegion(frontAnimBlue.getKeyFrames()[frontFrame]);
+            } else {
+                frame = new TextureRegion(frontAnimRed.getKeyFrames()[frontFrame]);
+            }
         } else if (backFrame != -1) {
-            frame = new TextureRegion(backAnim.getKeyFrames()[backFrame]);
+            if (blue) {
+                frame = new TextureRegion(backAnimBlue.getKeyFrames()[backFrame]);
+            } else {
+                frame = new TextureRegion(backAnimRed.getKeyFrames()[backFrame]);
+            }
         }
 
         if (frame == null) return;

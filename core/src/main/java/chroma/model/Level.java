@@ -277,7 +277,6 @@ public class Level {
             }
         }
 
-
         // Create the chameleon (player) using animation
         JsonValue chamData = globalConstants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
@@ -291,24 +290,41 @@ public class Level {
         avatar = new Chameleon(units, chamData, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
         avatar.setBombAnimation(bombAnim);
 
-
-
         // Create enemies
         enemies = new ArrayList<>();
         String name = levelfiles[selector.getCurrentLevel() - 1];
         JsonValue enemiesData = globalConstants.get("enemies").get(name);
         if (enemiesData != null) {
-            Texture enemyTex = directory.getEntry("enemy", Texture.class);
+//            Texture enemyTex = directory.getEntry("enemy", Texture.class);
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
             Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.1f);
             Texture enemyBlueRedSheet = directory.getEntry("enemyBlueRedSheet", Texture.class);
             Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.15f);
-            Texture enemySideSheet = directory.getEntry("enemySideSheet", Texture.class);
-            Animation<TextureRegion> enemySideAnim = createAnimation(enemySideSheet, 8, 0.15f);
-            Texture enemyFrontSheet = directory.getEntry("enemyFrontSheet", Texture.class);
-            Animation<TextureRegion> enemyFrontAnim = createAnimation(enemyFrontSheet, 12, 0.1f);
-            Texture enemyBackSheet = directory.getEntry("enemyBackSheet", Texture.class);
-            Animation<TextureRegion> enemyBackAnim = createAnimation(enemyBackSheet, 12, 0.1f);
+            // BLUE
+            Texture enemySideSheetBlue = directory.getEntry("enemySideSheetBlue", Texture.class);
+            Animation<TextureRegion> enemySideAnimBlue = createAnimation(enemySideSheetBlue, 8, 0.15f);
+            Texture enemyFrontSheetBlue = directory.getEntry("enemyFrontSheetBlue", Texture.class);
+            Animation<TextureRegion> enemyFrontAnimBlue = createAnimation(enemyFrontSheetBlue, 12, 0.1f);
+            Texture enemyBackSheetBlue = directory.getEntry("enemyBackSheetBlue", Texture.class);
+            Animation<TextureRegion> enemyBackAnimBlue = createAnimation(enemyBackSheetBlue, 12, 0.1f);
+            // RED
+            Texture enemySideSheetRed = directory.getEntry("enemySideSheetRed", Texture.class);
+            Animation<TextureRegion> enemySideAnimRed = createAnimation(enemySideSheetRed, 8, 0.15f);
+            Texture enemyFrontSheetRed = directory.getEntry("enemyFrontSheetRed", Texture.class);
+            Animation<TextureRegion> enemyFrontAnimRed = createAnimation(enemyFrontSheetRed, 12, 0.1f);
+            Texture enemyBackSheetRed = directory.getEntry("enemyBackSheetRed", Texture.class);
+            Animation<TextureRegion> enemyBackAnimRed = createAnimation(enemyBackSheetRed, 12, 0.1f);
+
+            // Store all animations together
+            ColorAnimations blueSet = new ColorAnimations(enemyFrontAnimBlue, enemySideAnimBlue, enemyBackAnimBlue);
+            ColorAnimations redSet  = new ColorAnimations(enemyFrontAnimRed, enemySideAnimRed, enemyBackAnimRed);
+            EnemyAnimations anims = new EnemyAnimations(
+                enemyAlertAnim,
+                enemyBlueRedAnim,
+                blueSet,
+                redSet
+            );
+
             JsonValue enemyPositions = enemiesData.get("positions");
             JsonValue enemyType = enemiesData.get("types");
             JsonValue enemyPatrol = enemiesData.get("patrols");
@@ -327,9 +343,8 @@ public class Level {
                 }
                 float startRotation = enemyStartRotation.get(i).asFloat();
                 float rotateAngle = enemyRotateAngles.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList, startRotation, rotateAngle, units,
-                    enemiesData, enemyAlertAnim, enemyBlueRedAnim, enemyFrontAnim, enemySideAnim, enemyBackAnim);
-                enemy.setTexture(enemyTex);
+                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList, startRotation, rotateAngle, units, enemiesData, anims);
+//                enemy.setTexture(enemyTex);
                 enemies.add(enemy);
             }
         }
@@ -448,6 +463,36 @@ public class Level {
         Animation<TextureRegion> animation = new Animation<>(frameDuration, frames);
         animation.setPlayMode(Animation.PlayMode.LOOP);
         return animation;
+    }
+
+    /** Data structures to hold all enemy animations */
+    public class ColorAnimations {
+        public final Animation<TextureRegion> frontAnim;
+        public final Animation<TextureRegion> sideAnim;
+        public final Animation<TextureRegion> backAnim;
+
+        public ColorAnimations(Animation<TextureRegion> front, Animation<TextureRegion> side, Animation<TextureRegion> back) {
+            this.frontAnim = front;
+            this.sideAnim = side;
+            this.backAnim = back;
+        }
+    }
+
+    public class EnemyAnimations {
+        public final Animation<TextureRegion> alertAnim;
+        public final Animation<TextureRegion> blueRedAnim;
+        public final ColorAnimations blueAnimations;
+        public final ColorAnimations redAnimations;
+
+        public EnemyAnimations(Animation<TextureRegion> alertAnim,
+                               Animation<TextureRegion> blueRedAnim,
+                               ColorAnimations blueAnimations,
+                               ColorAnimations redAnimations) {
+            this.alertAnim = alertAnim;
+            this.blueRedAnim = blueRedAnim;
+            this.blueAnimations = blueAnimations;
+            this.redAnimations = redAnimations;
+        }
     }
 
 }

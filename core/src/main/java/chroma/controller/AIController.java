@@ -526,6 +526,7 @@ public class AIController {
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
         alertTimer = 0;
+        enemy.setBlue(false);
         enemy.setAlertAnimationFrame(12);
         enemy.setMaxSpeed(chaseMaxSpeed);
         target = playerPos;
@@ -542,6 +543,7 @@ public class AIController {
     }
     private void alertState(float delta, Vector2 enemyPos) {
         alertTimer += delta;
+        enemy.setBlue(false);
         enemy.setAlertAnimationFrame(11);
         enemy.setMaxSpeed(alertMaxSpeed);
         target = player.getLastSeen();
@@ -563,6 +565,7 @@ public class AIController {
         if (detectionTimer == 0) {
             frame = -1;
         }
+        enemy.setBlue(true);
         enemy.setAlertAnimationFrame(frame);
         enemy.setMaxSpeed(wanderMaxSpeed);
         if (detectionTimer > 0) {
@@ -584,6 +587,7 @@ public class AIController {
     }
     private void wanderState(float delta, Vector2 enemyPos) {
         wanderTimer += delta;
+        enemy.setBlue(true);
         enemy.setMaxSpeed(wanderMaxSpeed);
         if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
             wanderTimer = 0f;
