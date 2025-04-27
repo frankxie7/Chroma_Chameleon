@@ -966,18 +966,25 @@ public class GameplayController implements Screen {
         } else if (failed) {
             batch.drawText(badMessage, width / 2, height / 2);
         }
-//        int numFilled = 0;
-//        for(Goal goal : physics.getGoalList()){
-//            if(goal != null && goal.isFull()){
-//                numFilled +=1;
-//            }
-//        }
-//        float goalPercentage = ((float) numFilled / (float) numGoals) * 100;
-//        goalMessage.setText("Goals filled: " + goalPercentage + "%");
-//        goalMessage.setColor(Color.YELLOW);
-//        goalMessage.setAlignment(TextAlign.middleCenter);
-//        goalMessage.setFont(displayFont);
-//        batch.drawText(goalMessage, width / 2, height - 40);
+// ——— Goal-region percentage notification ———
+        int numFilled = 0;
+        Goal[] goals = physics.getGoalList();
+        for (Goal g : goals) {
+            if (g != null && g.isFull()) {
+                numFilled++;
+            }
+        }
+// compute percent painted
+        float pct = ( (float)numFilled / (float)goals.length ) * 100f;
+
+// update the TextLayout
+        goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
+        goalMessage.setColor(Color.YELLOW);
+        goalMessage.setAlignment(TextAlign.middleCenter);
+        goalMessage.setFont(displayFont);
+
+// draw it at the top center, 20px down from the top
+        batch.drawText(goalMessage, width / 2, height - 20);
 
         batch.setColor(Color.WHITE);
         batch.end();
