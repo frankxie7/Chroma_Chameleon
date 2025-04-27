@@ -9,6 +9,10 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
+import box2dLight.ConeLight;
+import box2dLight.DirectionalLight;
+import box2dLight.PointLight;
+import box2dLight.RayHandler;
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -65,6 +69,7 @@ public class GameplayController implements Screen {
     private SpriteBatch batch;
     private AssetDirectory directory;
     private JsonValue constants;
+    private RayHandler rayHandler;
 
     // Dimensions in pixels
     private float width, height;
@@ -172,6 +177,12 @@ public class GameplayController implements Screen {
 
         // Initialize the PhysicsController
         physics = new PhysicsController(gravityY,numGoals, directory);
+        RayHandler.setGammaCorrection(true);
+        rayHandler = new RayHandler(physics.getWorld());
+        rayHandler.setAmbientLight(.9f);
+        rayHandler.setCulling(true);
+        rayHandler.setShadows(true);
+
 
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
@@ -229,6 +240,7 @@ public class GameplayController implements Screen {
         baseHeight = (int)this.height;
 
 
+
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int)this.width, (int)this.height);
@@ -250,7 +262,11 @@ public class GameplayController implements Screen {
 
         level = new Level(directory, units, levelSelector);
         numGoals = level.getGoalTiles().size() * 16;
+        RayHandler.setGammaCorrection(true);
         physics = new PhysicsController(gravityY,numGoals, directory);
+        rayHandler = new RayHandler(physics.getWorld());
+        rayHandler.setAmbientLight(.9f);
+        rayHandler.setShadows(true);
 
         complete = false;
         failed = false;
@@ -272,6 +288,7 @@ public class GameplayController implements Screen {
 
         // Add key objects to the physics world
         player = level.getAvatar();
+
         player.setPaint(player.getMaxPaint());
         if (level.getGoalDoor() != null) {
             physics.setGoalDoor(level.getGoalDoor());
@@ -297,6 +314,19 @@ public class GameplayController implements Screen {
             }
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
+
+//        PointLight light = new PointLight(rayHandler,128,Color.WHITE,500f,50,50);
+//        light.setXray(false);
+//        light.setStaticLight(false);
+     //   PointLight light = new PointLight(rayHandler,128,Color.RED,80f,player.getPosition().x,player.getPosition().y);
+        //ConeLight light = new ConeLight(rayHandler,128,Color.RED,160f,50,50,0,45);
+
+//        PointLight light2 = new PointLight(rayHandler,128,Color.RED,500f,200,50);
+//        PointLight light3 = new PointLight(rayHandler,128,Color.RED,500f,200,200);
+
+
+
+
     }
 
     /**
@@ -356,6 +386,7 @@ public class GameplayController implements Screen {
      * Game logic update
      */
     private void update(float dt) {
+
         InputController input = InputController.getInstance();
 //        float hmove = input.getHorizontal();
 //        float vmove = input.getVertical();
@@ -364,6 +395,9 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
+        if(player.getPosition() != null){
+            System.out.println(player.getPosition().x);
+        }
 
         // Update AI enemies
         boolean anyChasing = false;
@@ -739,6 +773,7 @@ public class GameplayController implements Screen {
      * Main draw method.
      */
     private void draw(float dt) {
+
         ScreenUtils.clear(new Color(0.10f, 0.12f, 0.15f, 1f));
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -915,7 +950,7 @@ public class GameplayController implements Screen {
                 aiController.debugRender(camera); // Call debug grid rendering
 //                }
             }
-            batch.begin(); // Resume SpriteBatch rendering
+            batch.begin();// Resume SpriteBatch rendering
         }
 
         // Draw the paint container (UI) after objects
@@ -979,6 +1014,7 @@ public class GameplayController implements Screen {
      */
     @Override
     public void render(float delta) {
+
         if (!active) return;
         if (!preUpdate(delta)) return;
         float frameTime = Math.min(delta, 0.25f);
@@ -992,6 +1028,9 @@ public class GameplayController implements Screen {
         }
         float alpha = accumulator / FIXED_TIMESTEP;
         draw(alpha);
+        rayHandler.setCombinedMatrix(camera.combined, camera.position.x, camera.position.y,
+            camera.viewportWidth, camera.viewportHeight);
+        rayHandler.updateAndRender();
     }
 
     // Screen interface methods
