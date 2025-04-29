@@ -261,7 +261,7 @@ public class GameplayController implements Screen {
         //level must be defined above physics to get number of goals
 
         level = new Level(directory, units, levelSelector);
-        numGoals = level.getGoalTiles().size() * 16;
+        numGoals = (level.getGoalTiles().size() + level.getGoal2Tiles().size()  + level.getGoal3Tiles().size())  * 16;
         RayHandler.setGammaCorrection(true);
         physics = new PhysicsController(gravityY,numGoals, directory);
         rayHandler = new RayHandler(physics.getWorld());
@@ -302,7 +302,23 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.2f;
             float x = (rec.getX() / 16) + 0.2f;
 
-            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants);
+            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,1);
+        }
+        for(BackgroundTile machine : level.getGoal2Tiles()){
+            Rectangle rec = machine.getBounds();
+
+            float y = (rec.getY() / 16) + 0.2f;
+            float x = (rec.getX() / 16) + 0.2f;
+
+            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,2);
+        }
+        for(BackgroundTile machine : level.getGoal3Tiles()){
+            Rectangle rec = machine.getBounds();
+
+            float y = (rec.getY() / 16) + 0.2f;
+            float x = (rec.getX() / 16) + 0.2f;
+
+            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,3);
         }
 
 
@@ -395,9 +411,6 @@ public class GameplayController implements Screen {
         player.setShooting(input.didSecondary());
 //        level.getAvatar().applyForce();
         player.updateOrientation();
-        if(player.getPosition() != null){
-            System.out.println(player.getPosition().x);
-        }
 
         // Update AI enemies
         boolean anyChasing = false;
@@ -419,6 +432,21 @@ public class GameplayController implements Screen {
                 removeBomb(b);
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
+        }
+        if(physics.goals1Full()){
+            for(Goal g : physics.getGoalList()){
+                g.setComplete();
+            }
+        }
+        if(physics.goals2Full()){
+            for(Goal g : physics.getGoal2List()){
+                g.setComplete();
+            }
+        }
+        if(physics.goals3Full()){
+            for(Goal g : physics.getGoal3List()){
+                g.setComplete();
+            }
         }
 
         // Fire paint spray
@@ -777,11 +805,7 @@ public class GameplayController implements Screen {
         ScreenUtils.clear(new Color(0.10f, 0.12f, 0.15f, 1f));
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
+
 
         // Draw tiled background
         if (level.getBackgroundTiles() != null) {
@@ -794,6 +818,16 @@ public class GameplayController implements Screen {
         // Draw goal tiles
         if (level.getGoalTiles() != null) {
             for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal2Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal2Tiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal3Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal3Tiles()) {
                 tile.draw(batch);
             }
         }
@@ -968,14 +1002,26 @@ public class GameplayController implements Screen {
         }
 // ——— Goal-region percentage notification ———
         int numFilled = 0;
-        Goal[] goals = physics.getGoalList();
-        for (Goal g : goals) {
+        List<Goal> goals1 = physics.getGoalList();
+        List<Goal> goals2 = physics.getGoal2List();
+        List<Goal> goals3 = physics.getGoal3List();
+        for (Goal g : goals1) {
             if (g != null && g.isFull()) {
                 numFilled++;
             }
         }
+        for (Goal g : goals2) {
+            if (g != null && g.isFull()) {
+                numFilled++;
+            }
+        }for (Goal g : goals3) {
+            if (g != null && g.isFull()) {
+                numFilled++;
+            }
+        }
+
 // compute percent painted
-        float pct = ( (float)numFilled / (float)goals.length ) * 100f;
+        float pct =  (float)numFilled / ((float)goals1.size() + (float)goals2.size() + (float)goals3.size() ) * 100f;
 
 // update the TextLayout
         goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));

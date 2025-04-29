@@ -16,9 +16,9 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * PhysicsController
@@ -56,7 +56,11 @@ public class PhysicsController implements ContactListener {
     //Goal Tile Points
     private float[] goalPoints;
     //List of Goal Tiles
-    private Goal[] goalList;
+    private List<Goal> goalList;
+    //List of Goal Tiles
+    private List<Goal> goal2List;
+    //List of Goal Tiles
+    private List<Goal> goal3List;
     //Index
     private int index;
     private Door goalDoor;
@@ -68,7 +72,9 @@ public class PhysicsController implements ContactListener {
         addQueue = new PooledList<>();
         points = new float[6];
         goalPoints = new float[8];
-        goalList = new Goal[numGoals];
+        goalList = new ArrayList<>();
+        goal2List = new ArrayList<>();
+        goal3List = new ArrayList<>();
         index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
@@ -78,7 +84,9 @@ public class PhysicsController implements ContactListener {
         return world;
     }
 
-    public Goal[] getGoalList(){ return goalList; }
+    public List<Goal> getGoalList(){ return goalList; }
+    public List<Goal> getGoal2List(){ return goal2List; }
+    public List<Goal> getGoal3List(){ return goal2List; }
 
     public void setGoalDoor(Door door) {
         this.goalDoor = door;
@@ -231,7 +239,7 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      */
     public void addPaint(Chameleon avatar, float units) {
-        for (int i = 0; i < numRays - 1; i++) {
+        for(int i = 0; i< endpoints.length - 1;i++)
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
                 Vector2 v1 = avatar.getPosition().cpy();
@@ -263,16 +271,17 @@ public class PhysicsController implements ContactListener {
                 points[3] = y2;
                 points[4] = x3;
                 points[5] = y3;
-                if(!isConcave(points) && isCounterClockwise(points)){
-                    try{
-                        Spray paintTriangle = new Spray(points, units);
-                        addObject(paintTriangle);
-                    }catch(IllegalArgumentException ignored){
-                    }
+                try{
+                    Spray paintTriangle = new Spray(points, units);
+                    addObject(paintTriangle);
                 }
+                catch(IllegalArgumentException ignored){}
             }
+
         }
-    }
+
+
+
 
     /**
      * Creates a grid of goals from a given center
@@ -280,13 +289,22 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings){
+    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
                 float x = center.x + row * width;
                 float y = center.y + col * width;
-                Goal tile = createTile(x, y, width, units, settings);
-                goalList[index] = tile;
+                Goal tile = createTile(x, y, width, units, settings,id);
+                if(id == 1){
+                    goalList.add(tile);
+                }
+                if(id == 2){
+                    goal2List.add(tile);
+                }
+                if(id == 3){
+                    goal3List.add(tile);
+                }
+
                 addObject(tile);
                 index+=1;
             }
@@ -304,7 +322,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings,int id){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -321,7 +339,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints, units, settings);
+        return new Goal(goalPoints, units, settings,id);
     }
 
 //    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
@@ -587,7 +605,44 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.length > 0.9;
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        for(Goal goal : goal3List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goalList.size() + goal2List.size() + goal3List.size() > 0.9;
+    }
+    public boolean goals1Full(){
+        int numFilled = 0;
+        for(Goal goal : goalList){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goalList.size() > 0.9;
+    }
+    public boolean goals2Full(){
+        int numFilled = 0;
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal2List.size() > 0.9;
+    }
+    public boolean goals3Full(){
+        int numFilled = 0;
+        for(Goal goal : goal3List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal3List.size() > 0.9;
     }
 
 

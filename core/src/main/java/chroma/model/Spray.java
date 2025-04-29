@@ -3,6 +3,7 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
@@ -72,7 +73,7 @@ public class Spray extends ObstacleSprite {
             pixmap.dispose();
 
             // Make the texture repeat when UV coords exceed [0..1].
-            sprayTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+            sprayTexture.setWrap(TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         }
         mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());
         setTexture(sprayTexture);

@@ -36,7 +36,7 @@ public class AIController {
     private Chameleon player;
     private List<Collision> collisions; // list of walls for pathfindinga
     private List<Terrain> platforms;
-    private Goal[] goals;
+    private List<Goal> goals;
     private State state;
 
     // Camera and detection
@@ -101,6 +101,8 @@ public class AIController {
         this.player = level.getAvatar();
         this.collisions = level.getCollision();
         this.goals = physics.getGoalList();
+        goals.addAll(physics.getGoal2List());
+        goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
         state = patrol ? State.PATROL : State.WANDER;
         pickNewWanderTarget();

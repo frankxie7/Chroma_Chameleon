@@ -26,9 +26,12 @@ public class Goal extends ObstacleSprite {
     private static Texture sprayTexture = null;
     private boolean full = false;
     private static Texture sprayTextureFull = null;
+    private static Texture sprayTextureComplete = null;
+    private boolean complete = false;
     float units;
     float[] points;
     private Poly2 poly;
+    int id;
 
     /**
      * Creates a new Spray object from the given points and world unit scale.
@@ -37,13 +40,14 @@ public class Goal extends ObstacleSprite {
      * @param units    The physics scale factor (pixels per world unit).
      * @param settings Additional settings from a JSON config (unused here).
      */
-    public Goal(float[] points, float units, JsonValue settings) {
+    public Goal(float[] points, float units, JsonValue settings,int id) {
         // Create the underlying physics shape (a PolygonObstacle).
         obstacle = new PolygonObstacle(points);
         obstacle.setBodyType(BodyType.StaticBody);
         obstacle.setUserData(this);
         obstacle.setName("goal");
         obstacle.setPhysicsUnits(units);
+        this.id = id;
         this.units = units;
         this.points = points;
 
@@ -80,6 +84,16 @@ public class Goal extends ObstacleSprite {
             sprayTextureFull = new Texture(pixmap);
             pixmap.dispose();
         }
+        if(sprayTextureComplete == null){
+            int texSize = 128;
+            Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
+            // Fill with a translucent purple color
+            Color purpleTranslucent = new Color(0.0f, 1.0f, 0.0f, 0.2f);
+            pixmap.setColor(purpleTranslucent);
+            pixmap.fill();
+            sprayTextureComplete = new Texture(pixmap);
+            pixmap.dispose();
+        }
         mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());
         setTexture(sprayTexture);
     }
@@ -87,6 +101,10 @@ public class Goal extends ObstacleSprite {
     public void setFull(){
         setTexture(sprayTextureFull);
         full = true;
+    }
+    public void setComplete(){
+        setTexture(sprayTextureComplete);
+        complete = true;
     }
 
     public float getX(){
@@ -98,6 +116,7 @@ public class Goal extends ObstacleSprite {
     public boolean isFull(){
         return full;
     }
+    public float getId(){return id;}
 
     public boolean contains(Vector2 point) {
         // Get transformed vertices from Poly2 (already scaled correctly)

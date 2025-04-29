@@ -27,6 +27,8 @@ public class Level {
     private List<Terrain> wallsTop;
     private List<BackgroundTile> backgroundTiles;
     private List<BackgroundTile> goalTiles;
+    private List<BackgroundTile> goal2Tiles;
+    private List<BackgroundTile> goal3Tiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
     private List<Grate> grates;
@@ -57,6 +59,8 @@ public class Level {
         walls           = new ArrayList<>();
         backgroundTiles = new ArrayList<>();
         goalTiles    = new ArrayList<>();
+        goal2Tiles = new ArrayList<>();
+        goal3Tiles = new ArrayList<>();
         bombs           = new ArrayList<>();
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
@@ -113,7 +117,7 @@ public class Level {
         }
 
         //background
-        JsonValue goalTileData = findLayer(constants, "goal");
+        JsonValue goalTileData = findLayer(constants, "goal1");
         if (goalTileData != null && goalTileData.has("data")) {
 
             goalTiles = new ArrayList<>();
@@ -143,6 +147,66 @@ public class Level {
                 goalTiles.add(tile);
 
 
+            }
+        }
+        JsonValue goalTileData2 = findLayer(constants, "goal2");
+        if (goalTileData2 != null && goalTileData2.has("data")) {
+
+            goal2Tiles = new ArrayList<>();
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = goalTileData2.getInt("width");
+            int layerHeight = goalTileData2.getInt("height");
+            JsonValue data = goalTileData2.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue; // skip empty
+
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                goal2Tiles.add(tile);
+            }
+        }
+        JsonValue goalTileData3 = findLayer(constants, "goal3");
+        if (goalTileData3 != null && goalTileData3.has("data")) {
+
+            goal3Tiles = new ArrayList<>();
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = goalTileData3.getInt("width");
+            int layerHeight = goalTileData3.getInt("height");
+            JsonValue data = goalTileData3.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue; // skip empty
+
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                goal3Tiles.add(tile);
             }
         }
         // Parse the "walls" tile layer and build a list of Terrain tiles
@@ -383,6 +447,12 @@ public class Level {
     }
     public List<BackgroundTile> getGoalTiles() {
         return goalTiles;
+    }
+    public List<BackgroundTile> getGoal2Tiles() {
+        return goal2Tiles;
+    }
+    public List<BackgroundTile> getGoal3Tiles() {
+        return goal3Tiles;
     }
 
 
