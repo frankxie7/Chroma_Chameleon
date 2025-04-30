@@ -16,7 +16,7 @@
     "force"     : 80.0,
     "damping"   : 80.0,
     "maxspeed"  : 8.0,
-    "shot_cool" : 120,
+    "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,
       "height" : 0.05

@@ -39,7 +39,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 15;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -146,9 +146,8 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI / 5.0) / numRays;
+        float angleStep = (float)(Math.PI / 4.0) / numRays;
         for (int i = 0; i < numRays; i++) {
-
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
             float customRadius = computeRadiusForAngle(angleOffset);
@@ -171,10 +170,8 @@ public class PhysicsController implements ContactListener {
                 position.y = position.y - 0.9f;
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
-            ArrayList<RayCastHit> hits = new ArrayList<>();
+            PriorityQueue<RayCastHit> hits = new PriorityQueue<>(Comparator.comparingDouble(h -> h.fraction));
             //We are using a priority queue here for efficiency (min stack could be better sigh)
-
-
             RayCastCallback callback = new RayCastCallback() {
                 /**
                  * Override of reportRayFixture
@@ -197,16 +194,14 @@ public class PhysicsController implements ContactListener {
                         return -1f;
                     } else if(userData instanceof Collision){
                         hits.add(new RayCastHit(userData,fraction));
+                        endPoint.set(point);
+                        return 0;
                     }else{
                         return -1;
                     }
-                    endPoint.set(point);
-                    return fraction;
                 }
             };
             world.rayCast(callback, position, endPoint);
-            hits.sort(Comparator.comparingDouble(hit -> hit.fraction));
-
             for(RayCastHit o : hits){
                 if(o.object instanceof Collision){
                     //Once we hit our Collision object get out
