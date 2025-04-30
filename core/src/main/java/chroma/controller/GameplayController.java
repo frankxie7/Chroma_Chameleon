@@ -9,40 +9,28 @@ package chroma.controller;
  * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
  * - Rendering all game objects and UI messages.
  */
-import box2dLight.ConeLight;
-import box2dLight.DirectionalLight;
-import box2dLight.PointLight;
-import box2dLight.RayHandler;
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
-import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
 
@@ -69,7 +57,6 @@ public class GameplayController implements Screen {
     private SpriteBatch batch;
     private AssetDirectory directory;
     private JsonValue constants;
-    private RayHandler rayHandler;
 
     // Dimensions in pixels
     private float width, height;
@@ -177,13 +164,6 @@ public class GameplayController implements Screen {
 
         // Initialize the PhysicsController
         physics = new PhysicsController(gravityY,numGoals, directory);
-        RayHandler.setGammaCorrection(true);
-        rayHandler = new RayHandler(physics.getWorld());
-        rayHandler.setAmbientLight(.9f);
-        rayHandler.setCulling(true);
-        rayHandler.setShadows(true);
-
-
         // Setup font and messages
         displayFont = directory.getEntry("shared-retro", BitmapFont.class);
         float targetWidth = Gdx.graphics.getWidth() * 0.8f;
@@ -262,12 +242,7 @@ public class GameplayController implements Screen {
 
         level = new Level(directory, units, levelSelector);
         numGoals = (level.getGoalTiles().size() + level.getGoal2Tiles().size()  + level.getGoal3Tiles().size())  * 16;
-        RayHandler.setGammaCorrection(true);
         physics = new PhysicsController(gravityY,numGoals, directory);
-        rayHandler = new RayHandler(physics.getWorld());
-        rayHandler.setAmbientLight(.9f);
-        rayHandler.setShadows(true);
-
         complete = false;
         failed = false;
         countdown = -1;
@@ -331,14 +306,6 @@ public class GameplayController implements Screen {
             aiControllers.add(new AIController(enemy, this, physics, level));
         }
 
-//        PointLight light = new PointLight(rayHandler,128,Color.WHITE,500f,50,50);
-//        light.setXray(false);
-//        light.setStaticLight(false);
-     //   PointLight light = new PointLight(rayHandler,128,Color.RED,80f,player.getPosition().x,player.getPosition().y);
-        //ConeLight light = new ConeLight(rayHandler,128,Color.RED,160f,50,50,0,45);
-
-//        PointLight light2 = new PointLight(rayHandler,128,Color.RED,500f,200,50);
-//        PointLight light3 = new PointLight(rayHandler,128,Color.RED,500f,200,200);
 
 
 
@@ -404,12 +371,7 @@ public class GameplayController implements Screen {
     private void update(float dt) {
 
         InputController input = InputController.getInstance();
-//        float hmove = input.getHorizontal();
-//        float vmove = input.getVertical();
-//        level.getAvatar().setMovement(hmove * level.getAvatar().getForce());
-//        level.getAvatar().setVerticalMovement(vmove * level.getAvatar().getForce());
         player.setShooting(input.didSecondary());
-//        level.getAvatar().applyForce();
         player.updateOrientation();
 
         // Update AI enemies
@@ -506,29 +468,6 @@ public class GameplayController implements Screen {
         }
         return new Vector2(bombX, bombY);
     }
-
-//    /**
-//     * Helper for creating the bomb
-//     * */
-//    private void createBomb() {
-//        Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-//        camera.unproject(screenPos);
-//
-//        Vector2 clampedPos = clampBombPos(screenPos);
-//        Vector2 targetPos = new Vector2(clampedPos.x / units, clampedPos.y / units);
-//        Vector2 playerPos = player.getObstacle().getPosition();
-//        float speed = 6f;
-//        Vector2 velocity = new Vector2(targetPos).sub(playerPos).nor().scl(speed);
-//        Texture bombTex   = directory.getEntry("platform-bullet", Texture.class);
-//        JsonValue bombData= constants.get("bomb");
-//        Bomb bomb = new Bomb(units, bombData, playerPos, velocity, targetPos);
-//        bomb.setTexture(bombTex);
-//        bomb.getObstacle().setName("bomb");
-//
-//        level.getBombs().add(bomb);
-//        physics.addObject(bomb);
-//    }
-
 
     /**
      * Removes a bomb from the physics world.
@@ -861,14 +800,6 @@ public class GameplayController implements Screen {
             level.getGoalDoor().draw(batch);
         }
 
-
-
-//        // Draw the aiming
-//        Texture aimTex = directory.getEntry("aiming-range", Texture.class);
-//        aimTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-//        if (player.isAiming()) {
-//            drawAimRange(aimTex);
-//        }
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
         for (ObstacleSprite sprite : physics.objects) {
@@ -901,10 +832,6 @@ public class GameplayController implements Screen {
             bombState == BombSkillState.PAINTING) {
             float r = aimRangeCurrent * units;
             Vector2 p = player.getPosition();
-            // Art asset
-//            Texture rangeTex = directory.getEntry("aiming-range", Texture.class);
-//            rangeTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-//            batch.draw(rangeTex, p.x*units - r/2, p.y*units - r/2, r, r);
             batch.end();
             Gdx.gl.glLineWidth(3f);
             shapeRenderer.setProjectionMatrix(camera.combined);
@@ -1081,9 +1008,6 @@ public class GameplayController implements Screen {
         }
         float alpha = accumulator / FIXED_TIMESTEP;
         draw(alpha);
-        rayHandler.setCombinedMatrix(camera.combined, camera.position.x, camera.position.y,
-            camera.viewportWidth, camera.viewportHeight);
-        rayHandler.updateAndRender();
     }
 
     // Screen interface methods

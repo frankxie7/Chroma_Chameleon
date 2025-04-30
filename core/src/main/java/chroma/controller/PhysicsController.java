@@ -1,19 +1,11 @@
 package chroma.controller;
 
 import chroma.model.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.BSpline;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -218,15 +210,6 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-
-//    private float computeRadiusForAngle(float angleOffset) {
-//        float halfFanAngle = (float) (Math.PI / 4.0);
-//        float normalized = angleOffset / halfFanAngle;
-//        float alpha = 0.6f;
-//        float factor = 1 - alpha * normalized * normalized;
-//        return rayLength * factor;
-//    }
-
     private float computeRadiusForAngle(float angleOffset) {
         float halfFanAngle = (float)(Math.PI / 4.0);
         float normalized = angleOffset / halfFanAngle;
@@ -342,81 +325,6 @@ public class PhysicsController implements ContactListener {
         goalPoints[6] = x4;
         goalPoints[7] = y4;
         return new Goal(goalPoints, units, settings,id);
-    }
-
-//    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
-//        float x1 = x + boxRad;
-//        float y1 = y - boxRad;
-//        float x2 = x + boxRad;
-//        float y2 = y + boxRad;
-//        float x3 = x - boxRad;
-//        float y3 = y + boxRad;
-//        float x4 = x - boxRad;
-//        float y4 = y - boxRad;
-//
-//        float[] gratePoints = new float[8];
-//        gratePoints[0] = x1;
-//        gratePoints[1] = y1;
-//        gratePoints[2] = x2;
-//        gratePoints[3] = y2;
-//        gratePoints[4] = x3;
-//        gratePoints[5] = y3;
-//        gratePoints[6] = x4;
-//        gratePoints[7] = y4;
-//
-//        return new Grate(gratePoints, units, settings);
-//    }
-
-
-    /**
-     * Determines whether or not points are CCW or not
-     * @param vertices the vertices to check
-     * @return True if CCW
-     */
-    private static boolean isCounterClockwise(float[] vertices) {
-        float sum = 0;
-        for (int i = 0; i < vertices.length; i += 2) {
-            int next = (i + 2) % vertices.length;
-            sum += (vertices[next] - vertices[i]) * (vertices[i + 1] + vertices[next + 1]);
-        }
-        return sum < 0; // CCW if sum < 0, CW if sum > 0
-    }
-
-    /**
-     * Returns true if points will create a concave shape
-     * @param vertices points to use
-     * @return true if Concave
-     */
-    public static boolean isConcave(float[] vertices) {
-        int numPoints = vertices.length / 2;  // Number of (x, y) pairs
-        boolean sign = false;  // To track the direction of turns
-
-        // Loop through each set of three consecutive vertices
-        for (int i = 0; i < numPoints; i++) {
-            int prev = (i - 1 + numPoints) % numPoints;  // Previous vertex
-            int current = i;  // Current vertex
-            int next = (i + 1) % numPoints;  // Next vertex
-
-            // Get the (x, y) coordinates of the vertices
-            float x1 = vertices[2 * prev], y1 = vertices[2 * prev + 1];
-            float x2 = vertices[2 * current], y2 = vertices[2 * current + 1];
-            float x3 = vertices[2 * next], y3 = vertices[2 * next + 1];
-
-            // Calculate the cross product to determine the direction of the turn
-            float crossProduct = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
-
-            if (crossProduct != 0) {  // Ignore collinear points
-                if (!sign) {
-                    sign = crossProduct > 0;  // Set the initial direction
-                } else {
-                    // If the sign changes, it's a concave polygon
-                    if (sign != (crossProduct > 0)) {
-                        return true; // Polygon is concave
-                    }
-                }
-            }
-        }
-        return false; // All turns are in the same direction; polygon is convex
     }
 
     /**
