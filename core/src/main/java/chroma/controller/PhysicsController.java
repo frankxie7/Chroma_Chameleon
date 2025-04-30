@@ -545,6 +545,10 @@ public class PhysicsController implements ContactListener {
      * @return true if all full false if not
      */
     public boolean goalsFull(){
+        int total = goalList.size() + goal2List.size() + goal3List.size();
+        if (total == 0) {
+            return true;
+        }
         int numFilled = 0;
         for(Goal goal : goalList){
             if(goal != null && goal.isFull()){

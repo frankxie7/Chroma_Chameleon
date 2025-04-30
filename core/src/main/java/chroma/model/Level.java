@@ -382,9 +382,9 @@ public class Level {
         Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
         Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
         Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
-        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.1f);
-        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.1f);
-        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.1f);
+        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.08f);
+        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.08f);
+        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.08f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.08f);
         avatar = new Chameleon(units, chamData, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
         avatar.setBombAnimation(bombAnim);
