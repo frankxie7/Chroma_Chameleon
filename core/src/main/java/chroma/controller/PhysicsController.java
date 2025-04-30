@@ -171,17 +171,25 @@ public class PhysicsController implements ContactListener {
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
             ArrayList<Object> array = new ArrayList<>(60);
-
+            //We are using a priority queue here for efficiency (min stack could be better sigh)
             PriorityQueue<RayCastHit> hits = new PriorityQueue<>(
                 Comparator.comparingDouble(hit -> hit.fraction)
             );
 
             RayCastCallback callback = new RayCastCallback() {
-
+                /**
+                 * Override of reportRayFixture
+                 * @param fixture the fixture we hit
+                 * @param point the point at which we hit
+                 * @param normal normal vector
+                 * @param fraction the fraction the ray was able to make it to end
+                 * @return fraction if we want to store the hit, -1 to ignore
+                 */
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
                     //If we are Goal or Collision add to list otherwise ignore
+                    //Note we are not adding full goals to the list
                     if (userData instanceof Goal && !(((Goal)userData).isFull())) {
                         hits.add(new RayCastHit(userData,fraction));
                         return -1f;
@@ -195,13 +203,13 @@ public class PhysicsController implements ContactListener {
                 }
             };
             world.rayCast(callback, position, endPoint);
-            //Code to be made more efficient, need to sort list first as order of
-            //objects in hits is completely random because box2d is stupid
             for(RayCastHit o : hits){
                 if(o.object instanceof Collision){
+                    //Once we hit our Collision object get out
                     break;
                 }
                 if(o.object instanceof Goal){
+                    //If we are a Goal set ourselves to full
                     Goal g = (Goal) o.object;
                     g.setFull();
                 }
@@ -508,6 +516,10 @@ public class PhysicsController implements ContactListener {
         playerCollidedWithEnemy = false;
     }
 
+    /**
+     * This function determines if ALL goal regions are full
+     * @return true if all full false if not
+     */
     public boolean goalsFull(){
         int numFilled = 0;
         for(Goal goal : goalList){
@@ -527,6 +539,11 @@ public class PhysicsController implements ContactListener {
         }
         return (float)numFilled / goalList.size() + goal2List.size() + goal3List.size() > 0.9;
     }
+
+    /**
+     * This function returns if goal 1 is full
+     * @return true if goal1 is full false if not
+     */
     public boolean goals1Full(){
         int numFilled = 0;
         for(Goal goal : goalList){
@@ -536,6 +553,11 @@ public class PhysicsController implements ContactListener {
         }
         return (float)numFilled / goalList.size() > 0.9;
     }
+
+    /**
+     * This function returns if goal 2 is full
+     * @return true if full false if not
+     */
     public boolean goals2Full(){
         int numFilled = 0;
         for(Goal goal : goal2List){
@@ -545,6 +567,11 @@ public class PhysicsController implements ContactListener {
         }
         return (float)numFilled / goal2List.size() > 0.9;
     }
+
+    /**
+     * This function returns if goal 3 is full
+     * @return true if full false if not
+     */
     public boolean goals3Full(){
         int numFilled = 0;
         for(Goal goal : goal3List){

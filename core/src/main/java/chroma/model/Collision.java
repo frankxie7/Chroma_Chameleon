@@ -1,6 +1,5 @@
 
 package chroma.model;
-
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
@@ -13,7 +12,6 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Collision extends ObstacleSprite {
     private Polygon polygon;
-    private TextureRegion region;  // sub-texture for tile rendering
     private float units;           // physics-to-world scale
 
     public Collision(float[] points, float units) {

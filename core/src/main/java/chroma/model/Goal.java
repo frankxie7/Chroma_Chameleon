@@ -13,14 +13,10 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 /**
- * A class representing a "spray" paint effect in the game.
- * It creates a translucent polygon mesh with a repeating texture.
+ * A class representing a "Goal" in the game
+ * It creates a translucent polygon with three different possible textures
  */
 public class Goal extends ObstacleSprite {
-    /**
-     * A single static reference to the spray texture.
-     * (Reused by all Spray objects so we only create it once.)
-     */
     private static Texture sprayTexture = null;
     private boolean full = false;
     private static Texture sprayTextureFull = null;
@@ -32,11 +28,12 @@ public class Goal extends ObstacleSprite {
     int id;
 
     /**
-     * Creates a new Spray object from the given points and world unit scale.
+     * Creates a new Goal object from the given points and world unit scale.
      *
      * @param points   The polygon vertices in local coordinates.
      * @param units    The physics scale factor (pixels per world unit).
      * @param settings Additional settings from a JSON config (unused here).
+     * @param id This is the goal to which this goal tile is attached to
      */
     public Goal(float[] points, float units, JsonValue settings,int id) {
         // Create the underlying physics shape (a PolygonObstacle).
@@ -65,7 +62,6 @@ public class Goal extends ObstacleSprite {
         if (sprayTexture == null) {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
-            // Fill with a translucent purple color
             Color grey = new Color(0.5f, 0.5f, 0.5f, 0.0f);
             pixmap.setColor(grey);
             pixmap.fill();
@@ -76,7 +72,7 @@ public class Goal extends ObstacleSprite {
         if(sprayTextureFull == null){
             int texSize = 1;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
-            // Fill with a translucent purple color
+            // Fill with a translucent pink color if we just got hit
             Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
             pixmap.setColor(pinkTranslucent);
             pixmap.fill();
@@ -88,7 +84,7 @@ public class Goal extends ObstacleSprite {
         if(sprayTextureComplete == null){
             int texSize = 256;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
-            // Fill with a translucent purple color
+            // Fill with a green if the goal region we are apart of is full
             Color purpleTranslucent = new Color(0.0f, 1.0f, 0.0f, 0.1f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
@@ -101,10 +97,17 @@ public class Goal extends ObstacleSprite {
         setTexture(sprayTexture);
     }
 
+    /**
+     * Sets this goal region to full (we just got hit)
+     */
     public void setFull(){
         setTexture(sprayTextureFull);
         full = true;
     }
+
+    /**
+     * Sets this goal tile as "complete" our goal is full enough
+     */
     public void setComplete(){
         setTexture(sprayTextureComplete);
         complete = true;
@@ -121,45 +124,6 @@ public class Goal extends ObstacleSprite {
     }
     public float getId(){return id;}
 
-    public boolean contains(Vector2 point) {
-        // Get transformed vertices from Poly2 (already scaled correctly)
-        Vector2[] polyVertices = poly.getVertices();
-        float[] vertices = new float[polyVertices.length * 2];
-
-        // Convert Vector2 array to float array for Polygon
-        for (int i = 0; i < polyVertices.length; i++) {
-            vertices[i * 2] = polyVertices[i].x; // No need to apply units again, already done in Poly2
-            vertices[i * 2 + 1] = polyVertices[i].y;
-        }
-
-        // Create the polygon (no need to scale, Poly2 is already transformed)
-        Polygon polygon = new Polygon(vertices);
-
-        // Check if the point is inside the polygon
-        if (polygon.contains(point.x, point.y)) {
-            return true;
-        }
-
-        // Check if the point is on any of the edges
-        float[] transformedVertices = polygon.getTransformedVertices();
-        int numVertices = transformedVertices.length / 2;
-
-        for (int i = 0; i < numVertices; i++) {
-            int next = (i + 1) % numVertices;
-            float x1 = transformedVertices[i * 2], y1 = transformedVertices[i * 2 + 1];
-            float x2 = transformedVertices[next * 2], y2 = transformedVertices[next * 2 + 1];
-
-            // Check if the point is exactly on an edge
-            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
-                return true;
-            }
-            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
-                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void update(float dt) {
         // Then call the superclass update
