@@ -15,7 +15,7 @@
     "drawScale": 0.55,
     "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 8.0,
+    "maxspeed"  : 20.0,
     "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,

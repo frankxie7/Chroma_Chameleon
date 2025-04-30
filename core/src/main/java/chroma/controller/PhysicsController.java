@@ -54,6 +54,8 @@ public class PhysicsController implements ContactListener {
     private List<Goal> goal2List;
     //List of Goal Tiles
     private List<Goal> goal3List;
+    //hits
+    private ArrayList<RayCastHit> hits;
     //Index
     private int index;
     private Door goalDoor;
@@ -68,6 +70,7 @@ public class PhysicsController implements ContactListener {
         goalList = new ArrayList<>();
         goal2List = new ArrayList<>();
         goal3List = new ArrayList<>();
+        hits = new ArrayList<>();
         index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
@@ -147,6 +150,7 @@ public class PhysicsController implements ContactListener {
      */
     public void shootRays(Chameleon obstacle, float angle) {
         float angleStep = (float)(Math.PI / 4.0) / numRays;
+        hits.clear();
         for (int i = 0; i < numRays; i++) {
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
@@ -170,7 +174,7 @@ public class PhysicsController implements ContactListener {
                 position.y = position.y - 0.9f;
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
-            PriorityQueue<RayCastHit> hits = new PriorityQueue<>(Comparator.comparingDouble(h -> h.fraction));
+
             //We are using a priority queue here for efficiency (min stack could be better sigh)
             RayCastCallback callback = new RayCastCallback() {
                 /**
@@ -202,6 +206,7 @@ public class PhysicsController implements ContactListener {
                 }
             };
             world.rayCast(callback, position, endPoint);
+            hits.sort((h1,h2) -> Float.compare(h1.fraction, h2.fraction));
             for(RayCastHit o : hits){
                 if(o.object instanceof Collision){
                     //Once we hit our Collision object get out
