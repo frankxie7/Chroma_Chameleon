@@ -133,6 +133,9 @@ public class GameplayController implements Screen {
     private int baseHeight;     // window height at start‑up (pixels)
 
     private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
+    private boolean goal1Complete = false;
+    private boolean goal2Complete = false;
+    private boolean goal3Complete = false;
 
 
 
@@ -248,6 +251,9 @@ public class GameplayController implements Screen {
         countdown = -1;
         targetZoom = ZOOM_DEFAULT;
         bombState = BombSkillState.IDLE;
+        goal1Complete = false;
+        goal2Complete = false;
+        goal3Complete = false;
         // Build the level with the current `units`
 
 
@@ -395,21 +401,24 @@ public class GameplayController implements Screen {
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
         }
-//        if(physics.goals1Full()){
-//            for(Goal g : physics.getGoalList()){
-//                g.setComplete();
-//            }
-//        }
-//        if(physics.goals2Full()){
-//            for(Goal g : physics.getGoal2List()){
-//                g.setComplete();
-//            }
-//        }
-//        if(physics.goals3Full()){
-//            for(Goal g : physics.getGoal3List()){
-//                g.setComplete();
-//            }
-//        }
+        if(physics.goals1Full() && !goal1Complete){
+            goal1Complete = true;
+            for(Goal g : physics.getGoalList()){
+                g.setComplete();
+            }
+        }
+        if(physics.goals2Full() && !goal2Complete) {
+            goal2Complete = true;
+            for(Goal g : physics.getGoal2List()){
+                g.setComplete();
+            }
+        }
+        if(physics.goals3Full() && !goal3Complete){
+            goal3Complete = true;
+            for(Goal g : physics.getGoal3List()){
+                g.setComplete();
+            }
+        }
 
         // Fire paint spray
         if (player.isShooting() && player.hasEnoughPaint(splatterCost)) {
