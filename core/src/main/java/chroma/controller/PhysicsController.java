@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  * PhysicsController
@@ -46,7 +47,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 50;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -179,7 +180,9 @@ public class PhysicsController implements ContactListener {
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
             ArrayList<Object> array = new ArrayList<>(60);
 
-            ArrayList<RayCastHit> hits = new ArrayList<>();
+            PriorityQueue<RayCastHit> hits = new PriorityQueue<>(
+                Comparator.comparingDouble(hit -> hit.fraction)
+            );
 
             RayCastCallback callback = new RayCastCallback() {
 
@@ -187,7 +190,7 @@ public class PhysicsController implements ContactListener {
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
                     //If we are Goal or Collision add to list otherwise ignore
-                    if (userData instanceof Goal) {
+                    if (userData instanceof Goal && !(((Goal)userData).isFull())) {
                         hits.add(new RayCastHit(userData,fraction));
                         return -1f;
                     } else if(userData instanceof Collision){
@@ -200,7 +203,6 @@ public class PhysicsController implements ContactListener {
                 }
             };
             world.rayCast(callback, position, endPoint);
-            hits.sort(Comparator.comparingDouble(hit -> hit.fraction));
             //Code to be made more efficient, need to sort list first as order of
             //objects in hits is completely random because box2d is stupid
             for(RayCastHit o : hits){
@@ -292,8 +294,8 @@ public class PhysicsController implements ContactListener {
     public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
-                float x = center.x + row * width;
-                float y = center.y + col * width;
+                float x = center.x + row * (width * 2);
+                float y = center.y + col * (width * 2);
                 Goal tile = createTile(x, y, width, units, settings,id);
                 if(id == 1){
                     goalList.add(tile);

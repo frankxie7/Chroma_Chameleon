@@ -3,6 +3,7 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -72,26 +73,31 @@ public class Goal extends ObstacleSprite {
             pixmap.setColor(grey);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);
+            sprayTexture.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
             pixmap.dispose();
         }
         if(sprayTextureFull == null){
-            int texSize = 128;
+            int texSize = 1;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color purpleTranslucent = new Color(1.0f, 0f, 1.0f, 0.2f);
-            pixmap.setColor(purpleTranslucent);
+            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
+            pixmap.setColor(pinkTranslucent);
             pixmap.fill();
-            sprayTextureFull = new Texture(pixmap);
+            sprayTextureFull = new Texture(pixmap,true);
+            sprayTextureFull.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            sprayTextureFull.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
             pixmap.dispose();
         }
         if(sprayTextureComplete == null){
-            int texSize = 128;
+            int texSize = 256;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color purpleTranslucent = new Color(0.0f, 1.0f, 0.0f, 0.2f);
+            Color purpleTranslucent = new Color(0.0f, 1.0f, 0.0f, 0.1f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
-            sprayTextureComplete = new Texture(pixmap);
+            sprayTextureComplete = new Texture(pixmap,true);
+            sprayTextureComplete.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            sprayTextureComplete.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
             pixmap.dispose();
         }
         mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());

@@ -55,7 +55,7 @@ public class AIController {
     private float chaseSpeed = 1.5f;
 
     // CHASE:
-    private float chaseMaxSpeed = 10f;
+    private float chaseMaxSpeed = 9f;
 
     // ALERT:
     private float alertMaxSpeed = 6f;
@@ -69,7 +69,7 @@ public class AIController {
     private float detectionThreshold = 0.5f;
 
     // WANDER:
-    private float wanderMaxSpeed = 5f;
+    private float wanderMaxSpeed = 3.5f;
     private float timeToChangeTarget = 2f;
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries

@@ -21,7 +21,7 @@ public class Spray extends ObstacleSprite {
      * (Reused by all Spray objects so we only create it once.)
      */
     private static Texture sprayTexture = null;
-    private static final float LIFETIME = 5f;
+    private static final float LIFETIME = 10f;
     private float timeAlive;
     private float[] trianglePoints;
     private Poly2 poly;
@@ -66,7 +66,7 @@ public class Spray extends ObstacleSprite {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 1.0f);
+            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
             pixmap.setColor(pinkTranslucent);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);

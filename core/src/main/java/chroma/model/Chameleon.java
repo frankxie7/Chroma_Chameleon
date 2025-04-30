@@ -277,6 +277,7 @@ public class Chameleon extends ObstacleSprite {
         obstacle.setUserData(this);
         obstacle.setName("chameleon");
 
+
         // Set up debug colors.
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
