@@ -122,6 +122,7 @@ public class Goal extends ObstacleSprite {
     public boolean isFull(){
         return full;
     }
+    public boolean isComplete(){return complete;}
     public float getId(){return id;}
 
 

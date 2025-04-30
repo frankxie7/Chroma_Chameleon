@@ -39,7 +39,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 50;
+    private int numRays = 20;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -146,8 +146,9 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI / 2.0) / numRays;
+        float angleStep = (float)(Math.PI / 5.0) / numRays;
         for (int i = 0; i < numRays; i++) {
+
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
             float customRadius = computeRadiusForAngle(angleOffset);
@@ -170,11 +171,9 @@ public class PhysicsController implements ContactListener {
                 position.y = position.y - 0.9f;
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
-            ArrayList<Object> array = new ArrayList<>(60);
+            ArrayList<RayCastHit> hits = new ArrayList<>();
             //We are using a priority queue here for efficiency (min stack could be better sigh)
-            PriorityQueue<RayCastHit> hits = new PriorityQueue<>(
-                Comparator.comparingDouble(hit -> hit.fraction)
-            );
+
 
             RayCastCallback callback = new RayCastCallback() {
                 /**
@@ -190,7 +189,10 @@ public class PhysicsController implements ContactListener {
                     Object userData = fixture.getBody().getUserData();
                     //If we are Goal or Collision add to list otherwise ignore
                     //Note we are not adding full goals to the list
-                    if (userData instanceof Goal && !(((Goal)userData).isFull())) {
+                    if (userData instanceof Goal && ((((Goal)userData).isFull()) || (((Goal)userData).isComplete()))){
+                        return -1f;
+                    }
+                    if (userData instanceof Goal) {
                         hits.add(new RayCastHit(userData,fraction));
                         return -1f;
                     } else if(userData instanceof Collision){
@@ -203,6 +205,8 @@ public class PhysicsController implements ContactListener {
                 }
             };
             world.rayCast(callback, position, endPoint);
+            hits.sort(Comparator.comparingDouble(hit -> hit.fraction));
+
             for(RayCastHit o : hits){
                 if(o.object instanceof Collision){
                     //Once we hit our Collision object get out

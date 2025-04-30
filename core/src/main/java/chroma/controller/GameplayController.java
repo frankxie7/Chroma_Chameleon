@@ -285,7 +285,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y),4,0.2f,units,constants,2);
+            physics.createGoal(new Vector2(x, y),5,0.1f,units,constants,2);
         }
         for(BackgroundTile machine : level.getGoal3Tiles()){
             Rectangle rec = machine.getBounds();
@@ -395,21 +395,21 @@ public class GameplayController implements Screen {
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
         }
-        if(physics.goals1Full()){
-            for(Goal g : physics.getGoalList()){
-                g.setComplete();
-            }
-        }
-        if(physics.goals2Full()){
-            for(Goal g : physics.getGoal2List()){
-                g.setComplete();
-            }
-        }
-        if(physics.goals3Full()){
-            for(Goal g : physics.getGoal3List()){
-                g.setComplete();
-            }
-        }
+//        if(physics.goals1Full()){
+//            for(Goal g : physics.getGoalList()){
+//                g.setComplete();
+//            }
+//        }
+//        if(physics.goals2Full()){
+//            for(Goal g : physics.getGoal2List()){
+//                g.setComplete();
+//            }
+//        }
+//        if(physics.goals3Full()){
+//            for(Goal g : physics.getGoal3List()){
+//                g.setComplete();
+//            }
+//        }
 
         // Fire paint spray
         if (player.isShooting() && player.hasEnoughPaint(splatterCost)) {
