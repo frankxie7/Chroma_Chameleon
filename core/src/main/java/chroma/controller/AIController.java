@@ -35,7 +35,6 @@ public class AIController {
     private Type type;
     private Chameleon player;
     private List<Collision> collisions; // list of walls for pathfindinga
-    private List<Terrain> platforms;
     private List<Goal> goals;
     private State state;
 
@@ -509,6 +508,7 @@ public class AIController {
         enemy.applyForce();
         enemy.update(delta);
 
+
         // Animation
         if (blueRedPlayingForward) {
             blueRedTime += delta;
@@ -524,6 +524,7 @@ public class AIController {
             }
         }
         enemy.setBlueRedTime(blueRedTime);
+
     }
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {

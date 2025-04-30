@@ -29,6 +29,7 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
+    private boolean playerHitByLaser = false;
 
     private int bombContactCount = 0;
 
@@ -59,6 +60,7 @@ public class PhysicsController implements ContactListener {
     //Index
     private int index;
     private Door goalDoor;
+
 
     public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
@@ -429,6 +431,17 @@ public class PhysicsController implements ContactListener {
             playerCollidedWithEnemy = enemy.getType() != Enemy.Type.CAMERA;
         }
 
+        Object a = contact.getFixtureA().getBody().getUserData();
+        Object b = contact.getFixtureB().getBody().getUserData();
+        if ((a instanceof Chameleon && b instanceof Laser) ||
+            (a instanceof Laser    && b instanceof Chameleon)) {
+            Laser laser = (a instanceof Laser) ? (Laser)a : (Laser)b;
+            if (laser.isActive()) {
+                playerHitByLaser = true;
+            }
+        }
+
+
         // Check for win condition
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
@@ -493,6 +506,13 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    public boolean didPlayerHitByLaser() {
+        return playerHitByLaser;
+    }
+
+    public void resetLaserFlag() {
+        playerHitByLaser = false;
+    }
 
 
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
