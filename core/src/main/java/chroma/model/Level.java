@@ -23,13 +23,17 @@ public class Level {
     private Door goalDoor;
     private Chameleon avatar;
     private List<Enemy> enemies;
-    private List<Terrain> walls;
-    private List<Terrain> wallsTop;
+    private List<BackgroundTile> wallsNoCover;
+    private List<BackgroundTile> wallsCover;
+    private List<BackgroundTile> wallsTop;
     private List<BackgroundTile> backgroundTiles;
     private List<BackgroundTile> goalTiles;
+    private List<BackgroundTile> goal2Tiles;
+    private List<BackgroundTile> goal3Tiles;
     private List<Bomb> bombs;
     private List<Spray> sprays;
     private List<Grate> grates;
+    private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
 
@@ -54,9 +58,13 @@ public class Level {
      * @param selector the LevelSelector that chooses the JSON configuration for this level.
      */
     public Level(AssetDirectory directory, float units, LevelSelector selector) {
-        walls           = new ArrayList<>();
+        wallsNoCover = new ArrayList<>();
+        wallsCover = new ArrayList<>();
+        wallsTop = new ArrayList<>();
         backgroundTiles = new ArrayList<>();
-        goalTiles    = new ArrayList<>();
+        goalTiles = new ArrayList<>();
+        goal2Tiles = new ArrayList<>();
+        goal3Tiles = new ArrayList<>();
         bombs           = new ArrayList<>();
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
@@ -113,7 +121,7 @@ public class Level {
         }
 
         //background
-        JsonValue goalTileData = findLayer(constants, "goal");
+        JsonValue goalTileData = findLayer(constants, "goal1");
         if (goalTileData != null && goalTileData.has("data")) {
 
             goalTiles = new ArrayList<>();
@@ -145,14 +153,74 @@ public class Level {
 
             }
         }
-        // Parse the "walls" tile layer and build a list of Terrain tiles
-        JsonValue wallsData = findLayer(constants, "walls");
-        if (wallsData != null && wallsData.has("data")) {
-            walls = new ArrayList<>();
+        JsonValue goalTileData2 = findLayer(constants, "goal2");
+        if (goalTileData2 != null && goalTileData2.has("data")) {
 
-            int layerWidth  = wallsData.getInt("width");
-            int layerHeight = wallsData.getInt("height");
-            JsonValue data  = wallsData.get("data");
+            goal2Tiles = new ArrayList<>();
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = goalTileData2.getInt("width");
+            int layerHeight = goalTileData2.getInt("height");
+            JsonValue data = goalTileData2.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue; // skip empty
+
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                goal2Tiles.add(tile);
+            }
+        }
+        JsonValue goalTileData3 = findLayer(constants, "goal3");
+        if (goalTileData3 != null && goalTileData3.has("data")) {
+
+            goal3Tiles = new ArrayList<>();
+//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
+//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+            int layerWidth = goalTileData3.getInt("width");
+            int layerHeight = goalTileData3.getInt("height");
+            JsonValue data = goalTileData3.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue; // skip empty
+
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                         // no tile defined
+
+                // compute tile grid position
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                            // flip Y origin
+
+                // create BackgroundTile with the region
+                BackgroundTile tile = new BackgroundTile(region, units);
+                tile.setPosition(tx, ty);
+                goal3Tiles.add(tile);
+            }
+        }
+        // Parse the "walls" tile layer and build a list of Terrain tiles
+        JsonValue wallsData1 = findLayer(constants, "walls-no-cover");
+        if (wallsData1 != null && wallsData1.has("data")) {
+            wallsNoCover = new ArrayList<>();
+
+            int layerWidth  = wallsData1.getInt("width");
+            int layerHeight = wallsData1.getInt("height");
+            JsonValue data  = wallsData1.get("data");
 
             for (int i = 0; i < data.size; i++) {
                 int gid = data.getInt(i);
@@ -170,9 +238,40 @@ public class Level {
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
                     float[] coords = createCoords(tx, ty);
-                    Terrain wall = new Terrain(region,units);
+                    BackgroundTile wall = new BackgroundTile(region,units);
                     wall.setPosition(tx, ty);
-                    walls.add(wall);
+                    wallsNoCover.add(wall);
+//                    wall.setTexture(region.getTexture());
+                }
+            }
+        }
+        JsonValue wallsData2 = findLayer(constants, "walls-cover");
+        if (wallsData2 != null && wallsData1.has("data")) {
+            wallsCover = new ArrayList<>();
+
+            int layerWidth  = wallsData2.getInt("width");
+            int layerHeight = wallsData2.getInt("height");
+            JsonValue data  = wallsData2.get("data");
+
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;                           // skip empty tiles
+
+                // compute tile coordinates in grid
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                        // flip Y origin
+
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;                     // no matching region
+                int tileValue = data.getInt(i);
+                // create a 1×1 tile-based Terrain at (tx,ty)
+                if (tileValue != 0) {
+                    float[] coords = createCoords(tx, ty);
+                    BackgroundTile wall = new BackgroundTile(region,units);
+                    wall.setPosition(tx, ty);
+                    wallsCover.add(wall);
 //                    wall.setTexture(region.getTexture());
                 }
             }
@@ -201,9 +300,9 @@ public class Level {
                 int tileValue = data.getInt(i);
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
-                    Terrain wall = new Terrain(region,units);
+                    BackgroundTile wall = new BackgroundTile(region,units);
                     wall.setPosition(tx, ty);
-                    walls.add(wall);
+                    wallsTop.add(wall);
                 }
             }
         }
@@ -278,16 +377,17 @@ public class Level {
         }
 
         // Create the chameleon (player) using animation
-        JsonValue chamData = globalConstants.get("chameleon");
+        JsonValue globalCham = globalConstants.get("chameleon");
+        JsonValue levelCham = constants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
         Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
         Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
         Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
-        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.1f);
-        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.1f);
-        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.1f);
+        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.08f);
+        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.08f);
+        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.08f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.08f);
-        avatar = new Chameleon(units, chamData, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
+        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
         avatar.setBombAnimation(bombAnim);
 
         // Create enemies
@@ -348,6 +448,29 @@ public class Level {
                 enemies.add(enemy);
             }
         }
+        lasers        = new ArrayList<>();
+        // ---------- Lasers (1×1 tiles) ----------
+        JsonValue laserLayer = findLayer(constants, "laser");
+        if (laserLayer != null && laserLayer.has("data")) {
+            int w = laserLayer.getInt("width");
+            int h = laserLayer.getInt("height");
+            JsonValue data = laserLayer.get("data");
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) { continue; }
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) { continue; }
+
+                // compute grid pos (flip Y)
+                int tx = i % w;
+                int ty = h - 1 - (i / w);
+                // center of tile in world coords
+                Vector2 center = new Vector2(tx + 0.5f, ty + 0.5f);
+
+                Laser laser = new Laser(units, region, center);
+                lasers.add(laser);
+            }
+        }
 
         bombs = new ArrayList<>();
         sprays = new ArrayList<>();
@@ -372,8 +495,17 @@ public class Level {
         return enemies;
     }
 
-    public List<Terrain> getWalls() {
-        return walls;
+    public List<BackgroundTile> getWallsNoCover() {
+        return wallsNoCover;
+    }
+    public List<BackgroundTile> getWallsCover() {
+        return wallsCover;
+    }
+    public List<BackgroundTile> getWallsTop() {
+        return wallsTop;
+    }
+    public List<Laser> getLasers() {
+        return lasers;
     }
 
     public List<Collision> getCollision(){return collision;}
@@ -383,6 +515,12 @@ public class Level {
     }
     public List<BackgroundTile> getGoalTiles() {
         return goalTiles;
+    }
+    public List<BackgroundTile> getGoal2Tiles() {
+        return goal2Tiles;
+    }
+    public List<BackgroundTile> getGoal3Tiles() {
+        return goal3Tiles;
     }
 
 

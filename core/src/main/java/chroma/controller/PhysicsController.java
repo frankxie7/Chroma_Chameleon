@@ -1,24 +1,17 @@
 package chroma.controller;
 
 import chroma.model.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.BSpline;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.physics2.Obstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-import edu.cornell.gdiac.physics2.PolygonObstacle;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  * PhysicsController
@@ -36,6 +29,7 @@ public class PhysicsController implements ContactListener {
     private static final int WORLD_POSIT = 2;
     private AssetDirectory directory;
     private boolean playerCollidedWithEnemy = false;
+    private boolean playerHitByLaser = false;
 
     private int bombContactCount = 0;
 
@@ -46,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 20;
+    private int numRays = 15;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -56,10 +50,17 @@ public class PhysicsController implements ContactListener {
     //Goal Tile Points
     private float[] goalPoints;
     //List of Goal Tiles
-    private Goal[] goalList;
+    private List<Goal> goalList;
+    //List of Goal Tiles
+    private List<Goal> goal2List;
+    //List of Goal Tiles
+    private List<Goal> goal3List;
+    //hits
+    private ArrayList<RayCastHit> hits;
     //Index
     private int index;
     private Door goalDoor;
+
 
     public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
@@ -68,7 +69,10 @@ public class PhysicsController implements ContactListener {
         addQueue = new PooledList<>();
         points = new float[6];
         goalPoints = new float[8];
-        goalList = new Goal[numGoals];
+        goalList = new ArrayList<>();
+        goal2List = new ArrayList<>();
+        goal3List = new ArrayList<>();
+        hits = new ArrayList<>();
         index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
@@ -78,7 +82,9 @@ public class PhysicsController implements ContactListener {
         return world;
     }
 
-    public Goal[] getGoalList(){ return goalList; }
+    public List<Goal> getGoalList(){ return goalList; }
+    public List<Goal> getGoal2List(){ return goal2List; }
+    public List<Goal> getGoal3List(){ return goal2List; }
 
     public void setGoalDoor(Door door) {
         this.goalDoor = door;
@@ -145,7 +151,8 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI / 2.0) / numRays;
+        float angleStep = (float)(Math.PI / 4.0) / numRays;
+        hits.clear();
         for (int i = 0; i < numRays; i++) {
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
@@ -169,37 +176,46 @@ public class PhysicsController implements ContactListener {
                 position.y = position.y - 0.9f;
             }
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
-            ArrayList<Object> array = new ArrayList<>(60);
 
-            ArrayList<RayCastHit> hits = new ArrayList<>();
-
+            //We are using a priority queue here for efficiency (min stack could be better sigh)
             RayCastCallback callback = new RayCastCallback() {
-
+                /**
+                 * Override of reportRayFixture
+                 * @param fixture the fixture we hit
+                 * @param point the point at which we hit
+                 * @param normal normal vector
+                 * @param fraction the fraction the ray was able to make it to end
+                 * @return fraction if we want to store the hit, -1 to ignore
+                 */
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
                     //If we are Goal or Collision add to list otherwise ignore
+                    //Note we are not adding full goals to the list
+                    if (userData instanceof Goal && ((((Goal)userData).isFull()) || (((Goal)userData).isComplete()))){
+                        return -1f;
+                    }
                     if (userData instanceof Goal) {
                         hits.add(new RayCastHit(userData,fraction));
                         return -1f;
                     } else if(userData instanceof Collision){
                         hits.add(new RayCastHit(userData,fraction));
+                        endPoint.set(point);
+                        return 0;
                     }else{
                         return -1;
                     }
-                    endPoint.set(point);
-                    return fraction;
                 }
             };
             world.rayCast(callback, position, endPoint);
-            hits.sort(Comparator.comparingDouble(hit -> hit.fraction));
-            //Code to be made more efficient, need to sort list first as order of
-            //objects in hits is completely random because box2d is stupid
+            hits.sort((h1,h2) -> Float.compare(h1.fraction, h2.fraction));
             for(RayCastHit o : hits){
                 if(o.object instanceof Collision){
+                    //Once we hit our Collision object get out
                     break;
                 }
                 if(o.object instanceof Goal){
+                    //If we are a Goal set ourselves to full
                     Goal g = (Goal) o.object;
                     g.setFull();
                 }
@@ -207,15 +223,6 @@ public class PhysicsController implements ContactListener {
             endpoints[i] = new Vector2(endPoint);
         }
     }
-
-
-//    private float computeRadiusForAngle(float angleOffset) {
-//        float halfFanAngle = (float) (Math.PI / 4.0);
-//        float normalized = angleOffset / halfFanAngle;
-//        float alpha = 0.6f;
-//        float factor = 1 - alpha * normalized * normalized;
-//        return rayLength * factor;
-//    }
 
     private float computeRadiusForAngle(float angleOffset) {
         float halfFanAngle = (float)(Math.PI / 4.0);
@@ -231,7 +238,7 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      */
     public void addPaint(Chameleon avatar, float units) {
-        for (int i = 0; i < numRays - 1; i++) {
+        for(int i = 0; i< endpoints.length - 1;i++)
             if (avatar.getPosition() != null
                 && endpoints[i] != null) {
                 Vector2 v1 = avatar.getPosition().cpy();
@@ -263,16 +270,17 @@ public class PhysicsController implements ContactListener {
                 points[3] = y2;
                 points[4] = x3;
                 points[5] = y3;
-                if(!isConcave(points) && isCounterClockwise(points)){
-                    try{
-                        Spray paintTriangle = new Spray(points, units);
-                        addObject(paintTriangle);
-                    }catch(IllegalArgumentException ignored){
-                    }
+                try{
+                    Spray paintTriangle = new Spray(points, units);
+                    addObject(paintTriangle);
                 }
+                catch(IllegalArgumentException ignored){}
             }
+
         }
-    }
+
+
+
 
     /**
      * Creates a grid of goals from a given center
@@ -280,13 +288,22 @@ public class PhysicsController implements ContactListener {
      * @param units the scaled physics units
      * @param settings the Json settings
      */
-    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings){
+    public void createGoal(Vector2 center,int gridSize,float width, float units, JsonValue settings,int id){
         for(int row = 0; row < gridSize; row++){
             for(int col = 0; col < gridSize; col++){
-                float x = center.x + row * width;
-                float y = center.y + col * width;
-                Goal tile = createTile(x, y, width, units, settings);
-                goalList[index] = tile;
+                float x = center.x + row * (width * 2);
+                float y = center.y + col * (width * 2);
+                Goal tile = createTile(x, y, width, units, settings,id);
+                if(id == 1){
+                    goalList.add(tile);
+                }
+                if(id == 2){
+                    goal2List.add(tile);
+                }
+                if(id == 3){
+                    goal3List.add(tile);
+                }
+
                 addObject(tile);
                 index+=1;
             }
@@ -304,7 +321,7 @@ public class PhysicsController implements ContactListener {
      * @param settings the Json settings
      * @return the created Goal Tile
      */
-    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings){
+    public Goal createTile(float x, float y,float boxRad, float units, JsonValue settings,int id){
         float x1 = x + boxRad;
         float y1 = y - boxRad;
         float x2 = x + boxRad;
@@ -321,82 +338,7 @@ public class PhysicsController implements ContactListener {
         goalPoints[5] = y3;
         goalPoints[6] = x4;
         goalPoints[7] = y4;
-        return new Goal(goalPoints, units, settings);
-    }
-
-//    public Grate createGrate(float x, float y, float boxRad, float units, JsonValue settings) {
-//        float x1 = x + boxRad;
-//        float y1 = y - boxRad;
-//        float x2 = x + boxRad;
-//        float y2 = y + boxRad;
-//        float x3 = x - boxRad;
-//        float y3 = y + boxRad;
-//        float x4 = x - boxRad;
-//        float y4 = y - boxRad;
-//
-//        float[] gratePoints = new float[8];
-//        gratePoints[0] = x1;
-//        gratePoints[1] = y1;
-//        gratePoints[2] = x2;
-//        gratePoints[3] = y2;
-//        gratePoints[4] = x3;
-//        gratePoints[5] = y3;
-//        gratePoints[6] = x4;
-//        gratePoints[7] = y4;
-//
-//        return new Grate(gratePoints, units, settings);
-//    }
-
-
-    /**
-     * Determines whether or not points are CCW or not
-     * @param vertices the vertices to check
-     * @return True if CCW
-     */
-    private static boolean isCounterClockwise(float[] vertices) {
-        float sum = 0;
-        for (int i = 0; i < vertices.length; i += 2) {
-            int next = (i + 2) % vertices.length;
-            sum += (vertices[next] - vertices[i]) * (vertices[i + 1] + vertices[next + 1]);
-        }
-        return sum < 0; // CCW if sum < 0, CW if sum > 0
-    }
-
-    /**
-     * Returns true if points will create a concave shape
-     * @param vertices points to use
-     * @return true if Concave
-     */
-    public static boolean isConcave(float[] vertices) {
-        int numPoints = vertices.length / 2;  // Number of (x, y) pairs
-        boolean sign = false;  // To track the direction of turns
-
-        // Loop through each set of three consecutive vertices
-        for (int i = 0; i < numPoints; i++) {
-            int prev = (i - 1 + numPoints) % numPoints;  // Previous vertex
-            int current = i;  // Current vertex
-            int next = (i + 1) % numPoints;  // Next vertex
-
-            // Get the (x, y) coordinates of the vertices
-            float x1 = vertices[2 * prev], y1 = vertices[2 * prev + 1];
-            float x2 = vertices[2 * current], y2 = vertices[2 * current + 1];
-            float x3 = vertices[2 * next], y3 = vertices[2 * next + 1];
-
-            // Calculate the cross product to determine the direction of the turn
-            float crossProduct = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
-
-            if (crossProduct != 0) {  // Ignore collinear points
-                if (!sign) {
-                    sign = crossProduct > 0;  // Set the initial direction
-                } else {
-                    // If the sign changes, it's a concave polygon
-                    if (sign != (crossProduct > 0)) {
-                        return true; // Polygon is concave
-                    }
-                }
-            }
-        }
-        return false; // All turns are in the same direction; polygon is convex
+        return new Goal(goalPoints, units, settings,id);
     }
 
     /**
@@ -489,6 +431,17 @@ public class PhysicsController implements ContactListener {
             playerCollidedWithEnemy = enemy.getType() != Enemy.Type.CAMERA;
         }
 
+        Object a = contact.getFixtureA().getBody().getUserData();
+        Object b = contact.getFixtureB().getBody().getUserData();
+        if ((a instanceof Chameleon && b instanceof Laser) ||
+            (a instanceof Laser    && b instanceof Chameleon)) {
+            Laser laser = (a instanceof Laser) ? (Laser)a : (Laser)b;
+            if (laser.isActive()) {
+                playerHitByLaser = true;
+            }
+        }
+
+
         // Check for win condition
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
@@ -553,6 +506,13 @@ public class PhysicsController implements ContactListener {
         }
     }
 
+    public boolean didPlayerHitByLaser() {
+        return playerHitByLaser;
+    }
+
+    public void resetLaserFlag() {
+        playerHitByLaser = false;
+    }
 
 
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
@@ -580,14 +540,75 @@ public class PhysicsController implements ContactListener {
         playerCollidedWithEnemy = false;
     }
 
+    /**
+     * This function determines if ALL goal regions are full
+     * @return true if all full false if not
+     */
     public boolean goalsFull(){
+        int total = goalList.size() + goal2List.size() + goal3List.size();
+        if (total == 0) {
+            return true;
+        }
+        System.out.println(goalList.size());
         int numFilled = 0;
         for(Goal goal : goalList){
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.length > 0.9;
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        for(Goal goal : goal3List) {
+            if (goal != null && goal.isFull()) {
+                numFilled += 1;
+            }
+        }
+        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.9;
+    }
+
+    /**
+     * This function returns if goal 1 is full
+     * @return true if goal1 is full false if not
+     */
+    public boolean goals1Full(){
+        int numFilled = 0;
+        for(Goal goal : goalList){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goalList.size() > 0.9;
+    }
+
+    /**
+     * This function returns if goal 2 is full
+     * @return true if full false if not
+     */
+    public boolean goals2Full(){
+        int numFilled = 0;
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal2List.size() > 0.9;
+    }
+
+    /**
+     * This function returns if goal 3 is full
+     * @return true if full false if not
+     */
+    public boolean goals3Full(){
+        int numFilled = 0;
+        for(Goal goal : goal3List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal3List.size() > 0.9;
     }
 
 

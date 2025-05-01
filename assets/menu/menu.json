@@ -1,29 +1,50 @@
 {
-	"textures": {
+    "textures": {
         "background": {
-            "file": "loading/splash.png",
+            "file": "menu/UI/ui.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
 	"play": {
-	    "file" : "platform/bullet.png",
+	    "file" : "menu/UI/numberbuttons1.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
 		},
         "buttons": {
             "file" : "platform/bomb_splatter.png"
-        }
+        },
+        "button1" : "menu/UI/numberbuttons1.png",
+        "button2" : "menu/UI/numberbuttons3.png",
+        "button3" : "menu/UI/numberbuttons5.png",
+        "button4" : "menu/UI/numberbuttons7.png",
+        "button5" : "menu/UI/numberbuttons9.png",
+        "button6" : "menu/UI/numberbuttons11.png",
+        "button7" : "menu/UI/numberbuttons13.png",
+        "button8" : "menu/UI/numberbuttons15.png",
+        "button9" : "menu/UI/numberbuttons17.png",
+        "buttonPress1" : "menu/UI/numberbuttons2.png",
+        "buttonPress2" : "menu/UI/numberbuttons4.png",
+        "buttonPress3" : "menu/UI/numberbuttons6.png",
+        "buttonPress4" : "menu/UI/numberbuttons8.png",
+        "buttonPress5" : "menu/UI/numberbuttons10.png",
+        "buttonPress6" : "menu/UI/numberbuttons12.png",
+        "buttonPress7" : "menu/UI/numberbuttons14.png",
+        "buttonPress8" : "menu/UI/numberbuttons16.png",
+        "buttonPress9" : "menu/UI/numberbuttons18.png",
+        "leftArrow" : "menu/UI/arrow1.png",
+        "rightArrow" : "menu/UI/arrow2.png"
 	},
     "jsons" : {
       "constants" : {
         "height" : 576,
         "bar.width" : 0.66,
         "bar.height" : 0.25,
-        "button.scale" : 0.2,
+        "button.scale" : 1.8,
         "bound.scale" : 0.5,
-        "numButtons": 10,
-        "numRows": 2,
-        "numCols": 5
+        "arrow.scale": 2,
+        "numButtons": 9,
+        "numRows": 3,
+        "numCols": 3
       }
     },
   "sounds" : {

@@ -15,7 +15,7 @@ public class Bomb extends ObstacleSprite {
 
     // For the bomb to appear “in flight” visually
     private static final float GRAVITY = 60f; // tune as needed for arc
-    private static final float LIFETIME = 12f;
+    private static final float LIFETIME = 15f;
 
     // Random rotation for splatter
     private float splatterRotation = 0f;

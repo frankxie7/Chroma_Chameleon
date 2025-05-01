@@ -35,8 +35,7 @@ public class AIController {
     private Type type;
     private Chameleon player;
     private List<Collision> collisions; // list of walls for pathfindinga
-    private List<Terrain> platforms;
-    private Goal[] goals;
+    private List<Goal> goals;
     private State state;
 
     // Camera and detection
@@ -55,7 +54,7 @@ public class AIController {
     private float chaseSpeed = 1.5f;
 
     // CHASE:
-    private float chaseMaxSpeed = 10f;
+    private float chaseMaxSpeed = 9f;
 
     // ALERT:
     private float alertMaxSpeed = 6f;
@@ -69,7 +68,7 @@ public class AIController {
     private float detectionThreshold = 0.5f;
 
     // WANDER:
-    private float wanderMaxSpeed = 5f;
+    private float wanderMaxSpeed = 3.5f;
     private float timeToChangeTarget = 2f;
     private float wanderTimer = 0f;
     private float margin = 1f; // margin inside room boundaries
@@ -101,6 +100,8 @@ public class AIController {
         this.player = level.getAvatar();
         this.collisions = level.getCollision();
         this.goals = physics.getGoalList();
+        goals.addAll(physics.getGoal2List());
+        goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
         state = patrol ? State.PATROL : State.WANDER;
         pickNewWanderTarget();
@@ -507,6 +508,7 @@ public class AIController {
         enemy.applyForce();
         enemy.update(delta);
 
+
         // Animation
         if (blueRedPlayingForward) {
             blueRedTime += delta;
@@ -522,6 +524,7 @@ public class AIController {
             }
         }
         enemy.setBlueRedTime(blueRedTime);
+
     }
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {

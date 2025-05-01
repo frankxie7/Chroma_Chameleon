@@ -3,9 +3,9 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
@@ -20,7 +20,7 @@ public class Spray extends ObstacleSprite {
      * (Reused by all Spray objects so we only create it once.)
      */
     private static Texture sprayTexture = null;
-    private static final float LIFETIME = 5f;
+    private static final float LIFETIME = 10f;
     private float timeAlive;
     private float[] trianglePoints;
     private Poly2 poly;
@@ -65,14 +65,14 @@ public class Spray extends ObstacleSprite {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 1.0f);
+            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
             pixmap.setColor(pinkTranslucent);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);
             pixmap.dispose();
 
             // Make the texture repeat when UV coords exceed [0..1].
-            sprayTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+            sprayTexture.setWrap(TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         }
         mesh.set(poly,sprayTexture.getWidth(), sprayTexture.getHeight());
         setTexture(sprayTexture);

@@ -298,6 +298,8 @@ public class Enemy extends ObstacleSprite {
             backFrame = -1;
         }
 
+
+
         // Update faceRight for flipping (side animations only — you might skip this for front)
         faceRight = velocity.x >= 0;
     }
