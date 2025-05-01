@@ -845,7 +845,6 @@ public class GameplayController implements Screen {
                     0);
             }
         }
-
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
@@ -853,7 +852,6 @@ public class GameplayController implements Screen {
             }
         }
         batch.begin();
-
         for (Laser laser : level.getLasers()) {
             laser.draw(batch);
         }
@@ -934,6 +932,8 @@ public class GameplayController implements Screen {
         batch.setTexture(null);
 
 
+        batch.end();
+        batch.begin();
 
         // Debug overlays
         if (debug) {
