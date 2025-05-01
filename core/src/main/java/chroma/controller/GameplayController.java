@@ -119,8 +119,8 @@ public class GameplayController implements Screen {
     private static final float RANGE_MIN = 5f;
     private static final float RANGE_MAX = 20f;
     private static final float RANGE_GROWTH = 12f;
-    private static final float ZOOM_DEFAULT = 0.6f;
-    private static final float ZOOM_OUT_MAX = 0.9f;
+    private static final float ZOOM_DEFAULT = 0.5f;
+    private static final float ZOOM_OUT_MAX = 0.8f;
     private static final float ZOOM_LERP = 5f;
 
 
@@ -679,6 +679,11 @@ public class GameplayController implements Screen {
             physics.resetCollisionFlags();
         }
 
+        // Laser kill?
+        if (!failed && physics.didPlayerHitByLaser()) {
+            setFailure(true);
+            physics.resetLaserFlag();
+        }
         // Check winning
         if (!failed && physics.didWin()) {
             setVictory();
@@ -794,26 +799,6 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-        for (Laser laser : level.getLasers()) {
-            laser.draw(batch);
-        }
-
-        // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
 
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
@@ -838,9 +823,59 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+        for (AIController ai : aiControllers) {
+            int frameIndex = ai.getEnemy()
+                .getAlertAnimationFrame(); // you set this from the AI logic
 
+            if (frameIndex != -1) {
+                TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
+
+                float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale() * 2;
+                float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale() * 2;
+                float px = ai.getEnemy().getPosition().x * units;
+                float py = ai.getEnemy().getPosition().y * units;
+
+                float hoverOffsetPixels = 40f;  // same as the enemies
+                batch.draw(frame,
+                    px - drawWidth / 2,
+                    py - drawHeight / 2 + hoverOffsetPixels,
+                    drawWidth / 2, drawHeight / 2,
+                    drawWidth, drawHeight,
+                    1, 1,
+                    0);
+            }
+        }
+
+        batch.end();
+        for (AIController aiController : aiControllers) {
+            if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
+                aiController.drawEnemyVision(camera);
+            }
+        }
+        batch.begin();
+
+        for (Laser laser : level.getLasers()) {
+            laser.draw(batch);
+        }
         if (level.getWallsCover() != null) {
             for (BackgroundTile tile : level.getWallsCover()) {
+                tile.draw(batch);
+            }
+        }
+
+        // Draw goal tiles
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal2Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal2Tiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal3Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal3Tiles()) {
                 tile.draw(batch);
             }
         }
@@ -886,28 +921,7 @@ public class GameplayController implements Screen {
             batch.draw(ghost, curPix.x - s / 2, curPix.y - s / 2, s, s);
         }
 
-        for (AIController ai : aiControllers) {
-            int frameIndex = ai.getEnemy()
-                .getAlertAnimationFrame(); // you set this from the AI logic
 
-            if (frameIndex != -1) {
-                TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
-
-                float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale() * 2;
-                float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale() * 2;
-                float px = ai.getEnemy().getPosition().x * units;
-                float py = ai.getEnemy().getPosition().y * units;
-
-                float hoverOffsetPixels = 40f;  // same as the enemies
-                batch.draw(frame,
-                    px - drawWidth / 2,
-                    py - drawHeight / 2 + hoverOffsetPixels,
-                    drawWidth / 2, drawHeight / 2,
-                    drawWidth, drawHeight,
-                    1, 1,
-                    0);
-            }
-        }
         for (ObstacleSprite sprite : physics.objects) {
             if ("bomb".equals(sprite.getName())) {
                 Bomb bomb = (Bomb) sprite.getObstacle().getUserData();
@@ -919,13 +933,7 @@ public class GameplayController implements Screen {
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
-        batch.end();
-        for (AIController aiController : aiControllers) {
-            if (aiController.getEnemy().getType() == Enemy.Type.CAMERA) {
-                aiController.drawEnemyVision(camera);
-            }
-        }
-        batch.begin();
+
 
         // Debug overlays
         if (debug) {
