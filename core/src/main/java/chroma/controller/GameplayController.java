@@ -1,14 +1,13 @@
 package chroma.controller;
 
 /**
- * GameplayController
- * ------------------
- * This class acts as the high-level coordinator for the game. It is responsible for:
- * - Managing game state and flow (reset, win, lose, and level transitions).
- * - Handling player input (via InputController) and applying it to game objects.
- * - Delegating physics simulation to the PhysicsController and level construction to the Level class.
- * - Rendering all game objects and UI messages.
+ * GameplayController ------------------ This class acts as the high-level coordinator for the game.
+ * It is responsible for: - Managing game state and flow (reset, win, lose, and level transitions).
+ * - Handling player input (via InputController) and applying it to game objects. - Delegating
+ * physics simulation to the PhysicsController and level construction to the Level class. -
+ * Rendering all game objects and UI messages.
  */
+
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -65,9 +64,8 @@ public class GameplayController implements Screen {
 
     private Chameleon player;
     private float splatterCost = 3f;
-    private static final float BOMB_INITIAL_COST    = 4f;
+    private static final float BOMB_INITIAL_COST = 6f;
     private static final float BOMB_SUBSEQUENT_COST = 0.5f;
-
 
 
     private OrthographicCamera camera;
@@ -213,7 +211,6 @@ public class GameplayController implements Screen {
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
 
-
         goalMessage = new TextLayout();
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
@@ -221,8 +218,6 @@ public class GameplayController implements Screen {
 // remember the very first window size
         baseWidth = (int) this.width;
         baseHeight = (int) this.height;
-
-
 
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
@@ -233,7 +228,6 @@ public class GameplayController implements Screen {
      * Rebuilds the world state (physics, level objects, etc.).
      */
     public void reset() {
-
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -514,7 +508,6 @@ public class GameplayController implements Screen {
         }
         switch (bombState) {
             case IDLE:
-                player.setMaxSpeed(1f);
                 if (skillKey && player.hasEnoughPaint(BOMB_INITIAL_COST)) {
                     bombState = BombSkillState.READY;
                     aimRangeCurrent = RANGE_MAX;               // instant full range
@@ -523,7 +516,6 @@ public class GameplayController implements Screen {
                 break;
 
             case READY:
-                player.setMaxSpeed(0f);
                 if (in.didLeftClick()) {
                     player.startBombAnimation();   // start fresh
                     player.pauseBombAnimation();   // freeze at frame‑0
@@ -556,7 +548,6 @@ public class GameplayController implements Screen {
                 break;
 
             case COOLDOWN:
-                player.setMaxSpeed(1f);
                 cooldownTimer -= dt;
                 if (cooldownTimer <= 0f) {
                     bombState = BombSkillState.IDLE;
@@ -651,7 +642,6 @@ public class GameplayController implements Screen {
                 Vector2 target = bombQueue.removeFirst();
 
                 Vector2 playerPos = player.getObstacle().getPosition();
-
 
                 float speed = 6f;
                 Vector2 vel = new Vector2(target).sub(playerPos).nor().scl(speed);
@@ -778,22 +768,7 @@ public class GameplayController implements Screen {
 
 
 
-        // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
+
 
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -880,8 +855,6 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
-
-
 
 // ───── new bomb ──────────────────────────
         if (
@@ -1027,8 +1000,8 @@ public class GameplayController implements Screen {
     }
 
     /**
-     * Keeps the camera centered on the player and guarantees that the
-     * visible world area stays the same even when the window is resized.
+     * Keeps the camera centered on the player and guarantees that the visible world area stays the
+     * same even when the window is resized.
      */
     private void updateCamera() {
         Vector2 pos = player.getObstacle().getPosition();

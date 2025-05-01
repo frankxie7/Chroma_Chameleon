@@ -50,8 +50,8 @@ public class Chameleon extends ObstacleSprite {
     /** Whether we are actively aiming */
     private boolean isAiming;
 
-    private float maxPaint = 25f;
-    private float currentPaint = 25f;
+    private float maxPaint;
+    private float currentPaint = maxPaint;
 
     /** The outline of the sensor obstacle */
     private Path2 sensorOutline;
@@ -257,6 +257,8 @@ public class Chameleon extends ObstacleSprite {
         float y = dataLevel.get("pos").getFloat(1);
         this.lastSeen = new Vector2(x, y);
 
+        maxPaint = dataLevel.getFloat("paint");
+
         float s = dataGlobal.getFloat("size");
         float size = s * units;
         drawScale = dataGlobal.getFloat("drawScale");
@@ -302,6 +304,8 @@ public class Chameleon extends ObstacleSprite {
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
         currentFrame = frames[6];
+
+
     }
 
     /**
