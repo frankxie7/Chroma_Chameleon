@@ -4,6 +4,8 @@ import chroma.controller.LevelSelector;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -17,7 +19,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
-
 
 public class MenuMode implements Screen, InputProcessor {
     private AssetDirectory directory;
@@ -47,6 +48,8 @@ public class MenuMode implements Screen, InputProcessor {
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
 
+    private Music menuSong;
+    private Sound levelSelectedSound;
 
     /** Internal class for creating a circular bound */
     private class CircleBound {
@@ -81,6 +84,14 @@ public class MenuMode implements Screen, InputProcessor {
         internal.loadAssets();
         internal.finishLoading();
 
+//        levelSelectedSound = internal.getEntry("level-select", Sound.class);
+
+//        menuSong = internal.getEntry("intro", Music.class);
+//        if (menuSong != null) {
+//            menuSong.setLooping(true);
+//            menuSong.play();
+//        }
+
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
@@ -99,7 +110,6 @@ public class MenuMode implements Screen, InputProcessor {
         font = new BitmapFont(); // You can also load custom fonts if needed
         font.setColor(Color.BLACK); // Set to your desired color
         font.getData().setScale(4f); // Scale to fit the button nicely
-
     }
 
     /**
@@ -266,6 +276,8 @@ public class MenuMode implements Screen, InputProcessor {
             if (bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1;
                 pressState = 1;
+//                levelSelectedSound.play();
+//                menuSong.stop();
                 return false;
             }
         }
@@ -303,6 +315,4 @@ public class MenuMode implements Screen, InputProcessor {
     public boolean scrolled(float amountX, float amountY) { return true; }
     public void pause() {}
     public void resume() {}
-
-
 }

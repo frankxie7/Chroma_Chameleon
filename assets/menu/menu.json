@@ -25,5 +25,9 @@
         "numRows": 2,
         "numCols": 5
       }
-    }
+    },
+  "sounds" : {
+    "intro": "sounds/Opening_Demo.wav",
+    "level-select": "sounds/Splice_Corectwav.wav"
+  }
 }
