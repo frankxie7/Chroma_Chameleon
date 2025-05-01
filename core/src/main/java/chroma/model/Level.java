@@ -377,7 +377,8 @@ public class Level {
         }
 
         // Create the chameleon (player) using animation
-        JsonValue chamData = globalConstants.get("chameleon");
+        JsonValue globalCham = globalConstants.get("chameleon");
+        JsonValue levelCham = constants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
         Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
         Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
@@ -386,7 +387,7 @@ public class Level {
         Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.08f);
         Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.08f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.08f);
-        avatar = new Chameleon(units, chamData, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
+        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
         avatar.setBombAnimation(bombAnim);
 
         // Create enemies
