@@ -982,6 +982,9 @@ public class GameplayController implements Screen {
 // compute percent painted
         float pct = (float) numFilled / ((float) goals1.size() + (float) goals2.size()
             + (float) goals3.size()) * 100f;
+        if(Float.isNaN(pct)){
+            pct = 100;
+        }
 
 // update the TextLayout
         goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
