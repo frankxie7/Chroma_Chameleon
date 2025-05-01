@@ -369,7 +369,7 @@ public class Chameleon extends ObstacleSprite {
         float vmove = input.getVertical();
         setMovement(hmove * getForce());
         setVerticalMovement(vmove * getForce());
-        setShooting(input.didSecondary());
+        setShooting(input.didLeftClick());
         applyForce();
 
         // Apply cooldowns
