@@ -362,6 +362,9 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void update(float dt) {
+        if (falling) {
+            return;
+        }
         InputController input = InputController.getInstance();
 
         // Update player (chameleon) movement based on input
