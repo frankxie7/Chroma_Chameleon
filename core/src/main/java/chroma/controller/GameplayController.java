@@ -64,7 +64,7 @@ public class GameplayController implements Screen {
 
     private Chameleon player;
     private float splatterCost = 3f;
-    private static final float BOMB_INITIAL_COST = 4f;
+    private static final float BOMB_INITIAL_COST = 6f;
     private static final float BOMB_SUBSEQUENT_COST = 0.5f;
 
 
