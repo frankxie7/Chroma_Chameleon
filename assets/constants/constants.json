@@ -12,10 +12,10 @@
     "pos"       : [5.0, 5.0],
     "inner"     : [1.8, 0.8],
     "size"      : 1.0,
-    "drawScale": 0.55,
+    "drawScale": 0.8,
     "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 20.0,
+    "maxspeed"  : 10.0,
     "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,
@@ -90,6 +90,32 @@
       "positions": [[19.0, 19.0],[22.0,8.0],[3,10]],
       "startRotation": [0,180,0],
       "rotateAngle": [0, 40,0],
+      "inner": [0.5, 0.65],
+      "size": 3.2,
+      "drawScale": 0.55,
+      "force": 10.0,
+      "damping": 80.0,
+      "maxspeed": 9.0,
+      "sensor": {
+        "shrink": 0.9,
+        "height": 0.05
+      },
+      "debug": {
+        "avatar": "#ffff00ff",
+        "sensor": "#ff0000ff",
+        "tolerance": 0.05
+      }
+    },
+    "laser_test" : {
+      "names": ["enemy1"],
+      "types": ["GUARD"],
+      "patrols": [true],
+      "patrol_paths": [
+        [[5.0, 17.0], [5.0,3.0]]
+      ],
+      "positions": [[5.0, 17.0]],
+      "startRotation": [0,0],
+      "rotateAngle": [0,0],
       "inner": [0.5, 0.65],
       "size": 3.2,
       "drawScale": 0.55,

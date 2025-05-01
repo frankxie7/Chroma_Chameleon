@@ -247,22 +247,22 @@ public class Chameleon extends ObstacleSprite {
      * thinner than the mesh in order to give a tighter hitbox.
      *
      * @param units     The physics units
-     * @param data      The physics constants for Traci
+     * @param dataGlobal      The physics constants for Traci
      */
-    public Chameleon(float units, JsonValue data, Animation<TextureRegion> animation, Animation<TextureRegion> upWalkAnim, Animation<TextureRegion> downWalkAnim) {
-        this.data = data;
-        JsonValue debugInfo = data.get("debug");
+    public Chameleon(float units, JsonValue dataGlobal, JsonValue dataLevel, Animation<TextureRegion> animation, Animation<TextureRegion> upWalkAnim, Animation<TextureRegion> downWalkAnim) {
+        this.data = dataGlobal;
+        JsonValue debugInfo = dataGlobal.get("debug");
 
-        float x = data.get("pos").getFloat(0);
-        float y = data.get("pos").getFloat(1);
+        float x = dataLevel.get("pos").getFloat(0);
+        float y = dataLevel.get("pos").getFloat(1);
         this.lastSeen = new Vector2(x, y);
 
-        float s = data.getFloat("size");
+        float s = dataGlobal.getFloat("size");
         float size = s * units;
-        drawScale = data.getFloat("drawScale");
+        drawScale = dataGlobal.getFloat("drawScale");
 
         // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(x, y, s * data.get("inner").getFloat(0), s * data.get("inner").getFloat(1)*1.5f);
+        obstacle = new CapsuleObstacle(x, y, s * dataGlobal.get("inner").getFloat(0), s * dataGlobal.get("inner").getFloat(1)*1.5f);
         ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
 
         // Ensure the body is dynamic so it can move.
@@ -277,12 +277,12 @@ public class Chameleon extends ObstacleSprite {
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
-        maxspeed = data.getFloat("maxspeed", 0);
+        maxspeed = dataGlobal.getFloat("maxspeed", 0);
         currentMaxSpeed = maxspeed;
-        damping = data.getFloat("damping", 0);
-        force = data.getFloat("force", 0);
+        damping = dataGlobal.getFloat("damping", 0);
+        force = dataGlobal.getFloat("force", 0);
 
-        shotLimit = data.getInt("shot_cool", 0);
+        shotLimit = dataGlobal.getInt("shot_cool", 0);
 
         isShooting = false;
         isAiming = false;
