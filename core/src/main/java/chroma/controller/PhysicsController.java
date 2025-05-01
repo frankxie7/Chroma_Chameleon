@@ -549,6 +549,7 @@ public class PhysicsController implements ContactListener {
         if (total == 0) {
             return true;
         }
+        System.out.println(goalList.size());
         int numFilled = 0;
         for(Goal goal : goalList){
             if(goal != null && goal.isFull()){
@@ -560,12 +561,12 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        for(Goal goal : goal3List){
-            if(goal != null && goal.isFull()){
-                numFilled +=1;
+        for(Goal goal : goal3List) {
+            if (goal != null && goal.isFull()) {
+                numFilled += 1;
             }
         }
-        return (float)numFilled / goalList.size() + goal2List.size() + goal3List.size() > 0.9;
+        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.9;
     }
 
     /**
