@@ -373,7 +373,7 @@ public class GameplayController implements Screen {
     private void update(float dt) {
 
         InputController input = InputController.getInstance();
-        player.setShooting(input.didSecondary());
+        player.setShooting(input.didLeftClick());
         player.updateOrientation();
 
         // Update AI enemies

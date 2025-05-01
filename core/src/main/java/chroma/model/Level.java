@@ -362,6 +362,8 @@ public class Level {
                 Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
 
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
+                Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
+                Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
 
@@ -371,7 +373,7 @@ public class Level {
                 Animation<TextureRegion> openAnim = new Animation<>(0.075f, frames);
                 openAnim.setPlayMode(Animation.PlayMode.NORMAL);
 
-                goalDoor = new Door(units, closedAnim, openAnim, doorCenter);
+                goalDoor = new Door(units, closedAnim, openAnim, doorCenter, chameleonFallAnim);
                 goalDoor.getObstacle().setName("door");
             }
         }
