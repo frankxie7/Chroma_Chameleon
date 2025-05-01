@@ -447,6 +447,11 @@ public class PhysicsController implements ContactListener {
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
             if(goalsFull()){
                 playerWithDoor = true;
+                Door door = userDataA instanceof Door ? (Door) userDataA : (Door) userDataB;
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+
+                player.setFalling(true);
+                door.playChameleonFallAnimation();
             }
         }
     }

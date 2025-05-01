@@ -77,7 +77,7 @@ public class Chameleon extends ObstacleSprite {
     private boolean faceDown = false;
     private enum Direction { UP, DOWN, LEFT, RIGHT }
     private Direction lastDirection = Direction.RIGHT;
-
+    private boolean falling = false;
 
     private Animation<TextureRegion> walkAnim;
     private Animation<TextureRegion> upWalkAnim;
@@ -126,6 +126,10 @@ public class Chameleon extends ObstacleSprite {
     public float getVerticalMovement() {return verticalMovement;}
     public void setVerticalMovement(float value) {
         verticalMovement = value;
+    }
+
+    public void setFalling(boolean falling) {
+        this.falling = falling;
     }
 
     /**
@@ -360,8 +364,6 @@ public class Chameleon extends ObstacleSprite {
     public void update(float dt) {
         InputController input = InputController.getInstance();
 
-
-
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
@@ -457,6 +459,7 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void draw(SpriteBatch batch) {
+        if (falling) return;
         // Save the current color of the batch
         Color target = isHidden() ? Color.PINK : Color.WHITE;
         batch.setColor(target);

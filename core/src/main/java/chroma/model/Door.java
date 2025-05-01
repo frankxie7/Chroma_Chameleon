@@ -16,7 +16,9 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 public class Door extends ObstacleSprite {
     private final Animation<TextureRegion> closedAnim;
     private final Animation<TextureRegion> openAnim;
+    private final Animation<TextureRegion> chameleonFallAnim;
     private boolean opened = false;
+    private boolean isChameleonFalling = false;
 
     private float animTime = 0f;
     private TextureRegion currentFrame;
@@ -25,12 +27,14 @@ public class Door extends ObstacleSprite {
     private static final float SIZE = 4f; // door size in world units
 
     public Door(float units,
-        Animation<TextureRegion> closedAnim,
-        Animation<TextureRegion> openAnim,
-        Vector2 center) {
+                Animation<TextureRegion> closedAnim,
+                Animation<TextureRegion> openAnim,
+                Vector2 center, Animation<TextureRegion> chameleonFallAnim) {
         this.units      = units;
         this.closedAnim = closedAnim;
         this.openAnim   = openAnim;
+        this.chameleonFallAnim = chameleonFallAnim;
+
 
         // Build 4×4‑unit static polygon
         float half = SIZE / 2f;
@@ -66,10 +70,20 @@ public class Door extends ObstacleSprite {
         return opened;
     }
 
+    public void playChameleonFallAnimation() {
+        isChameleonFalling = true;
+        animTime = 0f;
+    }
+
     @Override
     public void update(float dt) {
         animTime += dt;
-        if (opened) {
+        if (isChameleonFalling) {
+            currentFrame = chameleonFallAnim.getKeyFrame(animTime, false);
+            if (chameleonFallAnim.isAnimationFinished(animTime)) {
+                isChameleonFalling = false;
+            }
+        } else if (opened) {
             currentFrame = openAnim.getKeyFrame(animTime, false);
         } else {
             currentFrame = closedAnim.getKeyFrame(animTime, true);
