@@ -768,22 +768,7 @@ public class GameplayController implements Screen {
 
 
 
-        // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
+
 
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -813,22 +798,22 @@ public class GameplayController implements Screen {
             laser.draw(batch);
         }
 
-//        // Draw goal tiles
-//        if (level.getGoalTiles() != null) {
-//            for (BackgroundTile tile : level.getGoalTiles()) {
-//                tile.draw(batch);
-//            }
-//        }
-//        if (level.getGoal2Tiles() != null) {
-//            for (BackgroundTile tile : level.getGoal2Tiles()) {
-//                tile.draw(batch);
-//            }
-//        }
-//        if (level.getGoal3Tiles() != null) {
-//            for (BackgroundTile tile : level.getGoal3Tiles()) {
-//                tile.draw(batch);
-//            }
-//        }
+        // Draw goal tiles
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal2Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal2Tiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal3Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal3Tiles()) {
+                tile.draw(batch);
+            }
+        }
 
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
