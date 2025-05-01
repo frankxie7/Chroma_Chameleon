@@ -23,7 +23,8 @@ public class Laser extends ObstacleSprite {
 
         // Build 1×1-unit static polygon, centered on tile
         float half = SIZE / 2f;
-        float[] verts = { -half, -half,  half, -half,  half, half,  -half, half };
+        float vertical = 0.2f;
+        float[] verts = { -half, -half,  half, -half,  half, -vertical,  -half, -vertical };
         PolygonObstacle poly = new PolygonObstacle(verts);
         poly.setBodyType(BodyDef.BodyType.StaticBody);
         poly.setPhysicsUnits(units);
