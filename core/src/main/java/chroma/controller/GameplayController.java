@@ -285,7 +285,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y), 4, 0.1f, units, constants, 2);
+            physics.createGoal(new Vector2(x, y),4,0.125f,units,constants,2);
         }
         for (BackgroundTile machine : level.getGoal3Tiles()) {
             Rectangle rec = machine.getBounds();
@@ -293,7 +293,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y), 4, 0.2f, units, constants, 3);
+            physics.createGoal(new Vector2(x, y),4,0.125f,units,constants,3);
         }
 
         // Initialize AI
@@ -406,21 +406,21 @@ public class GameplayController implements Screen {
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
         }
-        if (physics.goals1Full() && !goal1Complete) {
+        if(physics.goals1Full() && !goal1Complete){
             goal1Complete = true;
-            for (Goal g : physics.getGoalList()) {
+            for(Goal g : physics.getGoalList()){
                 g.setComplete();
             }
         }
-        if (physics.goals2Full() && !goal2Complete) {
+        if(physics.goals2Full() && !goal2Complete) {
             goal2Complete = true;
-            for (Goal g : physics.getGoal2List()) {
+            for(Goal g : physics.getGoal2List()){
                 g.setComplete();
             }
         }
-        if (physics.goals3Full() && !goal3Complete) {
+        if(physics.goals3Full() && !goal3Complete){
             goal3Complete = true;
-            for (Goal g : physics.getGoal3List()) {
+            for(Goal g : physics.getGoal3List()){
                 g.setComplete();
             }
         }
@@ -465,7 +465,7 @@ public class GameplayController implements Screen {
 
     /**
      * Helper for clamping the bomb position in aiming range
-     */
+     * */
     private Vector2 clampBombPos(Vector3 screenPos, float rangePhys) {
         float startX = player.getPosition().x * units;
         float startY = player.getPosition().y * units;
@@ -476,7 +476,7 @@ public class GameplayController implements Screen {
 
         float dx = bombX - startX;
         float dy = bombY - startY;
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
+        float dist = (float)Math.sqrt(dx*dx + dy*dy);
 
         if (dist > aimRangePx / 2f) {
             float scale = (aimRangePx / 2f) / dist;
@@ -495,7 +495,7 @@ public class GameplayController implements Screen {
 
     private void handleBombSkill(float dt) {
         InputController in = InputController.getInstance();
-        boolean skillKey = in.didSkill();
+        boolean skillKey   = in.didSkill();
         BombSkillState old = bombState;
         switch (bombState) {
             case READY:
@@ -766,6 +766,25 @@ public class GameplayController implements Screen {
             }
         }
 
+
+
+        // Draw goal tiles
+        if (level.getGoalTiles() != null) {
+            for (BackgroundTile tile : level.getGoalTiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal2Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal2Tiles()) {
+                tile.draw(batch);
+            }
+        }
+        if (level.getGoal3Tiles() != null) {
+            for (BackgroundTile tile : level.getGoal3Tiles()) {
+                tile.draw(batch);
+            }
+        }
+
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         // Draw all bombs
@@ -794,22 +813,22 @@ public class GameplayController implements Screen {
             laser.draw(batch);
         }
 
-        // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
+//        // Draw goal tiles
+//        if (level.getGoalTiles() != null) {
+//            for (BackgroundTile tile : level.getGoalTiles()) {
+//                tile.draw(batch);
+//            }
+//        }
+//        if (level.getGoal2Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal2Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
+//        if (level.getGoal3Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal3Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
 
         if (level.getGrates() != null) {
             for (Grate grate : level.getGrates()) {
