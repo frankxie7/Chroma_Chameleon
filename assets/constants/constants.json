@@ -10,7 +10,7 @@
   },
   "chameleon" : {
     "pos"       : [5.0, 5.0],
-    "inner"     : [1.8, 0.8],
+    "inner"     : [1.5, 1.5],
     "size"      : 1.0,
     "drawScale": 0.8,
     "force"     : 80.0,
@@ -139,9 +139,35 @@
       "patrol_paths": [
         [],[]
       ],
-      "positions": [[11.0, 13.0],[25.0, 13.0]],
+      "positions": [[11.0, 12.0],[25.0, 12.0]],
       "startRotation": [30,150],
       "rotateAngle": [30,30],
+      "inner": [0.5, 0.65],
+      "size": 3.2,
+      "drawScale": 0.55,
+      "force": 10.0,
+      "damping": 80.0,
+      "maxspeed": 9.0,
+      "sensor": {
+        "shrink": 0.9,
+        "height": 0.05
+      },
+      "debug": {
+        "avatar": "#ffff00ff",
+        "sensor": "#ff0000ff",
+        "tolerance": 0.05
+      }
+    },
+    "level_4" : {
+      "names": ["enemy1"],
+      "types": ["GUARD"],
+      "patrols": [true],
+      "patrol_paths": [
+        [[12,29],[38,29],[38,8]]
+      ],
+      "positions": [[38, 29]],
+      "startRotation": [0,150],
+      "rotateAngle": [0,0],
       "inner": [0.5, 0.65],
       "size": 3.2,
       "drawScale": 0.55,

@@ -117,10 +117,10 @@ public class GameplayController implements Screen {
 
 
     private static final float RANGE_MIN = 5f;
-    private static final float RANGE_MAX = 20f;
+    private static final float RANGE_MAX = 15f;
     private static final float RANGE_GROWTH = 12f;
     private static final float ZOOM_DEFAULT = 0.5f;
-    private static final float ZOOM_OUT_MAX = 0.8f;
+    private static final float ZOOM_OUT_MAX = 0.7f;
     private static final float ZOOM_LERP = 5f;
 
 
@@ -760,7 +760,7 @@ public class GameplayController implements Screen {
      */
     private void draw(float dt) {
 
-        ScreenUtils.clear(new Color(0.10f, 0.12f, 0.15f, 1f));
+        ScreenUtils.clear(new Color(0.12f, 0.16f, 0.2f, 1f));
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
@@ -770,10 +770,6 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
-
-
-
-
 
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -812,11 +808,7 @@ public class GameplayController implements Screen {
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
-        for (ObstacleSprite sprite : physics.objects) {
-            if (sprite.getName() != null && sprite.getName().equals("chameleon")) {
-                sprite.draw(batch);
-            }
-        }
+        player.draw(batch);
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {

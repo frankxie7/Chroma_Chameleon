@@ -65,6 +65,8 @@ public class Chameleon extends ObstacleSprite {
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
+    private boolean translucent = false;
+
     //Position
     private Vector2 position;
 
@@ -224,6 +226,10 @@ public class Chameleon extends ObstacleSprite {
         return faceDown;
     }
 
+    /** Called by the controller to turn half-see-through on or off. */
+    public void setTranslucent(boolean t) {
+        this.translucent = t;
+    }
     public void setPosition(float x, float y) {
         if (obstacle != null && obstacle.getBody() != null) {
             obstacle.setPosition(x, y);
@@ -268,7 +274,7 @@ public class Chameleon extends ObstacleSprite {
         drawScale = dataGlobal.getFloat("drawScale");
 
         // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(x, y, s * dataGlobal.get("inner").getFloat(0), s * dataGlobal.get("inner").getFloat(1)*1.5f);
+        obstacle = new CapsuleObstacle(x, y, s * dataGlobal.get("inner").getFloat(0), s * dataGlobal.get("inner").getFloat(1));
         ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
 
         // Ensure the body is dynamic so it can move.
@@ -465,7 +471,10 @@ public class Chameleon extends ObstacleSprite {
         if (falling) return;
         // Save the current color of the batch
         Color target = isHidden() ? Color.PINK : Color.WHITE;
+//        float alpha = translucent ? 0.2f : 1.0f;
         batch.setColor(target);
+//        Color c = batch.getColor();
+//        batch.setColor(c.r, c.g, c.b, alpha);
         // Update the mesh vertex colors dynamically.
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
