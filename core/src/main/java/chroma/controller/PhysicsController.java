@@ -151,72 +151,58 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI / 2.0) / numRays;
+        float angleStep = (float)(Math.PI/2.0) / numRays;
         //hits.clear();
         for (int i = 0; i < numRays; i++) {
-            float angleOffset = (i - numRays / 2.0f) * angleStep;
-            float currentAngle = angle + angleOffset;
-            float customRadius = computeRadiusForAngle(angleOffset);
-            Vector2 direction = new Vector2((float)Math.cos(currentAngle), (float)Math.sin(currentAngle)).nor();
+            float angleOffset   = (i - numRays/2.0f) * angleStep;
+            float currentAngle  = angle + angleOffset;
+//            float customRadius  = computeRadiusForAngle(angleOffset);
+            float customRadius  = rayLength;
+            Vector2 direction   = new Vector2(
+                (float)Math.cos(currentAngle),
+                (float)Math.sin(currentAngle)
+            ).nor();
+
             if (obstacle.getPosition() == null) {
                 return;
             }
+            // start from the chameleon’s “nozzle”
             Vector2 position = obstacle.getPosition().cpy();
-            //Depening on orientation change the position of our raycast
-            if(obstacle.isFacingRight()) {
-                position.x = position.x + 0.9f;
-            }
-            if(obstacle.isFaceUp()){
-                position.y = position.y + 0.9f;
-            }
-            if(obstacle.isFaceLeft()){
-                position.x = position.x - 0.9f;
-            }
-            if(obstacle.isFaceDown()){
-                position.y = position.y - 0.9f;
-            }
+            if (obstacle.isFacingRight()) position.x += 0.9f;
+            if (obstacle.isFaceUp())     position.y += 0.9f;
+            if (obstacle.isFaceLeft())   position.x -= 0.9f;
+            if (obstacle.isFaceDown())   position.y -= 0.9f;
+
+            // shoot out to the variable radius
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
 
-            //We are using a priority queue here for efficiency (min stack could be better sigh)
             RayCastCallback callback = new RayCastCallback() {
                 /**
                  * Override of reportRayFixture
                  * @param fixture the fixture we hit
                  * @param point the point at which we hit
                  * @param normal normal vector
-                 * @param fraction the fraction the ray was able to make it to end
+                 * @param fraction how far along the ray we hit
                  * @return fraction if we want to store the hit, -1 to ignore
                  */
                 @Override
                 public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
                     Object userData = fixture.getBody().getUserData();
-                    //If we are Goal or Collision add to list otherwise ignore
-                    //Note we are not adding full goals to the list
-                    if(userData instanceof Collision){
-                        //hits.add(new RayCastHit(userData,fraction));
+                    // If we are a Collision, register the hit and stop the ray there
+                    if (userData instanceof Collision) {
                         endPoint.set(point);
                         return fraction;
-                    }else{
-                        return -1;
+                    } else {
+                        return -1f;
                     }
                 }
             };
+
             world.rayCast(callback, position, endPoint);
-            //hits.sort((h1,h2) -> Float.compare(h1.fraction, h2.fraction));
-//            for(RayCastHit o : hits){
-//                if(o.object instanceof Collision){
-//                    //Once we hit our Collision object get out
-//                    break;
-//                }
-//                if(o.object instanceof Goal){
-//                    //If we are a Goal set ourselves to full
-//                    Goal g = (Goal) o.object;
-//                    g.setFull();
-//                }
-//            }
             endpoints[i] = new Vector2(endPoint);
         }
     }
+
 
     private float computeRadiusForAngle(float angleOffset) {
         float halfFanAngle = (float)(Math.PI / 4.0);
@@ -351,13 +337,11 @@ public class PhysicsController implements ContactListener {
         final Fixture[] hitFixture = {null};
         world.rayCast((fixture, point, normal, fraction) -> {
             Object o = fixture.getBody().getUserData();
-            if (o instanceof Laser) {
-                return -1f;
-            }
+
             if(o instanceof Spray || o instanceof Bomb){
                 return 0;
             }
-            if(o instanceof Grate || o instanceof Door){
+            if(o instanceof Grate || o instanceof Door || o instanceof Laser){
                 return -1;
             }
             hitFixture[0] = fixture;
