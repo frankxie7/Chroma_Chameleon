@@ -55,6 +55,7 @@ public class AIController {
 
     // CHASE:
     private float chaseMaxSpeed = 9f;
+    private float outOfSightTimer = 1f;
 
     // ALERT:
     private float alertMaxSpeed = 6f;
@@ -452,6 +453,7 @@ public class AIController {
         // Detection logic first: always grows/shrinks no matter the state
         if (playerDetected) {
             detectionTimer = Math.min(detectionThreshold + 0.5f, detectionTimer + delta);
+            outOfSightTimer = 0f;
         } else if (alertTimer >= alertLength) {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
@@ -464,9 +466,12 @@ public class AIController {
             player.setLastSeen(lastSpotted);
             chaseState(delta, enemyPos, playerPos);
             if (!playerDetected) {
-                state = State.ALERT;
-                alertTimer = 0;
-                detectionTimer = detectionThreshold;  // lock it at max during ALERT
+                outOfSightTimer += delta;
+                if (outOfSightTimer > 0.5) {
+                    state = State.ALERT;
+                    alertTimer = 0;
+                    detectionTimer = detectionThreshold;  // lock it at max during ALERT
+                }
             }
         } else if (state == State.ALERT) {
             alertState(delta, enemyPos);
@@ -508,7 +513,6 @@ public class AIController {
         enemy.applyForce();
         enemy.update(delta);
 
-
         // Animation
         if (blueRedPlayingForward) {
             blueRedTime += delta;
@@ -524,7 +528,6 @@ public class AIController {
             }
         }
         enemy.setBlueRedTime(blueRedTime);
-
     }
 
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
@@ -730,25 +733,25 @@ public class AIController {
         }
     }
 
-    private float cleaningTimer = 0f;
-    private static final float CLEANING_INTERVAL = 1f;
-    private void cleanNearbyPaint(float delta) {
-        cleaningTimer += delta;
-        if (cleaningTimer >= CLEANING_INTERVAL) {
-            for (ObstacleSprite obj : physics.objects) {
-                if (obj instanceof Spray) {
-                    Spray spray = (Spray) obj;
-                    Vector2 sprayPos = spray.getPosition();
-//                    System.out.println("Spray: " + sprayPos);
-//                    System.out.println("Dist: " + enemy.getPosition().dst(sprayPos));
-                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= enemy.getBaseDetectionRange()) {
-                        cleaningTimer = 0f;
-                        spray.setExpired();; // however you handle removing objects
-                    }
-                }
-            }
-        }
-    }
+//    private float cleaningTimer = 0f;
+//    private static final float CLEANING_INTERVAL = 1f;
+//    private void cleanNearbyPaint(float delta) {
+//        cleaningTimer += delta;
+//        if (cleaningTimer >= CLEANING_INTERVAL) {
+//            for (ObstacleSprite obj : physics.objects) {
+//                if (obj instanceof Spray) {
+//                    Spray spray = (Spray) obj;
+//                    Vector2 sprayPos = spray.getPosition();
+////                    System.out.println("Spray: " + sprayPos);
+////                    System.out.println("Dist: " + enemy.getPosition().dst(sprayPos));
+//                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= enemy.getBaseDetectionRange()) {
+//                        cleaningTimer = 0f;
+//                        spray.setExpired();; // however you handle removing objects
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
     private Array<Vector2> lastPath;

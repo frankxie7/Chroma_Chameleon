@@ -1,11 +1,11 @@
 {
   "platform": "mac",
-  "jdk": "/Users/cooperproctor/Downloads/jdk-21.0.7.jdk/Contents/Home/",
+  "jdk": "/Users/cooperproctor/library/Java/JavaVirtualMachines/openjdk-23.0.2/Contents/Home/",
   "executable": "Chroma Chameleon",
   "classpath": ["Chroma_Chameleon.lwjgl3.main.jar"],
   "mainclass": "chroma.lwjgl3.Lwjgl3Launcher",
-  "vmargs": ["-Xmx1G"],
-  "resources": ["/Users/cooperproctor/3152 Game Dev/Chroma_Chameleon/assets/"],
-  "output": "/Users/cooperproctor/Desktop/ChromaBuildMac",
+  "vmargs": [],
+  "resources": [],
+  "output": "/Users/cooperproctor/Desktop/ChromaBuildMac.app",
   "icon": "/Users/cooperproctor/Downloads/chroma_icon.png"
 }

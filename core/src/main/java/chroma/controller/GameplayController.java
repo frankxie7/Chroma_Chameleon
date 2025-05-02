@@ -893,8 +893,8 @@ public class GameplayController implements Screen {
             if (frameIndex != -1) {
                 TextureRegion frame = ai.getEnemy().getAlertAnimation().getKeyFrames()[frameIndex];
 
-                float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale() * 2;
-                float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale() * 2;
+                float drawWidth = frame.getRegionWidth() * ai.getEnemy().getDrawScale();
+                float drawHeight = frame.getRegionHeight() * ai.getEnemy().getDrawScale();
                 float px = ai.getEnemy().getPosition().x * units;
                 float py = ai.getEnemy().getPosition().y * units;
 
