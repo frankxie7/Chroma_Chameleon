@@ -277,7 +277,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y), 5, 0.1f, units, constants, 1);
+            physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
         }
         for (BackgroundTile machine : level.getGoal2Tiles()) {
             Rectangle rec = machine.getBounds();
@@ -285,7 +285,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y),5,0.1f,units,constants,2);
+            physics.createGoal(new Vector2(x, y),4,0.125f,units,constants,2);
         }
         for (BackgroundTile machine : level.getGoal3Tiles()) {
             Rectangle rec = machine.getBounds();
@@ -293,7 +293,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
-            physics.createGoal(new Vector2(x, y),5,0.1f,units,constants,3);
+            physics.createGoal(new Vector2(x, y),4,0.125f,units,constants,3);
         }
 
         // Initialize AI
