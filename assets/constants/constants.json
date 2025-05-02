@@ -69,7 +69,7 @@
     },
     "level_3": {
       "names": ["enemy1", "enemy2"],
-      "types": ["CAMERA", "CAMERA"],
+      "types": ["CAMERA1", "CAMERA1"],
       "patrols": [false, false],
       "patrol_paths": [[], []],
       "positions": [[11.0, 12.0], [25.0, 12.0]],
@@ -78,7 +78,7 @@
     },
     "level_4": {
       "names": ["enemy1", "enemy2","enemy3","enemy4","enemy5"],
-      "types": ["GUARD", "GUARD","CAMERA","CAMERA","CAMERA"],
+      "types": ["GUARD", "GUARD","CAMERA2","CAMERA2","CAMERA1"],
       "patrols": [true, true,false,false,false],
       "patrol_paths": [
         [[12,30],[39,30],[39,8],[39,30]],
@@ -93,13 +93,13 @@
     },
     "level_5": {
           "names": ["enemy1", "enemy2"],
-          "types": ["GUARD", "CAMERA"],
+          "types": ["GUARD", "CAMERA2"],
           "patrols": [true, false],
           "patrol_paths": [[[9,25],[40,25]],[]],
           "positions": [[40, 25], [19, 14]],
           "startRotation": [90, 270],
-          "rotateAngle": [120, 270]
-        },
+          "rotateAngle": [120, 60]
+        }
   },
 
   "bomb": {

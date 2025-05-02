@@ -20,7 +20,7 @@ import java.util.List;
 
 public class Enemy extends ObstacleSprite {
     public enum Type {
-        GUARD, SWEEPER, CAMERA
+        GUARD, SWEEPER, CAMERA1, CAMERA2
     }
 
     private Vector2 position;
@@ -94,7 +94,7 @@ public class Enemy extends ObstacleSprite {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
-        if (this.type == Type.CAMERA) {
+        if (this.type == Type.CAMERA1 || this.type == Type.CAMERA2) {
             this.baseDetectionRange = 7;
             this.alertDetectionRange = 7;
         } else {
@@ -111,7 +111,7 @@ public class Enemy extends ObstacleSprite {
         float size = s * units;
         drawScale = globalData.getFloat("drawScale");
 
-        if (this.type == Type.CAMERA) {
+        if (this.type == Type.CAMERA1 || this.type == Type.CAMERA2) {
             this.position = new Vector2(position[0], position[1]);
             obstacle = null;
             bodyWidth = 0;
@@ -180,10 +180,10 @@ public class Enemy extends ObstacleSprite {
     public void setMaxSpeed(float value) { this.maxspeed = value; }
     public float getBaseDetectionRange() { return baseDetectionRange; }
     public float getAlertDetectionRange() { return alertDetectionRange; }
-    public float getFov() { return type == Type.CAMERA ? cameraFOV : guardFOV; }
+    public float getFov() { return type == Type.CAMERA1 || type == Type.CAMERA2 ? cameraFOV : guardFOV; }
     public Type getType() { return type; }
     public float getStartRotation() { return startRotation; }
-    public Vector2 getPosition() { return (type == Type.CAMERA) ? position : obstacle.getPosition(); }
+    public Vector2 getPosition() { return type == Type.CAMERA1 || type == Type.CAMERA2 ? position : obstacle.getPosition(); }
     public float getWidth() { return bodyWidth; }
     public float getHeight() { return bodyHeight; }
     public boolean getPatrol() { return patrol; }
@@ -197,7 +197,7 @@ public class Enemy extends ObstacleSprite {
     public float getDrawScale() { return drawScale; }
 
     public float getRotation() {
-        if (type == Type.CAMERA) {
+        if (type == Type.CAMERA1 || type == Type.CAMERA2) {
             return (float) Math.toRadians(rotation); // Cameras use their own stored rotation
         }
 
@@ -222,7 +222,7 @@ public class Enemy extends ObstacleSprite {
     private float turnSmoothing = 0.1f;
 
     public void applyForce() {
-        if (type == Type.CAMERA || obstacle == null || !obstacle.isActive()) {
+        if (type == Type.CAMERA1 || type == Type.CAMERA2 || obstacle == null || !obstacle.isActive()) {
             return;
         }
 

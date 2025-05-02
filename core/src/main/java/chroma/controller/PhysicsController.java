@@ -431,7 +431,7 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Chameleon && userDataB instanceof Enemy) ||
             (userDataA instanceof Enemy && userDataB instanceof Chameleon)) {
             Enemy enemy = (userDataA instanceof Enemy) ? (Enemy) userDataA : (Enemy) userDataB;
-            playerCollidedWithEnemy = enemy.getType() != Enemy.Type.CAMERA;
+            playerCollidedWithEnemy = enemy.getType() != Enemy.Type.CAMERA1 && enemy.getType() != Enemy.Type.CAMERA2;
         }
 
         Object a = contact.getFixtureA().getBody().getUserData();
