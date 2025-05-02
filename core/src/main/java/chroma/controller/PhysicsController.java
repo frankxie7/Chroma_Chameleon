@@ -554,21 +554,33 @@ public class PhysicsController implements ContactListener {
         }
         int numFilled = 0;
         for(Goal goal : goalList){
+            if(goal != null && goal.isComplete()){
+                numFilled += goalList.size();
+                break;
+            }
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
         for(Goal goal : goal2List){
+            if(goal != null && goal.isComplete()){
+                numFilled += goal2List.size();
+                break;
+            }
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
         for(Goal goal : goal3List) {
+            if(goal != null && goal.isComplete()){
+                numFilled += goal3List.size();
+                break;
+            }
             if (goal != null && goal.isFull()) {
                 numFilled += 1;
             }
         }
-        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.90;
+        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.95;
     }
 
     /**
@@ -582,7 +594,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.size() > 0.90;
+        return (float)numFilled / goalList.size() > 0.95;
     }
 
     /**
@@ -596,7 +608,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal2List.size() > 0.90;
+        return (float)numFilled / goal2List.size() > 0.95;
     }
 
     /**
@@ -610,7 +622,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal3List.size() > 0.8;
+        return (float)numFilled / goal3List.size() > 0.95;
     }
 
 
