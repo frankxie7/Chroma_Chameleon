@@ -90,7 +90,16 @@
       "positions": [[39, 30],[9,7],[13,24],[35,24],[24,11]],
       "startRotation": [0, 90, 315,225,90],
       "rotateAngle": [0, 0, 30,30,89]
-    }
+    },
+    "level_8": {
+          "names": ["enemy1", "enemy2"],
+          "types": ["GUARD", "CAMERA"],
+          "patrols": [true, false],
+          "patrol_paths": [[[5,30],[40,30]],[]],
+          "positions": [[40, 30], [19, 15]],
+          "startRotation": [90, 0],
+          "rotateAngle": [0, 180]
+        },
   },
 
   "bomb": {
