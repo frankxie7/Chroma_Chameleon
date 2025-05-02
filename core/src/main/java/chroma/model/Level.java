@@ -362,6 +362,8 @@ public class Level {
                 Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
 
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
+                Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
+                Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
 
@@ -371,7 +373,7 @@ public class Level {
                 Animation<TextureRegion> openAnim = new Animation<>(0.075f, frames);
                 openAnim.setPlayMode(Animation.PlayMode.NORMAL);
 
-                goalDoor = new Door(units, closedAnim, openAnim, doorCenter);
+                goalDoor = new Door(units, closedAnim, openAnim, doorCenter, chameleonFallAnim);
                 goalDoor.getObstacle().setName("door");
             }
         }
@@ -383,10 +385,10 @@ public class Level {
         Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
         Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
         Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
-        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.08f);
-        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.08f);
-        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.08f);
-        Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.08f);
+        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.07f);
+        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
+        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
+        Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
         avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
         avatar.setBombAnimation(bombAnim);
 
@@ -397,16 +399,16 @@ public class Level {
         if (enemiesData != null) {
 //            Texture enemyTex = directory.getEntry("enemy", Texture.class);
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
-            Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.1f);
+            Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.2f);
             Texture enemyBlueRedSheet = directory.getEntry("enemyBlueRedSheet", Texture.class);
-            Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.15f);
+            Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.2f);
             // BLUE
             Texture enemySideSheetBlue = directory.getEntry("enemySideSheetBlue", Texture.class);
-            Animation<TextureRegion> enemySideAnimBlue = createAnimation(enemySideSheetBlue, 8, 0.15f);
+            Animation<TextureRegion> enemySideAnimBlue = createAnimation(enemySideSheetBlue, 8, 0.3f);
             Texture enemyFrontSheetBlue = directory.getEntry("enemyFrontSheetBlue", Texture.class);
-            Animation<TextureRegion> enemyFrontAnimBlue = createAnimation(enemyFrontSheetBlue, 12, 0.1f);
+            Animation<TextureRegion> enemyFrontAnimBlue = createAnimation(enemyFrontSheetBlue, 12, 0.2f);
             Texture enemyBackSheetBlue = directory.getEntry("enemyBackSheetBlue", Texture.class);
-            Animation<TextureRegion> enemyBackAnimBlue = createAnimation(enemyBackSheetBlue, 12, 0.1f);
+            Animation<TextureRegion> enemyBackAnimBlue = createAnimation(enemyBackSheetBlue, 12, 0.2f);
             // RED
             Texture enemySideSheetRed = directory.getEntry("enemySideSheetRed", Texture.class);
             Animation<TextureRegion> enemySideAnimRed = createAnimation(enemySideSheetRed, 8, 0.15f);
@@ -425,28 +427,41 @@ public class Level {
                 redSet
             );
 
-            JsonValue enemyPositions = enemiesData.get("positions");
-            JsonValue enemyType = enemiesData.get("types");
-            JsonValue enemyPatrol = enemiesData.get("patrols");
-            JsonValue enemyPatrolPath = enemiesData.get("patrol_paths");
-            JsonValue enemyStartRotation = enemiesData.get("startRotation");
-            JsonValue enemyRotateAngles = enemiesData.get("rotateAngle");
-            for (int i = 0; i < enemyPositions.size; i++) {
-                float[] coords = enemyPositions.get(i).asFloatArray();
-                String type = enemyType.get(i).asString();
+            JsonValue enemiesRoot = globalConstants.get("enemies");
+            JsonValue globalEnemy = enemiesRoot.get("global");
+            JsonValue levelData   = enemiesRoot.get(name);
 
-                boolean patrol = enemyPatrol.get(i).asBoolean();
-                JsonValue patrolPath = enemyPatrolPath.get(i); // Get the JSON array for this enemy
+            JsonValue enemyPositions    = levelData.get("positions");
+            JsonValue enemyTypes        = levelData.get("types");
+            JsonValue enemyPatrols      = levelData.get("patrols");
+            JsonValue enemyPatrolPaths  = levelData.get("patrol_paths");
+            JsonValue enemyStartRot     = levelData.get("startRotation");
+            JsonValue enemyRotateAngles = levelData.get("rotateAngle");
+
+            for (int i = 0; i < enemyPositions.size; i++) {
+                float[] coords          = enemyPositions.get(i).asFloatArray();
+                String type             = enemyTypes.get(i).asString();
+                boolean patrol          = enemyPatrols.get(i).asBoolean();
+
                 List<float[]> patrolPathList = new ArrayList<>();
-                for (JsonValue point : patrolPath) {
-                    patrolPathList.add(point.asFloatArray()); // Convert each sub-array to float[]
+                for (JsonValue point : enemyPatrolPaths.get(i)) {
+                    patrolPathList.add(point.asFloatArray());
                 }
-                float startRotation = enemyStartRotation.get(i).asFloat();
-                float rotateAngle = enemyRotateAngles.get(i).asFloat();
-                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList, startRotation, rotateAngle, units, enemiesData, anims);
-//                enemy.setTexture(enemyTex);
+
+                float startRotation = enemyStartRot.get(i).asFloat();
+                float rotateAngle   = enemyRotateAngles.get(i).asFloat();
+
+                Enemy enemy = new Enemy(
+                    coords, type, patrol, patrolPathList,
+                    startRotation, rotateAngle,
+                    units,
+                    globalEnemy,
+                    levelData,
+                    anims
+                );
                 enemies.add(enemy);
             }
+
         }
         lasers        = new ArrayList<>();
         // ---------- Lasers (1×1 tiles) ----------

@@ -65,6 +65,8 @@ public class Chameleon extends ObstacleSprite {
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
+    private boolean translucent = false;
+
     //Position
     private Vector2 position;
 
@@ -77,7 +79,7 @@ public class Chameleon extends ObstacleSprite {
     private boolean faceDown = false;
     private enum Direction { UP, DOWN, LEFT, RIGHT }
     private Direction lastDirection = Direction.RIGHT;
-
+    private boolean falling = false;
 
     private Animation<TextureRegion> walkAnim;
     private Animation<TextureRegion> upWalkAnim;
@@ -126,6 +128,10 @@ public class Chameleon extends ObstacleSprite {
     public float getVerticalMovement() {return verticalMovement;}
     public void setVerticalMovement(float value) {
         verticalMovement = value;
+    }
+
+    public void setFalling(boolean falling) {
+        this.falling = falling;
     }
 
     /**
@@ -220,6 +226,10 @@ public class Chameleon extends ObstacleSprite {
         return faceDown;
     }
 
+    /** Called by the controller to turn half-see-through on or off. */
+    public void setTranslucent(boolean t) {
+        this.translucent = t;
+    }
     public void setPosition(float x, float y) {
         if (obstacle != null && obstacle.getBody() != null) {
             obstacle.setPosition(x, y);
@@ -264,7 +274,7 @@ public class Chameleon extends ObstacleSprite {
         drawScale = dataGlobal.getFloat("drawScale");
 
         // Create a capsule obstacle
-        obstacle = new CapsuleObstacle(x, y, s * dataGlobal.get("inner").getFloat(0), s * dataGlobal.get("inner").getFloat(1)*1.5f);
+        obstacle = new CapsuleObstacle(x, y, s * dataGlobal.get("inner").getFloat(0), s * dataGlobal.get("inner").getFloat(1));
         ((CapsuleObstacle)obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
 
         // Ensure the body is dynamic so it can move.
@@ -358,16 +368,17 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void update(float dt) {
+        if (falling) {
+            return;
+        }
         InputController input = InputController.getInstance();
-
-
 
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
         setMovement(hmove * getForce());
         setVerticalMovement(vmove * getForce());
-        setShooting(input.didSecondary());
+        setShooting(input.didLeftClick());
         applyForce();
 
         // Apply cooldowns
@@ -457,9 +468,13 @@ public class Chameleon extends ObstacleSprite {
      */
     @Override
     public void draw(SpriteBatch batch) {
+        if (falling) return;
         // Save the current color of the batch
         Color target = isHidden() ? Color.PINK : Color.WHITE;
+//        float alpha = translucent ? 0.2f : 1.0f;
         batch.setColor(target);
+//        Color c = batch.getColor();
+//        batch.setColor(c.r, c.g, c.b, alpha);
         // Update the mesh vertex colors dynamically.
         int count = mesh.vertexCount();
         for (int i = 0; i < count; i++) {
@@ -477,6 +492,11 @@ public class Chameleon extends ObstacleSprite {
         float px = obstacle.getX() * obstacle.getPhysicsUnits();
         float py = obstacle.getY() * obstacle.getPhysicsUnits();
 
+        if (faceRight || faceLeft) {
+            drawWidth *= 0.95f;
+        }else{
+            drawWidth *= 1.05f;
+        }
         if (faceRight) {
             if (currentFrame.isFlipX()) {
                 currentFrame.flip(true, false);

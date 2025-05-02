@@ -40,7 +40,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 15;
+    private int numRays = 12;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -56,7 +56,7 @@ public class PhysicsController implements ContactListener {
     //List of Goal Tiles
     private List<Goal> goal3List;
     //hits
-    private ArrayList<RayCastHit> hits;
+    //private ArrayList<RayCastHit> hits;
     //Index
     private int index;
     private Door goalDoor;
@@ -72,7 +72,7 @@ public class PhysicsController implements ContactListener {
         goalList = new ArrayList<>();
         goal2List = new ArrayList<>();
         goal3List = new ArrayList<>();
-        hits = new ArrayList<>();
+        //hits = new ArrayList<>();
         index = 0;
         this.directory = directory;
         endpoints = new Vector2[numRays];
@@ -151,8 +151,8 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI / 4.0) / numRays;
-        hits.clear();
+        float angleStep = (float)(Math.PI / 2.0) / numRays;
+        //hits.clear();
         for (int i = 0; i < numRays; i++) {
             float angleOffset = (i - numRays / 2.0f) * angleStep;
             float currentAngle = angle + angleOffset;
@@ -192,34 +192,28 @@ public class PhysicsController implements ContactListener {
                     Object userData = fixture.getBody().getUserData();
                     //If we are Goal or Collision add to list otherwise ignore
                     //Note we are not adding full goals to the list
-                    if (userData instanceof Goal && ((((Goal)userData).isFull()) || (((Goal)userData).isComplete()))){
-                        return -1f;
-                    }
-                    if (userData instanceof Goal) {
-                        hits.add(new RayCastHit(userData,fraction));
-                        return -1f;
-                    } else if(userData instanceof Collision){
-                        hits.add(new RayCastHit(userData,fraction));
+                    if(userData instanceof Collision){
+                        //hits.add(new RayCastHit(userData,fraction));
                         endPoint.set(point);
-                        return 0;
+                        return fraction;
                     }else{
                         return -1;
                     }
                 }
             };
             world.rayCast(callback, position, endPoint);
-            hits.sort((h1,h2) -> Float.compare(h1.fraction, h2.fraction));
-            for(RayCastHit o : hits){
-                if(o.object instanceof Collision){
-                    //Once we hit our Collision object get out
-                    break;
-                }
-                if(o.object instanceof Goal){
-                    //If we are a Goal set ourselves to full
-                    Goal g = (Goal) o.object;
-                    g.setFull();
-                }
-            }
+            //hits.sort((h1,h2) -> Float.compare(h1.fraction, h2.fraction));
+//            for(RayCastHit o : hits){
+//                if(o.object instanceof Collision){
+//                    //Once we hit our Collision object get out
+//                    break;
+//                }
+//                if(o.object instanceof Goal){
+//                    //If we are a Goal set ourselves to full
+//                    Goal g = (Goal) o.object;
+//                    g.setFull();
+//                }
+//            }
             endpoints[i] = new Vector2(endPoint);
         }
     }
@@ -357,6 +351,9 @@ public class PhysicsController implements ContactListener {
         final Fixture[] hitFixture = {null};
         world.rayCast((fixture, point, normal, fraction) -> {
             Object o = fixture.getBody().getUserData();
+            if (o instanceof Laser) {
+                return -1f;
+            }
             if(o instanceof Spray || o instanceof Bomb){
                 return 0;
             }
@@ -406,6 +403,12 @@ public class PhysicsController implements ContactListener {
             }
 //            System.out.println("Player entered spray; count = " + sprayContactCount);
         }
+
+        if ((userDataA instanceof Goal && userDataB instanceof Spray) ||
+            (userDataA instanceof Spray && userDataB instanceof Goal)) {
+            Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
+            goal.setFull();
+        }
         // Handle bomb and goal collisons
         if ((userDataA instanceof Goal && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Goal)) {
@@ -447,6 +450,11 @@ public class PhysicsController implements ContactListener {
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
             if(goalsFull()){
                 playerWithDoor = true;
+                Door door = userDataA instanceof Door ? (Door) userDataA : (Door) userDataB;
+                Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
+
+                player.setFalling(true);
+                door.playChameleonFallAnimation();
             }
         }
     }
@@ -518,11 +526,6 @@ public class PhysicsController implements ContactListener {
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
-        if ((a instanceof Goal && b instanceof Spray) ||
-            (a instanceof Spray && b instanceof Goal)) {
-            Goal g = a instanceof Goal ? (Goal) a : (Goal) b;
-            g.setFull();
-        }
         if ((a instanceof Spray && b instanceof Chameleon) ||
             (a instanceof Chameleon && b instanceof Spray)) {
             contact.setEnabled(false);
@@ -549,7 +552,6 @@ public class PhysicsController implements ContactListener {
         if (total == 0) {
             return true;
         }
-        System.out.println(goalList.size());
         int numFilled = 0;
         for(Goal goal : goalList){
             if(goal != null && goal.isFull()){
@@ -566,7 +568,7 @@ public class PhysicsController implements ContactListener {
                 numFilled += 1;
             }
         }
-        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.9;
+        return ((float)numFilled / (goalList.size() + goal2List.size() + goal3List.size())) > 0.90;
     }
 
     /**
@@ -580,7 +582,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.size() > 0.9;
+        return (float)numFilled / goalList.size() > 0.90;
     }
 
     /**
@@ -594,7 +596,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal2List.size() > 0.9;
+        return (float)numFilled / goal2List.size() > 0.90;
     }
 
     /**
@@ -608,7 +610,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal3List.size() > 0.9;
+        return (float)numFilled / goal3List.size() > 0.8;
     }
 
 
