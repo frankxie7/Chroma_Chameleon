@@ -351,6 +351,9 @@ public class PhysicsController implements ContactListener {
         final Fixture[] hitFixture = {null};
         world.rayCast((fixture, point, normal, fraction) -> {
             Object o = fixture.getBody().getUserData();
+            if (o instanceof Laser) {
+                return -1f;
+            }
             if(o instanceof Spray || o instanceof Bomb){
                 return 0;
             }
