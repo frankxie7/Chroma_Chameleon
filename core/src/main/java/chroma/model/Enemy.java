@@ -85,8 +85,12 @@ public class Enemy extends ObstacleSprite {
     boolean blue;
     private float drawScale;
 
-    public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath, float startRotation,
-                 float rotateAngle, float units, JsonValue data, Level.EnemyAnimations animations) {
+    public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath,
+        float startRotation, float rotateAngle,
+        float units,
+        JsonValue globalData,
+        JsonValue levelData,
+        Level.EnemyAnimations animations) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -102,10 +106,10 @@ public class Enemy extends ObstacleSprite {
         this.minRotation = startRotation - rotateAngle % 360;
         this.maxRotation = startRotation + rotateAngle % 360;
 
-        JsonValue debugInfo = data.get("debug");
-        float s = data.getFloat("size");
+        JsonValue debugInfo = globalData.get("debug");
+        float s = globalData.getFloat("size");
         float size = s * units;
-        drawScale = data.getFloat("drawScale");
+        drawScale = globalData.getFloat("drawScale");
 
         if (this.type == Type.CAMERA) {
             this.position = new Vector2(position[0], position[1]);
@@ -113,8 +117,8 @@ public class Enemy extends ObstacleSprite {
             bodyWidth = 0;
             bodyHeight = 0;
         } else {
-            bodyWidth = s * data.get("inner").getFloat(0);
-            bodyHeight = s * data.get("inner").getFloat(1);
+            bodyWidth = s * globalData.get("inner").getFloat(0);
+            bodyHeight = s * globalData.get("inner").getFloat(1);
             obstacle = new CapsuleObstacle(position[0], position[1], bodyWidth, bodyHeight);
             obstacle.setBodyType(BodyDef.BodyType.DynamicBody);
             ((CapsuleObstacle) obstacle).setTolerance(debugInfo.getFloat("tolerance", 0.5f));
@@ -133,8 +137,8 @@ public class Enemy extends ObstacleSprite {
         debug = ParserUtils.parseColor(debugInfo.get("avatar"), Color.WHITE);
         sensorColor = ParserUtils.parseColor(debugInfo.get("sensor"), Color.WHITE);
 
-        maxspeed = data.getFloat("maxspeed", 0);
-        force = data.getFloat("force", 0);
+        maxspeed = globalData.getFloat("maxspeed", 0);
+        force = globalData.getFloat("force", 0);
 
         faceRight = true;
 

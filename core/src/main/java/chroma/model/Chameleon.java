@@ -492,6 +492,11 @@ public class Chameleon extends ObstacleSprite {
         float px = obstacle.getX() * obstacle.getPhysicsUnits();
         float py = obstacle.getY() * obstacle.getPhysicsUnits();
 
+        if (faceRight || faceLeft) {
+            drawWidth *= 0.95f;
+        }else{
+            drawWidth *= 1.05f;
+        }
         if (faceRight) {
             if (currentFrame.isFlipX()) {
                 currentFrame.flip(true, false);
