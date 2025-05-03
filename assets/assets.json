@@ -42,6 +42,7 @@
     "level_3" : "constants/level_3.json",
     "level_4" : "constants/level_4.json",
     "level_5" : "constants/level_5.json",
+    "level_6" : "constants/level_6.json",
     "laser_test" : "constants/laser_test.json"
   },
   "soundfx" : {
