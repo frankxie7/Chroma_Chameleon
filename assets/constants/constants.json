@@ -99,7 +99,7 @@
           "positions": [[40, 25], [19, 14],[20,14]],
           "startRotation": [90, 80, 270],
           "rotateAngle": [0, 40, 30]
-        },
+        }
   },
 
   "bomb": {

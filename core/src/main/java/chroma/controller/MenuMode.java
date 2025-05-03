@@ -107,13 +107,6 @@ public class MenuMode implements Screen, InputProcessor {
         internal.loadAssets();
         internal.finishLoading();
 
-        System.out.println("Progress: " + internal.getProgress());
-        System.out.println("Directory: " + internal.getDirectory());
-
-        // Check if expected assets are present
-//        System.out.println("Has menuSong: " + internal.hasEntry("intro", Music.class));
-        System.out.println("Has level select sound: " + internal.hasEntry("level-select", Sound.class));
-
         levelSelectedSound = internal.getEntry("level-select", Sound.class);
 
         menuSong = internal.getEntry("intro", Sound.class);

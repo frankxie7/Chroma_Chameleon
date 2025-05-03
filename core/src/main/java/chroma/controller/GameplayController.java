@@ -119,10 +119,10 @@ public class GameplayController implements Screen {
 
 
     private static final float RANGE_MIN = 5f;
-    private static final float RANGE_MAX = 30f;
+    private static final float RANGE_MAX = 20f;
     private static final float RANGE_GROWTH = 12f;
     private static final float ZOOM_DEFAULT = 0.45f;
-    private static final float ZOOM_OUT_MAX = 0.7f;
+    private static final float ZOOM_OUT_MAX = 0.6f;
     private static final float ZOOM_LERP = 5f;
 
 
@@ -133,6 +133,7 @@ public class GameplayController implements Screen {
 
     private int baseWidth;      // window width at start‑up (pixels)
     private int baseHeight;     // window height at start‑up (pixels)
+    private boolean baseResolutionSet = false;
 
     private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
     private boolean goal1Complete = false;
@@ -217,13 +218,14 @@ public class GameplayController implements Screen {
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
 
-// remember the very first window size
-        baseWidth = (int) this.width;
-        baseHeight = (int) this.height;
-
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int) this.width, (int) this.height);
+    }
+
+    public void setBaseResolution(int width, int height) {
+        this.baseWidth = width;
+        this.baseHeight = height;
     }
 
     /**
@@ -375,7 +377,8 @@ public class GameplayController implements Screen {
     private void update(float dt) {
 
         InputController input = InputController.getInstance();
-        player.setShooting(input.didLeftClick());
+        boolean allowSpray = bombState == BombSkillState.IDLE || bombState == BombSkillState.COOLDOWN;
+        player.setShooting(allowSpray && input.didLeftClick());
         player.updateOrientation();
 
         // Update AI enemies

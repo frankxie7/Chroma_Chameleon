@@ -47,8 +47,8 @@
         "numCols": 3
       }
     },
-  "sounds" : {
-    "intro": "audio/Opening-Demo.wav",
-    "level-select": "audio/Splice-Correct.wav"
-  }
+    "sounds" : {
+      "intro": "audio/Opening-Demo.wav",
+      "level-select": "audio/Splice-Correct.wav"
+    }
 }

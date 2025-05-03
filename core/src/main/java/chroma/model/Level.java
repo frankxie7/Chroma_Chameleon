@@ -340,6 +340,8 @@ public class Level {
             }
         }
 
+
+
         // ---------- Door ----------
         JsonValue doorLayer = findLayer(constants, "door");
         if (doorLayer != null && doorLayer.has("data")) {
@@ -423,8 +425,12 @@ public class Level {
             // Store all animations together
             ColorAnimations blueSet = new ColorAnimations(enemyFrontAnimBlue, enemySideAnimBlue, enemyBackAnimBlue);
             ColorAnimations redSet  = new ColorAnimations(enemyFrontAnimRed, enemySideAnimRed, enemyBackAnimRed);
-
-            EnemyAnimations anims = new EnemyAnimations(enemyAlertAnim, enemyBlueRedAnim, blueSet, redSet);
+            EnemyAnimations anims = new EnemyAnimations(
+                enemyAlertAnim,
+                enemyBlueRedAnim,
+                blueSet,
+                redSet
+            );
 
             JsonValue enemiesRoot = globalConstants.get("enemies");
             JsonValue globalEnemy = enemiesRoot.get("global");
@@ -453,7 +459,8 @@ public class Level {
                 float startRotation = enemyStartRot.get(i).asFloat();
                 float rotateAngle   = enemyRotateAngles.get(i).asFloat();
 
-                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList,
+                Enemy enemy = new Enemy(
+                    coords, type, patrol, patrolPathList,
                     startRotation, rotateAngle,
                     units,
                     globalEnemy,
@@ -463,6 +470,7 @@ public class Level {
                 );
                 enemies.add(enemy);
             }
+
         }
         lasers        = new ArrayList<>();
         // ---------- Lasers (1×1 tiles) ----------
