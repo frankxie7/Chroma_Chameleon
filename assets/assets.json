@@ -20,7 +20,7 @@
     "chameleonDownWalk": "platform/down_walk.png",
     "chameleonSkillSheet": "platform/character-animation.png",
     "ventFall": "platform/vent_fall.png",
-    "enemyAlertSheet": "platform/enemy-alert-Sheet.png",
+    "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
     "enemySideSheetBlue": "platform/enemy-side-blue.png",
     "enemyFrontSheetBlue": "platform/enemy-front-blue.png",

@@ -431,10 +431,9 @@ public class AIController {
                         //enemy.getType() is Camera2 return -1 for Collision
                         return -1f;  // Continue the ray without stopping
                     }
-                    if (type == Type.CAMERA2 && userData instanceof Collision) {
-                        return -1f; // Skip walls for front-facing camera
+                    if (type == Type.CAMERA2 && (userData instanceof Collision || dst2(point.x, point.y, enemyPos.x, enemyPos.y) < 0.5f)) {
+                        return -1f; // Skip walls for front-facing camera and avoid reading through walls
                     }
-
                     // Store the hit position when encountering an obstacle
                     rayHit.set(point);
                     return fraction;  // Stop ray at the first obstacle or player hit
@@ -445,7 +444,7 @@ public class AIController {
 
                 // After the raycast, check what is at the end of the ray
                 // If the ray ends at the player, detect the player
-                if (rayHit.epsilonEquals(playerPos, 1f) && dst2(playerPos.x, playerPos.y, rayHit.x, rayHit.y) > 0.6f) {  // Use epsilonEquals for tolerance
+                if (rayHit.epsilonEquals(playerPos, 1f)) {  // Use epsilonEquals for tolerance
                     playerDetected = true;
                     break;  // Stop as soon as the player is detected
                 }
@@ -775,11 +774,11 @@ public class AIController {
 //            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
 //        }
 
-        // 1. Draw all NavNodes first (background layer)
-        shapeRenderer.setColor(Color.GRAY);
-        for (NavNode node : graph.nodes) {
-            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
-        }
+//        // 1. Draw all NavNodes first (background layer)
+//        shapeRenderer.setColor(Color.GRAY);
+//        for (NavNode node : graph.nodes) {
+//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+//        }
 
 //        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
@@ -831,8 +830,8 @@ public class AIController {
                 if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
                     return -1f; // Skip transparent
                 }
-                if (type == Type.CAMERA2 && userData instanceof Collision) {
-                    return -1f; // Skip walls for front-facing camera
+                if (type == Type.CAMERA2 && (userData instanceof Collision || dst2(point.x, point.y, enemyWorldPos.x, enemyWorldPos.y) < 0.5f)) {
+                    return -1f; // Skip walls for front-facing camera and avoid reading through walls
                 }
 
                 rayHitWorld.set(point);
