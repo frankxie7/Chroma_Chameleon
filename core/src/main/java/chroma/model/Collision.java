@@ -39,6 +39,10 @@ public class Collision extends ObstacleSprite {
     }
 
 
+    public Polygon getPolygon(){
+        return this.polygon;
+    }
+
     public boolean contains(Vector2 point) {
         if (polygon.contains(point.x, point.y)) {
             return true;
