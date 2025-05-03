@@ -216,6 +216,8 @@ public class GameplayController implements Screen {
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
 
+        baseWidth = (int) this.width;
+        baseHeight = (int)this.height;
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int) this.width, (int) this.height);
