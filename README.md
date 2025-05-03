@@ -15,22 +15,21 @@
 - [] Find and **integrate audio assets**
 
 ## Alex
-- [] **Ask WW** about possible solutions for **spray texturing**
-- [] Beilin was assigned to do the completion bar, but now Alex has fixed the tile drawing may be Alex understands the goals better and can do the percentage indicator faster. You two discuss about it.
+- [] **spray texturing**
+- [] Goal completion UI
 
 ## Beilin
 - [] Design **later levels**
 - [] Coordinate with Alex on the **completion bar**
 - [] Work with artists to integrate assets
 
-
+## Lower Priority
 - [] Evaluate feasibility of implementing **lighting effects**
 
 Art assets to be implemented:
 - [] lose animation
 - [] win animation autopilot
 - [] tutorial assets
-
 
 - **All Members**:
     - If you finish early, help with **level design**
