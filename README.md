@@ -1,39 +1,35 @@
 # Release Task Summary
 
 ## Frank
-- [] Change spray release control to **Left Click**
-- [] Implement Laser system:
-    - Toggle **on/off** via method calls
-    - **Kill chameleon** on contact
-    - Automatically **turn on when chameleon is discovered**:
-        - Acts as a **punishment** for being seen
-        - **Encourages planning** over fast consecutive sprays (Functions as a nerf to spray and remedy to instant enemy vision loss)
+- [X] Change spray release control to **Left Click**
+- [] Fix **bomb being drawn outside the map**
+- [] Fix **window zoom issue**
 
 ## Brian
-- [] Remove **bomb charging mechanic**
-- [] Fix **bomb being drawn outside the map**
-- [] Create **tutorial levels**
-- [] Fix **window zoom issue**
+- [X] Remove **bomb charging mechanic**
+- [X] Implement Laser system
+- [X] Create **tutorial levels**
 
 ## Cooper
 - [] Find ways to prevent enemies from **instantly losing track** of the chameleon
 - [] Find and **integrate audio assets**
 
 ## Alex
-- [] **Ask WW** about possible solutions for **spray texturing**
-- [] Beilin was assigned to do the completion bar, but now Alex has fixed the tile drawing may be Alex understands the goals better and can do the percentage indicator faster. You two discuss about it.
+- [] **spray texturing**
+- [] Goal completion UI
 
 ## Beilin
 - [] Design **later levels**
 - [] Coordinate with Alex on the **completion bar**
+- [] Work with artists to integrate assets
 
+## Lower Priority
+- [] Evaluate feasibility of implementing **lighting effects**
 
----
-
-## 🔁 Shared Responsibilities
-- **Alex & Beilin**:
-    - Work with artists to integrate assets
-    - Evaluate feasibility of implementing **lighting effects**
+Art assets to be implemented:
+- [] lose animation
+- [] win animation autopilot
+- [] tutorial assets
 
 - **All Members**:
     - If you finish early, help with **level design**
