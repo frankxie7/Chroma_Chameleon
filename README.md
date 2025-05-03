@@ -11,7 +11,7 @@
 - [X] Create **tutorial levels**
 
 ## Cooper
-- [] Find ways to prevent enemies from **instantly losing track** of the chameleon
+- [X] Find ways to prevent enemies from **instantly losing track** of the chameleon
 - [] Find and **integrate audio assets**
 
 ## Alex

@@ -1,5 +1,7 @@
 package chroma.model;
 
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -17,6 +19,7 @@ public class Door extends ObstacleSprite {
     private final Animation<TextureRegion> closedAnim;
     private final Animation<TextureRegion> openAnim;
     private final Animation<TextureRegion> chameleonFallAnim;
+    private final Music openSound;
     private boolean opened = false;
     private boolean isChameleonFalling = false;
 
@@ -29,12 +32,14 @@ public class Door extends ObstacleSprite {
     public Door(float units,
                 Animation<TextureRegion> closedAnim,
                 Animation<TextureRegion> openAnim,
-                Vector2 center, Animation<TextureRegion> chameleonFallAnim) {
+                Vector2 center,
+                Animation<TextureRegion> chameleonFallAnim,
+                Music openSound) {
         this.units      = units;
         this.closedAnim = closedAnim;
         this.openAnim   = openAnim;
         this.chameleonFallAnim = chameleonFallAnim;
-
+        this.openSound = openSound;
 
         // Build 4×4‑unit static polygon
         float half = SIZE / 2f;
@@ -58,6 +63,7 @@ public class Door extends ObstacleSprite {
      * Trigger door opening: switch to openAnim and set sensor
      */
     public void open() {
+        openSound.play();
         if (!opened) {
             opened = true;
             animTime = 0f;

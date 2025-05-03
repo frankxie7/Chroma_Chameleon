@@ -62,7 +62,7 @@ public class AIController {
 
     // ALERT:
     private float alertMaxSpeed = 6f;
-    private float alertLength = 3f;
+    private float alertLength = 5f;
     private float alertTimer = alertLength;
 
     // SUSPICIOUS:
@@ -490,6 +490,7 @@ public class AIController {
             }
             if (playerDetected && detectionTimer > detectionThreshold) {
                 state = State.CHASE;
+                enemy.getSpottedSound().play();
             }
         } else if (state == State.PATROL) {
             patrolState(delta, enemyPos);
@@ -498,6 +499,7 @@ public class AIController {
 //                blueRedPlayingForward = true;
 //                blueRedPlayingBackward = false;
                 blueRedTime = 0f;
+                enemy.getSpottedSound().play();
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
                 alertTimer = 0;
@@ -510,6 +512,7 @@ public class AIController {
 //                blueRedPlayingForward = true;
 //                blueRedPlayingBackward = false;
                 blueRedTime = 0f;
+                enemy.getSpottedSound().play();
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
                 alertTimer = 0;

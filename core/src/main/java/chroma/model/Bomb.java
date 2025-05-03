@@ -1,5 +1,6 @@
 package chroma.model;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
@@ -24,6 +25,7 @@ public class Bomb extends ObstacleSprite {
     static final float LAND_SCALE = 1.8f;
     private Texture flyTex;
     private Texture splatterTex;
+    private Sound splatterSound;
     /**
      * Horizontal velocity in physics units (straight line)
      */
@@ -50,11 +52,12 @@ public class Bomb extends ObstacleSprite {
     private final float arcDuration;
 
     public Bomb(float units,
-        JsonValue settings,
-        Vector2 startPos,
-        Vector2 velocity,
-        Vector2 targetPos,Texture flyTex,
-        Texture splatterTex) {
+                JsonValue settings,
+                Vector2 startPos,
+                Vector2 velocity,
+                Vector2 targetPos,Texture flyTex,
+                Texture splatterTex,
+                Sound splatterSound) {
         this.startPos = new Vector2(startPos);
         size = settings.getFloat("size");
         float radius = size * units / 2.0f;
@@ -68,7 +71,6 @@ public class Bomb extends ObstacleSprite {
         obstacle.setSensor(true);
         obstacle.setUserData(this);
         obstacle.setName("bomb");
-
 
         // 2) Initialize debug color and mesh to match the circle
         debug = ParserUtils.parseColor(settings.get("debug"), Color.WHITE);
@@ -90,6 +92,7 @@ public class Bomb extends ObstacleSprite {
         this.flyTex   = flyTex;
         this.splatterTex = splatterTex;
         setTexture(flyTex);
+        this.splatterSound = splatterSound;
     }
 
     public boolean isExpired() {
@@ -133,9 +136,10 @@ public class Bomb extends ObstacleSprite {
             setTexture(splatterTex);
             // Randomize splatter rotation
             splatterRotation = MathUtils.random(0f, 360f);
+
+            splatterSound.play();
         }
     }
-
 
     /**
      * Override how we draw so we can offset the sprite by z (in pixels).

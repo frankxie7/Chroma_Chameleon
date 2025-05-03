@@ -428,7 +428,6 @@ public class PhysicsController implements ContactListener {
             }
         }
 
-
         // Check for win condition
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
@@ -470,7 +469,6 @@ public class PhysicsController implements ContactListener {
                 player.setHidden(true);
             }
         }
-
 
         // Handle bomb contacts ending
         if ((userDataA instanceof Chameleon && userDataB instanceof Bomb) ||

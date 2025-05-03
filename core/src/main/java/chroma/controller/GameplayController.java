@@ -11,6 +11,7 @@ package chroma.controller;
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -51,7 +52,6 @@ public class GameplayController implements Screen {
     private int countdown;
     private int failureDelay;
 
-
     private ScreenListener listener;
     private SpriteBatch batch;
     private AssetDirectory directory;
@@ -78,6 +78,8 @@ public class GameplayController implements Screen {
 
     private List<AIController> aiControllers;
     private boolean globalChase = false;
+    private long alertSoundId = -1;
+    private boolean alertSoundPlaying = false;
 
     // For UI messages
     private BitmapFont displayFont;
@@ -393,6 +395,20 @@ public class GameplayController implements Screen {
                 anyThreat = true;
             }
         }
+        if (!aiControllers.isEmpty()) {
+            Sound alertSound = aiControllers.get(0).getEnemy().getAlertSound();
+            if (anyThreat) {
+                if (!alertSoundPlaying) {
+                    alertSoundId = alertSound.loop();  // store the ID so we can stop it
+                    alertSoundPlaying = true;
+                }
+            } else {
+                if (alertSoundPlaying) {
+                    alertSound.stop(alertSoundId);  // stop that specific loop
+                    alertSoundPlaying = false;
+                }
+            }
+        }
 
         globalChase = anyChasing;
 
@@ -529,7 +545,6 @@ public class GameplayController implements Screen {
                 break;
 
             case PAINTING:
-
                 if (!player.isBombPlaying()) {     // animation done
                     bombState = BombSkillState.COOLDOWN;
                     cooldownTimer = BOMB_COOLDOWN;
@@ -648,11 +663,13 @@ public class GameplayController implements Screen {
                 Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
                 Texture bulletTex = directory.getEntry("platform-bullet", Texture.class);
                 Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+                Sound splatterSound = directory.getEntry("bomb", Sound.class);
                 splatterTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
                     playerPos, vel, target,
-                    bulletTex, splatterTex);
+                    bulletTex, splatterTex,
+                    splatterSound);
                 bomb.setTexture(bombTex);
                 bomb.getObstacle().setName("bomb");
 

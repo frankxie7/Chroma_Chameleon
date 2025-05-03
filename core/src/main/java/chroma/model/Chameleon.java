@@ -1,6 +1,7 @@
 package chroma.model;
 
 import chroma.controller.InputController;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -86,6 +87,7 @@ public class Chameleon extends ObstacleSprite {
     private Animation<TextureRegion> downWalkAnim;
     private float animTime;
     private TextureRegion currentFrame;
+    private Music walkSound;
 
     private Animation<TextureRegion> bombAnim;
     private float  bombAnimTime  = 0f;
@@ -259,7 +261,11 @@ public class Chameleon extends ObstacleSprite {
      * @param units     The physics units
      * @param dataGlobal      The physics constants for Traci
      */
-    public Chameleon(float units, JsonValue dataGlobal, JsonValue dataLevel, Animation<TextureRegion> animation, Animation<TextureRegion> upWalkAnim, Animation<TextureRegion> downWalkAnim) {
+    public Chameleon(float units, JsonValue dataGlobal, JsonValue dataLevel,
+                     Animation<TextureRegion> animation,
+                     Animation<TextureRegion> upWalkAnim,
+                     Animation<TextureRegion> downWalkAnim,
+                     Music walkSound) {
         this.data = dataGlobal;
         JsonValue debugInfo = dataGlobal.get("debug");
 
@@ -314,8 +320,7 @@ public class Chameleon extends ObstacleSprite {
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
         currentFrame = frames[6];
-
-
+        this.walkSound = walkSound;
     }
 
     /**
@@ -422,7 +427,6 @@ public class Chameleon extends ObstacleSprite {
             lastDirection = Direction.DOWN;
         }
 
-
         if (hmove == 0 && vmove == 0) {
             switch (lastDirection) {
                 case UP:
@@ -438,8 +442,12 @@ public class Chameleon extends ObstacleSprite {
                     break;
             }
             animTime = 0;
+            walkSound.stop();
         } else {
             animTime += dt;
+
+            walkSound.play();
+
             if (Math.abs(vmove) > Math.abs(hmove)) {
                 if (vmove > 0) {
                     obstacle.setAngle(1.57f);

@@ -1,5 +1,7 @@
 package chroma.model;
 
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
@@ -85,12 +87,17 @@ public class Enemy extends ObstacleSprite {
     boolean blue;
     private float drawScale;
 
+    // SOUNDS:
+    private Music playerSpottedSound;
+    private Sound enemiesAlertSound;
+
     public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath,
-        float startRotation, float rotateAngle,
-        float units,
-        JsonValue globalData,
-        JsonValue levelData,
-        Level.EnemyAnimations animations) {
+                float startRotation, float rotateAngle,
+                float units,
+                JsonValue globalData,
+                JsonValue levelData,
+                Level.EnemyAnimations animations,
+                Music playerSpottedSound, Sound enemiesAlertSound) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -159,6 +166,9 @@ public class Enemy extends ObstacleSprite {
         animTime = 0;
         blue = true;
 
+        this.playerSpottedSound = playerSpottedSound;
+        this.enemiesAlertSound = enemiesAlertSound;
+
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
 }
@@ -195,6 +205,8 @@ public class Enemy extends ObstacleSprite {
     public void setBlueRedTime(float index) { this.blueRedTime = index; }
     public void setBlue(boolean value) { this.blue = value; }
     public float getDrawScale() { return drawScale; }
+    public Music getSpottedSound() { return playerSpottedSound; }
+    public Sound getAlertSound() { return enemiesAlertSound; }
 
     public float getRotation() {
         if (type == Type.CAMERA1 || type == Type.CAMERA2) {
@@ -301,8 +313,6 @@ public class Enemy extends ObstacleSprite {
             sideFrame = frameIndex;
             backFrame = -1;
         }
-
-
 
         // Update faceRight for flipping (side animations only — you might skip this for front)
         faceRight = velocity.x >= 0;

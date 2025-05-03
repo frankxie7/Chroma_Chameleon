@@ -70,7 +70,7 @@ public class MenuMode implements Screen, InputProcessor {
     /** Draw the outline for determining */
     private ShapeRenderer shapeRenderer;
 
-    private Music menuSong;
+    private Sound menuSong;
     private Sound levelSelectedSound;
 
     /** Internal class for creating a rectangle bound */
@@ -107,13 +107,19 @@ public class MenuMode implements Screen, InputProcessor {
         internal.loadAssets();
         internal.finishLoading();
 
-//        levelSelectedSound = internal.getEntry("level-select", Sound.class);
+        System.out.println("Progress: " + internal.getProgress());
+        System.out.println("Directory: " + internal.getDirectory());
 
-//        menuSong = internal.getEntry("intro", Music.class);
-//        if (menuSong != null) {
-//            menuSong.setLooping(true);
-//            menuSong.play();
-//        }
+        // Check if expected assets are present
+//        System.out.println("Has menuSong: " + internal.hasEntry("intro", Music.class));
+        System.out.println("Has level select sound: " + internal.hasEntry("level-select", Sound.class));
+
+        levelSelectedSound = internal.getEntry("level-select", Sound.class);
+
+        menuSong = internal.getEntry("intro", Sound.class);
+        long soundId = menuSong.play();
+        menuSong.setLooping(soundId, true);
+        menuSong.setVolume(soundId, 0.2f);
 
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -138,7 +144,6 @@ public class MenuMode implements Screen, InputProcessor {
         active = true;
         currPage = 0;
         shapeRenderer = new ShapeRenderer();
-
     }
 
     /**
@@ -366,8 +371,8 @@ public class MenuMode implements Screen, InputProcessor {
             if (bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1;
                 pressState = 1;
-//                levelSelectedSound.play();
-//                menuSong.stop();
+                levelSelectedSound.play();
+                menuSong.stop();
                 return false;
             }
         }

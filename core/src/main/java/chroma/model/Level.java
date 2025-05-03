@@ -1,6 +1,8 @@
 package chroma.model;
 
 import chroma.controller.LevelSelector;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -338,8 +340,6 @@ public class Level {
             }
         }
 
-
-
         // ---------- Door ----------
         JsonValue doorLayer = findLayer(constants, "door");
         if (doorLayer != null && doorLayer.has("data")) {
@@ -373,7 +373,9 @@ public class Level {
                 Animation<TextureRegion> openAnim = new Animation<>(0.075f, frames);
                 openAnim.setPlayMode(Animation.PlayMode.NORMAL);
 
-                goalDoor = new Door(units, closedAnim, openAnim, doorCenter, chameleonFallAnim);
+                Music openSound = directory.getEntry("door_open", Music.class);
+
+                goalDoor = new Door(units, closedAnim, openAnim, doorCenter, chameleonFallAnim, openSound);
                 goalDoor.getObstacle().setName("door");
             }
         }
@@ -389,7 +391,8 @@ public class Level {
         Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
         Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
-        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim);
+        Music walkSound = directory.getEntry("chameleon_walk", Music.class);
+        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound);
         avatar.setBombAnimation(bombAnim);
 
         // Create enemies
@@ -420,12 +423,8 @@ public class Level {
             // Store all animations together
             ColorAnimations blueSet = new ColorAnimations(enemyFrontAnimBlue, enemySideAnimBlue, enemyBackAnimBlue);
             ColorAnimations redSet  = new ColorAnimations(enemyFrontAnimRed, enemySideAnimRed, enemyBackAnimRed);
-            EnemyAnimations anims = new EnemyAnimations(
-                enemyAlertAnim,
-                enemyBlueRedAnim,
-                blueSet,
-                redSet
-            );
+
+            EnemyAnimations anims = new EnemyAnimations(enemyAlertAnim, enemyBlueRedAnim, blueSet, redSet);
 
             JsonValue enemiesRoot = globalConstants.get("enemies");
             JsonValue globalEnemy = enemiesRoot.get("global");
@@ -437,6 +436,9 @@ public class Level {
             JsonValue enemyPatrolPaths  = levelData.get("patrol_paths");
             JsonValue enemyStartRot     = levelData.get("startRotation");
             JsonValue enemyRotateAngles = levelData.get("rotateAngle");
+
+            Music playerSpottedSound = directory.getEntry("enemy_spotted", Music.class);
+            Sound enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
 
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords          = enemyPositions.get(i).asFloatArray();
@@ -451,17 +453,16 @@ public class Level {
                 float startRotation = enemyStartRot.get(i).asFloat();
                 float rotateAngle   = enemyRotateAngles.get(i).asFloat();
 
-                Enemy enemy = new Enemy(
-                    coords, type, patrol, patrolPathList,
+                Enemy enemy = new Enemy(coords, type, patrol, patrolPathList,
                     startRotation, rotateAngle,
                     units,
                     globalEnemy,
                     levelData,
-                    anims
+                    anims,
+                    playerSpottedSound, enemiesAlertSound
                 );
                 enemies.add(enemy);
             }
-
         }
         lasers        = new ArrayList<>();
         // ---------- Lasers (1×1 tiles) ----------

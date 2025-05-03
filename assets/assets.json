@@ -44,7 +44,14 @@
     "level_5" : "constants/level_5.json",
     "laser_test" : "constants/laser_test.json"
   },
-  "soundfx" : {
+  "sounds" : {
+    "bomb" : "audio/Bomb_16bit.wav",
+    "enemies_alert" : "audio/Continuous-Enemy-Alert_16bit.wav"
+  },
+  "music" : {
+    "door_open" : "audio/Door-Open.mp3",
+    "chameleon_walk" : "audio/Chameleon-Footstep.mp3",
+    "enemy_spotted" : "audio/Enemy-Alert.mp3"
   },
   "fonts": {
     "shared-retro": {
