@@ -43,6 +43,7 @@
     "level_4" : "constants/level_4.json",
     "level_5" : "constants/level_5.json",
     "level_6" : "constants/level_6.json",
+    "level_8" : "constants/level_8.json",
     "alex_level": "constants/alexlevel.json",
     "laser_test" : "constants/laser_test.json"
   },
