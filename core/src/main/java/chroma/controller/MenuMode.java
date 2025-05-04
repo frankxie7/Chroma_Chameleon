@@ -363,6 +363,7 @@ public class MenuMode implements Screen, InputProcessor {
         for (int i = 0; i < bounds.length; i++) {
             if (bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1 + currPage * 9;
+                System.out.println(currLevel);
                 pressState = 1;
                 levelSelectedSound.play();
                 menuSong.stop();
