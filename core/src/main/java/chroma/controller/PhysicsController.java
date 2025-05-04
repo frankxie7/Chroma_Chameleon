@@ -8,10 +8,8 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.PooledList;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 
 /**
  * PhysicsController
@@ -435,9 +433,7 @@ public class PhysicsController implements ContactListener {
                 playerWithDoor = true;
                 Door door = userDataA instanceof Door ? (Door) userDataA : (Door) userDataB;
                 Chameleon player = userDataA instanceof Chameleon ? (Chameleon) userDataA : (Chameleon) userDataB;
-
-                player.setFalling(true);
-                door.playChameleonFallAnimation();
+                door.setChameleon(player);
             }
         }
     }

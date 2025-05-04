@@ -374,6 +374,12 @@ public class Chameleon extends ObstacleSprite {
     @Override
     public void update(float dt) {
         if (falling) {
+            setMovement(0f);
+            setVerticalMovement(0f);
+            setShooting(false);
+            setAiming(false);
+            walkSound.stop();
+            applyForce();
             return;
         }
         InputController input = InputController.getInstance();
