@@ -261,6 +261,9 @@ public class GameplayController implements Screen {
         goal1Complete = false;
         goal2Complete = false;
         goal3Complete = false;
+        if(bombQueue != null){
+            bombQueue.clear();
+        }
         // Build the level with the current `units`
 
         // Add all walls
