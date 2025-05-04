@@ -140,6 +140,7 @@ public class GameplayController implements Screen {
     private static final float ZOOM_LERP = 5f;
 
 
+
     /* ───────── Aim‑range charging ───────── */
     private float aimRangeCurrent = RANGE_MIN;
     private float cameraZoom = ZOOM_DEFAULT;
@@ -1082,8 +1083,12 @@ public class GameplayController implements Screen {
         if (gameState == GameState.WON) {
             drawWinScreen(youWinTexture);
         } else if (gameState == GameState.LOST) {
-            drawLoseScreen(youLoseTexture);
+            // only pop up the lose UI once we've zoomed all the way in
+            if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
+                drawLoseScreen(youLoseTexture);
+            }
         }
+
 
 //        // UI messages
 //        if (complete && !failed) {
