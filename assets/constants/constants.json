@@ -98,7 +98,7 @@
           "patrol_paths": [[[9,25],[40,25]],[],[]],
           "positions": [[40, 25], [19, 14],[20,14]],
           "startRotation": [90, 80, 270],
-          "rotateAngle": [0, 40, 25]
+          "rotateAngle": [0, 100, 100]
         },
 
     "alex_level": {

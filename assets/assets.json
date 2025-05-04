@@ -15,6 +15,8 @@
     "aiming-range": "platform/circle.png",
     "paintBar": "platform/bar.png",
     "paintBar-overlay": "platform/paintbaroverlay.png",
+    "win-screen": "platform/ui_you_win.png",
+    "lose-screen": "platform/ui_game_over.png",
     "chameleonSheet": "platform/chameleon.png",
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
@@ -44,6 +46,7 @@
     "level_5" : "constants/level_5.json",
     "level_6" : "constants/level_6.json",
     "alex_level": "constants/alexlevel.json",
+    "level_7" : "constants/level_7.json",
     "laser_test" : "constants/laser_test.json"
   },
   "sounds" : {
