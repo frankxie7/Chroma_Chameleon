@@ -156,15 +156,11 @@ public class AIController {
     }
     private boolean isBlocked(Vector2 position) {
         for (Collision wall : collisions) {
-            if (wall.getPos().equals(position)) {
+            if (wall.contains(position)) {
                 return true;
             }
         }
-//        for (Goal goal : goals) {
-//            if (goal.contains(position)) {
-//                return true;
-//            }
-//        }
+
         return false;
     }
 

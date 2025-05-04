@@ -3,6 +3,8 @@ package chroma.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.utils.JsonValue;
@@ -20,6 +22,7 @@ public class Goal extends ObstacleSprite {
     private static Texture sprayTextureFull = null;
     private static Texture sprayTextureComplete = null;
     private boolean complete = false;
+    private Polygon polygon;
     float units;
     float[] points;
     private Poly2 poly;
@@ -54,6 +57,7 @@ public class Goal extends ObstacleSprite {
         // Create the polygon for the mesh (rendering).
         this.poly = new Poly2(points,indices);
         this.poly.scl(units);
+        this.polygon = new Polygon(points);
 
 
         // If the shared texture is not created yet, make it now.
@@ -127,6 +131,31 @@ public class Goal extends ObstacleSprite {
     public void update(float dt) {
         // Then call the superclass update
         super.update(dt);
+    }
+
+    public boolean contains(Vector2 point) {
+        if (polygon.contains(point.x, point.y)) {
+            return true;
+        }
+
+        float[] vertices = polygon.getTransformedVertices();
+        int numVertices = vertices.length / 2;
+
+        for (int i = 0; i < numVertices; i++) {
+            int next = (i + 1) % numVertices;
+            float x1 = vertices[i * 2], y1 = vertices[i * 2 + 1];
+            float x2 = vertices[next * 2], y2 = vertices[next * 2 + 1];
+
+            // Check if point is on the right or top edge
+            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
+                return true;
+            }
+            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
+                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
