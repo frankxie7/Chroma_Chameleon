@@ -250,6 +250,9 @@ public class GameplayController implements Screen {
             (level.getGoalTiles().size() + level.getGoal2Tiles().size() + level.getGoal3Tiles()
                 .size()) * 16;
         physics = new PhysicsController(gravityY, numGoals, directory);
+        physics.getGoalList().clear();
+        physics.getGoal2List().clear();
+        physics.getGoal3List().clear();
         complete = false;
         failed = false;
         countdown = -1;
@@ -287,6 +290,7 @@ public class GameplayController implements Screen {
 
             physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
         }
+
         for (BackgroundTile machine : level.getGoal2Tiles()) {
             Rectangle rec = machine.getBounds();
 
@@ -429,7 +433,9 @@ public class GameplayController implements Screen {
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
         }
+
         if(physics.goals1Full() && !goal1Complete){
+
             goal1Complete = true;
             for(Goal g : physics.getGoalList()){
                 g.setComplete();
@@ -1015,9 +1021,11 @@ public class GameplayController implements Screen {
         List<Goal> goals1 = physics.getGoalList();
         List<Goal> goals2 = physics.getGoal2List();
         List<Goal> goals3 = physics.getGoal3List();
+
         for (Goal g : goals1) {
             if (g != null && g.isFull()) {
                 numFilled++;
+
             }
         }
         for (Goal g : goals2) {
