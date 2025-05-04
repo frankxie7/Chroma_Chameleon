@@ -187,7 +187,6 @@ public class Level {
         }
         JsonValue goalTileData3 = findLayer(constants, "goal3");
         if (goalTileData3 != null && goalTileData3.has("data")) {
-
             goal3Tiles = new ArrayList<>();
 //            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
 //            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
