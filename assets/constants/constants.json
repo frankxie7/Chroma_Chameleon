@@ -15,7 +15,7 @@
     "drawScale": 0.6,
     "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 10.0,
+    "maxspeed"  : 8.0,
     "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,
@@ -105,7 +105,7 @@
       "names": ["enemy1","enemy2","enemy3"],
       "types": ["GUARD","GUARD","GUARD"],
       "patrols": [true,true,true],
-      "patrol_paths": [[[3,25],[27,25],[27,3],[3,3]],[[27,25],[27,3],[3,3],[3,25]],[[27,3],[3,3],[3,25],[27,25]]],
+      "patrol_paths": [[[3,25],[27,25],[27,5],[3,5]],[[27,25],[27,5],[3,5],[3,25]],[[27,5],[3,5],[3,25],[27,25]]],
       "positions": [[3, 25],[27,25],[27,5]],
       "startRotation": [90,90,90],
       "rotateAngle": [0,0,0]
