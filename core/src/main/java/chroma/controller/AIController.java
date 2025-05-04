@@ -104,7 +104,7 @@ public class AIController {
         this.player = level.getAvatar();
         this.collisions = level.getCollision();
         this.goals = new ArrayList<>();
-        goals.addAll(physics.getGoalList());
+        this.goals.addAll(physics.getGoalList());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
