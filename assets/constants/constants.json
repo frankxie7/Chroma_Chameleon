@@ -1,6 +1,6 @@
 {
   "world" : {
-    "bounds"  : [80,80],
+    "bounds"  : [65,65],
     "gravity" : 0,
     "volume": 0.8
   },
