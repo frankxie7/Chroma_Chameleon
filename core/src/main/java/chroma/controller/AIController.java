@@ -156,7 +156,9 @@ public class AIController {
     }
     private boolean isBlocked(Vector2 position) {
         for (Collision wall : collisions) {
-           // wall.getPos()
+            if (wall.getPos().equals(position)) {
+                return true;
+            }
         }
 //        for (Goal goal : goals) {
 //            if (goal.contains(position)) {
@@ -257,7 +259,7 @@ public class AIController {
         // Create nodes that are not inside obstacles
         for (float x = 0; x < worldWidth + 1; x++) {
             for (float y = 0; y < worldHeight + 1; y++) {
-                Vector2 pos = new Vector2(x * scale, y * scale);
+                Vector2 pos = new Vector2(x, y);
                 if (!isBlocked(pos)) {
                     NavNode node = new NavNode(x, y);
                     graph.addNode(node);
