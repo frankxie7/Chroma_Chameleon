@@ -125,6 +125,7 @@ public class GameplayController implements Screen {
     private static final float RANGE_GROWTH = 12f;
     private static final float ZOOM_DEFAULT = 0.45f;
     private static final float ZOOM_OUT_MAX = 0.6f;
+    private static final float ZOOM_FOCUS = 0.20f;  // tune this until the chameleon fills the view
     private static final float ZOOM_LERP = 5f;
 
 
@@ -392,6 +393,11 @@ public class GameplayController implements Screen {
         player.setShooting(allowSpray && input.didLeftClick());
         player.updateOrientation();
 
+        if (failed) {
+            // freeze world state, but still adjust camera.zoom toward targetZoom
+            updateCamera();
+            return;
+        }
         // Update AI enemies
         boolean anyChasing = false;
         for (AIController ai : aiControllers) {
@@ -734,6 +740,9 @@ public class GameplayController implements Screen {
      * Step physics after update.
      */
     private void postUpdate(float dt) {
+        if (failed) {
+            return;
+        }
         // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy() && !physics.didWin()) {
             setFailure(true);
@@ -869,7 +878,7 @@ public class GameplayController implements Screen {
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
-        player.draw(batch);
+
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {
@@ -897,6 +906,7 @@ public class GameplayController implements Screen {
                     0);
             }
         }
+        player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
@@ -1180,9 +1190,11 @@ public class GameplayController implements Screen {
 
     private void setFailure(boolean value) {
         if (value) {
-            countdown = EXIT_COUNT;
-        }
-        failed = value;
+                   countdown = EXIT_COUNT;
+                   // immediately start zooming in on the chameleon
+                       targetZoom = ZOOM_FOCUS;
+               }
+           failed = value;
     }
 
     public OrthographicCamera getCamera() {
