@@ -217,7 +217,7 @@ public class Enemy extends ObstacleSprite {
 
         // If the enemy is stationary, return the last known facing angle
         if (velocity.len2() < 0.01f) {
-            return faceRight ? 0 : (float) Math.PI;
+            return startRotation;
         }
 
         return (float) Math.atan2(velocity.y, velocity.x);
