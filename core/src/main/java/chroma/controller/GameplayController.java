@@ -41,6 +41,14 @@ import java.util.List;
 
 public class GameplayController implements Screen {
 
+    public enum GameState {
+        PLAYING,
+        WON,
+        LOST
+    }
+
+    private GameState gameState = GameState.PLAYING;
+
     public static final int EXIT_QUIT = 100;
     public static final int EXIT_NEXT = 101;
     public static final int EXIT_PREV = 102;
@@ -88,6 +96,9 @@ public class GameplayController implements Screen {
     private TextLayout goodMessage;
     private TextLayout badMessage;
     private TextLayout goalMessage;
+    Rectangle retryButton = new Rectangle(width/2 - 50, height/2 - 80, 100, 40);
+    Rectangle menuButton = new Rectangle(width/2 - 50, height/2 - 140, 100, 40);
+    Rectangle nextButton = new Rectangle(width/2 - 50, height/2 - 200, 100, 40);
 
     //Single scale factor for world→screen
     private float units;
@@ -125,6 +136,7 @@ public class GameplayController implements Screen {
     private static final float RANGE_GROWTH = 12f;
     private static final float ZOOM_DEFAULT = 0.45f;
     private static final float ZOOM_OUT_MAX = 0.6f;
+    private static final float ZOOM_FOCUS = 0.20f;  // tune this until the chameleon fills the view
     private static final float ZOOM_LERP = 5f;
 
 
@@ -236,6 +248,8 @@ public class GameplayController implements Screen {
      * Rebuilds the world state (physics, level objects, etc.).
      */
     public void reset() {
+        // Reset game state so overlays disappear
+        gameState = GameState.PLAYING;
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -386,6 +400,10 @@ public class GameplayController implements Screen {
      * Game logic update
      */
     private void update(float dt) {
+        if (gameState == GameState.WON || gameState == GameState.LOST) {
+            updateCamera();
+            return; // Skip updates
+        }
 
         InputController input = InputController.getInstance();
         boolean allowSpray = bombState == BombSkillState.IDLE || bombState == BombSkillState.COOLDOWN;
@@ -734,6 +752,10 @@ public class GameplayController implements Screen {
      * Step physics after update.
      */
     private void postUpdate(float dt) {
+        if (gameState == GameState.WON || gameState == GameState.LOST) {
+            return; // Skip updates
+        }
+
         // Check collisions
         if (!failed && physics.didPlayerCollideWithEnemy() && !physics.didWin()) {
             setFailure(true);
@@ -792,28 +814,66 @@ public class GameplayController implements Screen {
             height * (posYRatio - textOffset));
 
         batch.setColor(Color.WHITE);
-
     }
 
+//    /**
+//     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in
+//     * 'draw' method to view.
+//     */
+//    private void drawMapCoords(SpriteBatch batch) {
+//        BitmapFont font = new BitmapFont(); // Default font
+//        font.setColor(Color.WHITE); // Set color to white for visibility
+//        font.getData().setScale(0.5f); // Scale down text if needed
+//
+//        for (int x = 0; x < worldWidth; x++) {
+//            for (int y = 0; y < worldHeight; y++) {
+//                float tileX = x * units;
+//                float tileY = y * units;
+//                String coordText = "(" + x + "," + y + ")";
+//
+//                font.draw(batch, coordText, tileX, tileY);
+//            }
+//        }
+//    }
 
     /**
-     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in
-     * 'draw' method to view.
+     * Draws the Win screen UI.
      */
-    private void drawMapCoords(SpriteBatch batch) {
-        BitmapFont font = new BitmapFont(); // Default font
-        font.setColor(Color.WHITE); // Set color to white for visibility
-        font.getData().setScale(0.5f); // Scale down text if needed
+    private void drawWinScreen(Texture youWinTexture) {
+        batch.setColor(Color.WHITE); // Just in case you changed it elsewhere
+        batch.draw(youWinTexture, 0, 0, width, height);
 
-        for (int x = 0; x < worldWidth; x++) {
-            for (int y = 0; y < worldHeight; y++) {
-                float tileX = x * units;
-                float tileY = y * units;
-                String coordText = "(" + x + "," + y + ")";
+        // Optional: text overlay if needed
+        // batch.drawText(goodMessage, width / 2, height / 2);
 
-                font.draw(batch, coordText, tileX, tileY);
-            }
-        }
+        drawButton(batch, retryButton);
+        drawButton(batch, menuButton);
+        drawButton(batch, nextButton);
+    }
+
+    /**
+     * Draws the Lose screen UI.
+     */
+    private void drawLoseScreen(Texture youLoseTexture) {
+        batch.setColor(Color.WHITE);
+        batch.draw(youLoseTexture, 0, 0, width, height);
+
+        // Optional: text overlay if needed
+        // batch.drawText(badMessage, width / 2, height / 2);
+
+        drawButton(batch, retryButton);
+        drawButton(batch, menuButton);
+    }
+
+    private void drawButton(SpriteBatch batch, Rectangle rect) {
+        // Optional: Draw button background (replace with your own texture if available)
+        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+        batch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1); // dark gray
+        shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+        shapeRenderer.end();
+        batch.begin();
     }
 
     /**
@@ -869,7 +929,7 @@ public class GameplayController implements Screen {
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
-        player.draw(batch);
+
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {
@@ -897,6 +957,7 @@ public class GameplayController implements Screen {
                     0);
             }
         }
+        player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
@@ -1013,13 +1074,25 @@ public class GameplayController implements Screen {
         barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         drawPaintContainer(barTex, barOverlayTex);
 
-        // UI messages
-        if (complete && !failed) {
-            batch.drawText(goodMessage, width / 2, height / 2);
-        } else if (failed) {
-            batch.drawText(badMessage, width / 2, height / 2);
+        Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
+        Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
+        youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        if (gameState == GameState.WON) {
+            drawWinScreen(youWinTexture);
+        } else if (gameState == GameState.LOST) {
+            drawLoseScreen(youLoseTexture);
         }
-// ——— Goal-region percentage notification ———
+
+//        // UI messages
+//        if (complete && !failed) {
+//            batch.drawText(goodMessage, width / 2, height / 2);
+//        } else if (failed) {
+//            batch.drawText(badMessage, width / 2, height / 2);
+//        }
+
+        // ——— Goal-region percentage notification ———
         int numFilled = 0;
         List<Goal> goals1 = physics.getGoalList();
         List<Goal> goals2 = physics.getGoal2List();
@@ -1083,19 +1156,32 @@ public class GameplayController implements Screen {
         camera.update();
     }
 
-
     /**
      * The main render loop.
      */
     @Override
     public void render(float delta) {
-
         if (!active) {
             return;
         }
         if (!preUpdate(delta)) {
             return;
         }
+
+//        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
+//            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+//            camera.unproject(touch); // if you’re using a camera
+//
+//            if (retryButton.contains(touch.x, touch.y)) {
+//                reset();
+//                gameState = GameState.PLAYING;
+//            } else if (menuButton.contains(touch.x, touch.y)) {
+//                listener.exitScreen(this, EXIT_MAP);
+//            } else if (nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+//                listener.exitScreen(this, EXIT_NEXT);
+//            }
+//        }
+
         float frameTime = Math.min(delta, 0.25f);
         accumulator += frameTime;
         final float FIXED_TIMESTEP = 1 / 120f;
@@ -1175,14 +1261,18 @@ public class GameplayController implements Screen {
 
     private void setVictory() {
         complete = true;
+        gameState = GameState.WON;
         countdown = EXIT_COUNT;
     }
 
     private void setFailure(boolean value) {
         if (value) {
             countdown = EXIT_COUNT;
+            // immediately start zooming in on the chameleon
+            targetZoom = ZOOM_FOCUS;
         }
         failed = value;
+        gameState = GameState.LOST;
     }
 
     public OrthographicCamera getCamera() {
