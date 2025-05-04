@@ -412,8 +412,8 @@ public class AIController {
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
-            float halfFOV = (float) Math.toRadians(fov / 2);
-            int numRays = (int) fov;
+            float halfFOV = (float) Math.toRadians(10f / 2);
+            int numRays = (int) 10;
             float angleStep = (halfFOV * 2) / (numRays - 1);
 
             for (int i = 0; i < numRays; i++) {
@@ -811,7 +811,7 @@ public class AIController {
         Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
 
         float halfFOV = (float) Math.toRadians(fov / 2);
-        int numRays = (int) (fov);  // high = smoother
+        int numRays = (int) 10;  // high = smoother
         float angleStep = (halfFOV * 2) / (numRays - 1);
 
         float angleToLook = enemy.getRotation();

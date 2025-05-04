@@ -38,7 +38,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 12;
+    private int numRays = 13;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
@@ -140,7 +140,7 @@ public class PhysicsController implements ContactListener {
         for (int i = 0; i < numRays; i++) {
             float angleOffset   = (i - numRays/2.0f) * angleStep;
             float currentAngle  = angle + angleOffset;
-            float customRadius  = rayLength;
+            float customRadius  = computeRadiusForAngle(angleOffset);
             Vector2 direction   = new Vector2(
                 (float)Math.cos(currentAngle),
                 (float)Math.sin(currentAngle)
