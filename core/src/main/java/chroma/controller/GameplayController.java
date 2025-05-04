@@ -1247,7 +1247,7 @@ public class GameplayController implements Screen {
         scale.x = (this.width == 0) ? 1.0f : ((float) this.width / worldWidth);
         scale.y = (this.height == 0) ? 1.0f : ((float) this.height / worldHeight);
         // Rebuild the world for the new scale
-        reset();
+//        reset();
     }
 
     @Override

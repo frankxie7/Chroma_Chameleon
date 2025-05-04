@@ -119,11 +119,11 @@ public class ChromaRoot extends Game implements ScreenListener {
         }
 
         // Pass size changes to each gameplay controller
-        if (controllers != null) {
-            for (int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].resize(width, height);
-            }
-        }
+//        if (controllers != null) {
+//            for (int ii = 0; ii < controllers.length; ii++) {
+//                controllers[ii].resize(width, height);
+//            }
+//        }
     }
 
     /**
@@ -143,41 +143,61 @@ public class ChromaRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-            levelSelector = new LevelSelector(directory);
+
+
+            controllers = new GameplayController[27];
+            for (int ii = 0; ii < controllers.length; ii++) {
+                levelSelector = new LevelSelector(directory);
+                levelSelector.setCurrentLevel(ii+1);
+                controllers[ii] = new GameplayController(directory, levelSelector);
+                controllers[ii].setScreenListener(this);
+                controllers[ii].setSpriteBatch(batch);
+                controllers[ii].reset();
+            }
 
             selecting = new MenuMode("assets.json", batch);
             selecting.setScreenListener(this);
             setScreen(selecting);
 
         } else if (screen == selecting) {
-            levelSelector.setCurrentLevel(exitCode);
+//            levelSelector.setCurrentLevel(exitCode);
+//            selecting.dispose();
+//            selecting = null;
+//
+//            // Create array of gameplay controllers (could be multiple levels or just one)
+//            controllers = new GameplayController[1];
+//            controllers[0] = new GameplayController(directory, levelSelector);
+//
+//            // Initialize them
+//            for (int ii = 0; ii < controllers.length; ii++) {
+//                controllers[ii].setScreenListener(this);
+//                controllers[ii].setSpriteBatch(batch);
+//                controllers[ii].reset();  // If your class has a 'reset' method
+//            }
+//
+//            current = 0;
+//            setScreen(controllers[current]);
             selecting.dispose();
             selecting = null;
 
-            // Create array of gameplay controllers (could be multiple levels or just one)
-            controllers = new GameplayController[1];
-            controllers[0] = new GameplayController(directory, levelSelector);
 
-            // Initialize them
-            for (int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].setScreenListener(this);
-                controllers[ii].setSpriteBatch(batch);
-                controllers[ii].reset();  // If your class has a 'reset' method
-            }
-
-            current = 0;
-            setScreen(controllers[current]);
+            current = exitCode;
+            setScreen(controllers[current-1]);
 
             // Handling transitions inside gameplay
         } else if (exitCode == GameplayController.EXIT_NEXT) {
-            levelSelector.nextLevel();
-            controllers[current].reset();
-            setScreen(controllers[current]);
+//            levelSelector.nextLevel();
+//            controllers[current].reset();
+            current = Math.min(current + 1, controllers.length - 1);
+            controllers[current - 1].reset();
+            setScreen(controllers[current-1]);
 
         } else if (exitCode == GameplayController.EXIT_PREV) {
-            levelSelector.prevLevel();
-            controllers[current].reset();
-            setScreen(controllers[current]);
+//            levelSelector.prevLevel();
+//            controllers[current].reset();
+            current = Math.max(current - 1, 0);
+            controllers[current-1].reset();
+            setScreen(controllers[current-1]);
 
         } else if (exitCode == GameplayController.EXIT_QUIT) {
             // Quit the main application
@@ -185,7 +205,7 @@ public class ChromaRoot extends Game implements ScreenListener {
 
         } else if (exitCode == GameplayController.EXIT_MAP) {
             //Transition from gameplay to menu
-            controllers = null;
+//            controllers = null;
             selecting = new MenuMode("assets.json", batch);
             selecting.setScreenListener(this);
             setScreen(selecting);
