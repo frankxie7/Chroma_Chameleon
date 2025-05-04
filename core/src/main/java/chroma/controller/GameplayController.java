@@ -732,13 +732,13 @@ public class GameplayController implements Screen {
      */
     private void postUpdate(float dt) {
         // Check collisions
-        if (!failed && physics.didPlayerCollideWithEnemy()) {
+        if (!failed && physics.didPlayerCollideWithEnemy() && !physics.didWin()) {
             setFailure(true);
             physics.resetCollisionFlags();
         }
 
         // Laser kill?
-        if (!failed && physics.didPlayerHitByLaser()) {
+        if (!failed && physics.didPlayerHitByLaser() && !physics.didWin()) {
             setFailure(true);
             physics.resetLaserFlag();
         }
