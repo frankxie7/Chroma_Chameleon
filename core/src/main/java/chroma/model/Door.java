@@ -22,6 +22,9 @@ public class Door extends ObstacleSprite {
     private final Music openSound;
     private boolean opened = false;
     private boolean isChameleonFalling = false;
+    private Chameleon chameleon = null;
+    private boolean fallPlayed = false;
+    private boolean movingToVent = true;
 
     private float animTime = 0f;
     private TextureRegion currentFrame;
@@ -59,6 +62,17 @@ public class Door extends ObstacleSprite {
         mesh.set(-half, -half, half*2, half*2);
     }
 
+    public Vector2 getCenter() {
+        float centerX = obstacle.getX();
+        float centerY = obstacle.getY();
+        return new Vector2(centerX, centerY);
+    }
+
+    public void setChameleon(Chameleon cham) {
+        chameleon = cham;
+        fallPlayed = false;
+    }
+
     /**
      * Trigger door opening: switch to openAnim and set sensor
      */
@@ -76,6 +90,10 @@ public class Door extends ObstacleSprite {
         return opened;
     }
 
+    public boolean movingToVent() {
+        return movingToVent;
+    }
+
     public void playChameleonFallAnimation() {
         isChameleonFalling = true;
         animTime = 0f;
@@ -84,6 +102,19 @@ public class Door extends ObstacleSprite {
     @Override
     public void update(float dt) {
         animTime += dt;
+        if (chameleon != null && !fallPlayed) {
+            Vector2 chamPos = chameleon.getObstacle().getPosition();
+            if (chamPos.dst(getCenter()) < 0.05f) {
+                chameleon.setFalling(true);
+                playChameleonFallAnimation();
+                fallPlayed = true;
+                movingToVent = false;
+            } else {
+                Vector2 dir = getCenter().cpy().sub(chamPos).nor();
+                chameleon.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
+                movingToVent = true;
+            }
+        }
         if (isChameleonFalling) {
             currentFrame = chameleonFallAnim.getKeyFrame(animTime, false);
             if (chameleonFallAnim.isAnimationFinished(animTime)) {
