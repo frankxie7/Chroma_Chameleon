@@ -1,6 +1,6 @@
 {
   "world" : {
-    "bounds"  : [48,36],
+    "bounds"  : [65,65],
     "gravity" : 0,
     "volume": 0.8
   },
@@ -15,7 +15,7 @@
     "drawScale": 0.6,
     "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 10.0,
+    "maxspeed"  : 8.0,
     "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,
@@ -100,17 +100,45 @@
           "startRotation": [90, 80, 270],
           "rotateAngle": [0, 100, 100]
         },
+    "level_6": {
+      "names": ["enemy1", "enemy2", "enemy3","enemy4","enemy5","enemy6","enemy7"],
+      "types": ["GUARD", "GUARD", "CAMERA2","GUARD","GUARD","GUARD","CAMERA2"],
+      "patrols": [true, true,false,true,true,true,false],
+      "patrol_paths": [[[6, 22],[15,22],[15,31],[6,31]],
+        [[15,31],[6,31],[6, 22],[15,22]],
+        [],
+        [[28,42],[28,32],[28,42],[43,42]],
+        [[49,18],[57,18],[57,36],[49,36]],
+        [[16,50],[42,50]],
+      []],
+      "positions": [[5, 21], [16, 32],[11,29],[28,42],[49,18],[16,50],[55,49]],
+      "startRotation": [0, 180,0,90,0,0,0],
+      "rotateAngle": [0, 0, 359,0,0,0,90]
+    },
+    "level_8" : {
+      "names": ["enemy1","enemy2","enemy3"],
+      "types": ["GUARD","CAMERA1", "GUARD"],
+      "patrols": [true,false,true],
+      "patrol_paths": [
+        [[19.0, 24.0], [19.0, 13.0]],[],[[2,15],[8,15]]
+      ],
+      "positions": [[19.0, 19.0],[22.0,12.0],[2,15]],
+      "startRotation": [0,180,0],
+      "rotateAngle": [0, 40,0]
+    },
+
 
     "alex_level": {
       "names": ["enemy1","enemy2","enemy3"],
       "types": ["GUARD","GUARD","GUARD"],
       "patrols": [true,true,true],
-      "patrol_paths": [[[3,25],[27,25],[27,3],[3,3]],[[27,25],[27,3],[3,3],[3,25]],[[27,3],[3,3],[3,25],[27,25]]],
+      "patrol_paths": [[[3,25],[27,25],[27,5],[3,5]],[[27,25],[27,5],[3,5],[3,25]],[[27,5],[3,5],[3,25],[27,25]]],
       "positions": [[3, 25],[27,25],[27,5]],
       "startRotation": [90,90,90],
       "rotateAngle": [0,0,0]
     }
   },
+
   "bomb": {
     "size"      : 2.0,
     "aimRange": 8

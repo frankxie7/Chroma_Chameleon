@@ -136,6 +136,7 @@ public class GameplayController implements Screen {
     private static final float RANGE_GROWTH = 12f;
     private static final float ZOOM_DEFAULT = 0.45f;
     private static final float ZOOM_OUT_MAX = 0.6f;
+    private static final float ZOOM_FOCUS = 0.20f;  // tune this until the chameleon fills the view
     private static final float ZOOM_LERP = 5f;
 
 
@@ -274,6 +275,9 @@ public class GameplayController implements Screen {
         goal1Complete = false;
         goal2Complete = false;
         goal3Complete = false;
+        if(bombQueue != null){
+            bombQueue.clear();
+        }
         // Build the level with the current `units`
 
         // Add all walls
@@ -397,6 +401,7 @@ public class GameplayController implements Screen {
      */
     private void update(float dt) {
         if (gameState == GameState.WON || gameState == GameState.LOST) {
+            updateCamera();
             return; // Skip updates
         }
 
@@ -747,14 +752,18 @@ public class GameplayController implements Screen {
      * Step physics after update.
      */
     private void postUpdate(float dt) {
+        if (gameState == GameState.WON || gameState == GameState.LOST) {
+            return; // Skip updates
+        }
+
         // Check collisions
-        if (!failed && physics.didPlayerCollideWithEnemy()) {
+        if (!failed && physics.didPlayerCollideWithEnemy() && !physics.didWin()) {
             setFailure(true);
             physics.resetCollisionFlags();
         }
 
         // Laser kill?
-        if (!failed && physics.didPlayerHitByLaser()) {
+        if (!failed && physics.didPlayerHitByLaser() && !physics.didWin()) {
             setFailure(true);
             physics.resetLaserFlag();
         }
@@ -920,7 +929,7 @@ public class GameplayController implements Screen {
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
-        player.draw(batch);
+
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {
@@ -948,6 +957,7 @@ public class GameplayController implements Screen {
                     0);
             }
         }
+        player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
@@ -1158,19 +1168,19 @@ public class GameplayController implements Screen {
             return;
         }
 
-        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
-            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touch); // if you’re using a camera
-
-            if (retryButton.contains(touch.x, touch.y)) {
-                reset();
-                gameState = GameState.PLAYING;
-            } else if (menuButton.contains(touch.x, touch.y)) {
-                listener.exitScreen(this, EXIT_MAP);
-            } else if (nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
-                listener.exitScreen(this, EXIT_NEXT);
-            }
-        }
+//        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
+//            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+//            camera.unproject(touch); // if you’re using a camera
+//
+//            if (retryButton.contains(touch.x, touch.y)) {
+//                reset();
+//                gameState = GameState.PLAYING;
+//            } else if (menuButton.contains(touch.x, touch.y)) {
+//                listener.exitScreen(this, EXIT_MAP);
+//            } else if (nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+//                listener.exitScreen(this, EXIT_NEXT);
+//            }
+//        }
 
         float frameTime = Math.min(delta, 0.25f);
         accumulator += frameTime;
@@ -1258,6 +1268,8 @@ public class GameplayController implements Screen {
     private void setFailure(boolean value) {
         if (value) {
             countdown = EXIT_COUNT;
+            // immediately start zooming in on the chameleon
+            targetZoom = ZOOM_FOCUS;
         }
         failed = value;
         gameState = GameState.LOST;

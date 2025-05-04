@@ -156,16 +156,11 @@ public class AIController {
     }
     private boolean isBlocked(Vector2 position) {
         for (Collision wall : collisions) {
-//            System.out.println(wall.getObstacle().getPosition());
-            if (wall.getObstacle().getPosition() == position) {
+            if (wall.contains(position)) {
                 return true;
             }
         }
-//        for (Goal goal : goals) {
-//            if (goal.contains(position)) {
-//                return true;
-//            }
-//        }
+
         return false;
     }
 
@@ -260,7 +255,7 @@ public class AIController {
         // Create nodes that are not inside obstacles
         for (float x = 0; x < worldWidth + 1; x++) {
             for (float y = 0; y < worldHeight + 1; y++) {
-                Vector2 pos = new Vector2(x * scale, y * scale);
+                Vector2 pos = new Vector2(x, y);
                 if (!isBlocked(pos)) {
                     NavNode node = new NavNode(x, y);
                     graph.addNode(node);
@@ -412,8 +407,8 @@ public class AIController {
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
-            float halfFOV = (float) Math.toRadians(fov / 2);
-            int numRays = (int) fov;
+            float halfFOV = (float) Math.toRadians(10f / 2);
+            int numRays = (int) 10;
             float angleStep = (halfFOV * 2) / (numRays - 1);
 
             for (int i = 0; i < numRays; i++) {
@@ -778,11 +773,11 @@ public class AIController {
 //            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
 //        }
 
-//        // 1. Draw all NavNodes first (background layer)
-//        shapeRenderer.setColor(Color.GRAY);
-//        for (NavNode node : graph.nodes) {
-//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
-//        }
+        // 1. Draw all NavNodes first (background layer)
+        shapeRenderer.setColor(Color.GRAY);
+        for (NavNode node : graph.nodes) {
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+        }
 
 //        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
@@ -811,7 +806,7 @@ public class AIController {
         Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
 
         float halfFOV = (float) Math.toRadians(fov / 2);
-        int numRays = (int) (fov);  // high = smoother
+        int numRays = (int) 10;  // high = smoother
         float angleStep = (halfFOV * 2) / (numRays - 1);
 
         float angleToLook = enemy.getRotation();
