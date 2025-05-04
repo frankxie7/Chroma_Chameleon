@@ -372,14 +372,19 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Goal && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Goal)) {
             Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
-            goal.setFull();
+            if (!goal.isComplete()){
+                goal.setFull();
+            }
+
         }
         // Handle bomb and goal collisons
         if ((userDataA instanceof Goal && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Goal)) {
             Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
             Bomb bomb = userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB;
-            goal.setFull();
+            if(!goal.isComplete()){
+                goal.setFull();
+            }
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)

@@ -259,7 +259,7 @@ public class Level {
             }
         }
         JsonValue wallsData2 = findLayer(constants, "walls-cover");
-        if (wallsData2 != null && wallsData1.has("data")) {
+        if (wallsData2 != null && wallsData2.has("data")) {
             wallsCover = new ArrayList<>();
 
             int layerWidth  = wallsData2.getInt("width");
