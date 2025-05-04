@@ -115,6 +115,17 @@
       "startRotation": [0, 180,0,90,0,0,0],
       "rotateAngle": [0, 0, 359,0,0,0,90]
     },
+    "level_8" : {
+      "names": ["enemy1","enemy2","enemy3"],
+      "types": ["GUARD","CAMERA1", "GUARD"],
+      "patrols": [true,false,true],
+      "patrol_paths": [
+        [[19.0, 24.0], [19.0, 13.0]],[],[[2,15],[8,15]]
+      ],
+      "positions": [[19.0, 19.0],[22.0,12.0],[2,15]],
+      "startRotation": [0,180,0],
+      "rotateAngle": [0, 40,0]
+    },
 
 
     "alex_level": {
