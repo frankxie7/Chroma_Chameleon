@@ -10,7 +10,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.AssetDirectory;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 /**
  * Level ----- This class is responsible for constructing the game environment from JSON
@@ -38,6 +40,11 @@ public class Level {
     private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
+    private int mapWidthInTiles;
+    private int mapHeightInTiles;
+    public static final int TILE_WIDTH = 16;
+    public static final int TILE_HEIGHT = 16;
+    Set<Point> bombableTiles = new HashSet<>();
 
     /**
      * gid →  corresponding tile
@@ -89,6 +96,8 @@ public class Level {
         //background
         JsonValue backgroundData = findLayer(constants, "background");
         if (backgroundData != null && backgroundData.has("data")) {
+            mapWidthInTiles = backgroundData.getInt("width");
+            mapHeightInTiles = backgroundData.getInt("height");
             backgroundTiles = new ArrayList<>();
 
 //            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
@@ -119,6 +128,7 @@ public class Level {
                     tile.setPosition(tx, ty);
                     backgroundTiles.add(tile);
                 }
+                bombableTiles.add(new Point(tx, ty));
             }
         }
 
@@ -152,7 +162,7 @@ public class Level {
                 tile.setPosition(tx, ty);
                 goalTiles.add(tile);
 
-
+                bombableTiles.add(new Point(tx, ty));
             }
         }
         JsonValue goalTileData2 = findLayer(constants, "goal2");
@@ -183,6 +193,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 goal2Tiles.add(tile);
+                bombableTiles.add(new Point(tx, ty));
             }
         }
         JsonValue goalTileData3 = findLayer(constants, "goal3");
@@ -213,6 +224,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 goal3Tiles.add(tile);
+                bombableTiles.add(new Point(tx, ty));
             }
         }
         // Parse the "walls" tile layer and build a list of Terrain tiles
@@ -232,7 +244,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -263,7 +275,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -295,7 +307,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -610,6 +622,16 @@ public class Level {
             tx, ty + 1
         };
     }
+
+    public int getWidth() {
+        return mapWidthInTiles * TILE_WIDTH;
+    }
+
+    public int getHeight() {
+        return mapHeightInTiles * TILE_HEIGHT;
+    }
+
+
     public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount,
         float frameDuration) {
         int totalWidth = sheet.getWidth();
@@ -655,6 +677,14 @@ public class Level {
             this.blueAnimations = blueAnimations;
             this.redAnimations = redAnimations;
         }
+    }
+
+    public boolean isTileBombable(int x, int y) {
+        return bombableTiles.contains(new Point(x, y));
+    }
+
+    public Set<Point> getBombableTiles() {
+        return bombableTiles;
     }
 
 }
