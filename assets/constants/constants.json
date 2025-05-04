@@ -98,10 +98,19 @@
           "patrol_paths": [[[9,25],[40,25]],[],[]],
           "positions": [[40, 25], [19, 14],[20,14]],
           "startRotation": [90, 80, 270],
-          "rotateAngle": [0, 40, 30]
-        }
-  },
+          "rotateAngle": [0, 40, 25]
+        },
 
+    "alex_level": {
+      "names": ["enemy1","enemy2","enemy3"],
+      "types": ["GUARD","GUARD","GUARD"],
+      "patrols": [true,true,true],
+      "patrol_paths": [[[3,25],[27,25],[27,3],[3,3]],[[27,25],[27,3],[3,3],[3,25]],[[27,3],[3,3],[3,25],[27,25]]],
+      "positions": [[3, 25],[27,25],[27,5]],
+      "startRotation": [90,90,90],
+      "rotateAngle": [0,0,0]
+    }
+  },
   "bomb": {
     "size"      : 2.0,
     "aimRange": 8

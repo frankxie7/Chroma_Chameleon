@@ -82,7 +82,7 @@ public class PhysicsController implements ContactListener {
 
     public List<Goal> getGoalList(){ return goalList; }
     public List<Goal> getGoal2List(){ return goal2List; }
-    public List<Goal> getGoal3List(){ return goal2List; }
+    public List<Goal> getGoal3List(){ return goal3List; }
 
     public void setGoalDoor(Door door) {
         this.goalDoor = door;
@@ -125,21 +125,8 @@ public class PhysicsController implements ContactListener {
                 spr.update(dt);
             }
         }
-        if (goalDoor != null && !goalDoor.isOpen() && goalsFull()) {
+        if (goalDoor != null && !goalDoor.isOpen() && (goals1Full() && goals2Full() && goals3Full())) {
             goalDoor.open();
-        }
-    }
-
-    /**
-     * RayCastHit s a simple class containing an object hit within a raycast and the fraction
-     */
-    static class RayCastHit {
-        public Object object;
-        public float fraction;
-
-        public RayCastHit(Object object, float fraction) {
-            this.object = object;
-            this.fraction = fraction;
         }
     }
 
@@ -149,12 +136,10 @@ public class PhysicsController implements ContactListener {
      * @param angle the angle to shoot the rays
      */
     public void shootRays(Chameleon obstacle, float angle) {
-        float angleStep = (float)(Math.PI/2.0) / numRays;
-        //hits.clear();
+        float angleStep = (float)(Math.PI/3.0) / numRays;
         for (int i = 0; i < numRays; i++) {
             float angleOffset   = (i - numRays/2.0f) * angleStep;
             float currentAngle  = angle + angleOffset;
-//            float customRadius  = computeRadiusForAngle(angleOffset);
             float customRadius  = rayLength;
             Vector2 direction   = new Vector2(
                 (float)Math.cos(currentAngle),
@@ -274,11 +259,9 @@ public class PhysicsController implements ContactListener {
                 Goal tile = createTile(x, y, width, units, settings,id);
                 if(id == 1){
                     goalList.add(tile);
-                }
-                if(id == 2){
+                }else if(id == 2){
                     goal2List.add(tile);
-                }
-                if(id == 3){
+                }else if(id == 3){
                     goal3List.add(tile);
                 }
 
@@ -389,14 +372,19 @@ public class PhysicsController implements ContactListener {
         if ((userDataA instanceof Goal && userDataB instanceof Spray) ||
             (userDataA instanceof Spray && userDataB instanceof Goal)) {
             Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
-            goal.setFull();
+            if (!goal.isComplete()){
+                goal.setFull();
+            }
+
         }
         // Handle bomb and goal collisons
         if ((userDataA instanceof Goal && userDataB instanceof Bomb) ||
             (userDataA instanceof Bomb && userDataB instanceof Goal)) {
             Goal goal = userDataA instanceof Goal ? (Goal) userDataA : (Goal) userDataB;
             Bomb bomb = userDataA instanceof Bomb ? (Bomb) userDataA : (Bomb) userDataB;
-            goal.setFull();
+            if(!goal.isComplete()){
+                goal.setFull();
+            }
         }
 
         // Handle bomb contacts (unchanged or similar counter logic if needed)
@@ -567,12 +555,15 @@ public class PhysicsController implements ContactListener {
      */
     public boolean goals1Full(){
         int numFilled = 0;
+        if(goalList.isEmpty()){
+            return true;
+        }
         for(Goal goal : goalList){
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.size() > 0.95;
+        return (float)numFilled / goalList.size() > 0.93;
     }
 
     /**
@@ -581,12 +572,15 @@ public class PhysicsController implements ContactListener {
      */
     public boolean goals2Full(){
         int numFilled = 0;
+        if(goal2List.isEmpty()){
+            return true;
+        }
         for(Goal goal : goal2List){
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal2List.size() > 0.95;
+        return (float)numFilled / goal2List.size() > 0.93;
     }
 
     /**
@@ -595,12 +589,15 @@ public class PhysicsController implements ContactListener {
      */
     public boolean goals3Full(){
         int numFilled = 0;
+        if(goal3List.isEmpty()){
+            return true;
+        }
         for(Goal goal : goal3List){
             if(goal != null && goal.isFull()){
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal3List.size() > 0.95;
+        return (float)numFilled / goal3List.size() > 0.93;
     }
 
 
