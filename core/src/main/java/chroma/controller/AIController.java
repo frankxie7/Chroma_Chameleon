@@ -156,10 +156,7 @@ public class AIController {
     }
     private boolean isBlocked(Vector2 position) {
         for (Collision wall : collisions) {
-//            System.out.println(wall.getObstacle().getPosition());
-            if (wall.getObstacle().getPosition() == position) {
-                return true;
-            }
+           // wall.getPos()
         }
 //        for (Goal goal : goals) {
 //            if (goal.contains(position)) {
@@ -778,11 +775,11 @@ public class AIController {
 //            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
 //        }
 
-//        // 1. Draw all NavNodes first (background layer)
-//        shapeRenderer.setColor(Color.GRAY);
-//        for (NavNode node : graph.nodes) {
-//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
-//        }
+        // 1. Draw all NavNodes first (background layer)
+        shapeRenderer.setColor(Color.GRAY);
+        for (NavNode node : graph.nodes) {
+            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+        }
 
 //        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {

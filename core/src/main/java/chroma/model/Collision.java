@@ -12,9 +12,10 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 
 public class Collision extends ObstacleSprite {
     private Polygon polygon;
-    private float units;           // physics-to-world scale
+    private float units;
+    private Vector2 pos;// physics-to-world scale
 
-    public Collision(float[] points, float units) {
+    public Collision(float[] points, float units,Vector2 location) {
         super();
         this.units = units;
 
@@ -28,6 +29,7 @@ public class Collision extends ObstacleSprite {
         obstacle.setPhysicsUnits(units);
         obstacle.setUserData(this);
         obstacle.setName("collision");
+        pos = location;
 
         // Scale the polygon and create the mesh.
         poly.scl(units);
@@ -38,7 +40,7 @@ public class Collision extends ObstacleSprite {
 
     }
 
-
+    public Vector2 getPos() {return this.pos;}
     public Polygon getPolygon(){
         return this.polygon;
     }

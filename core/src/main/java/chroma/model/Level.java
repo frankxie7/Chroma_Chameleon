@@ -347,7 +347,7 @@ public class Level {
                 // create a 1×1 tile-based Collision at (tx,ty)
                 if (tileValue != 0) {
                     float[] coords = createCoords(tx, ty);
-                    Collision block = new Collision(coords, units);
+                    Collision block = new Collision(coords, units,new Vector2(tx,ty));
                     collision.add(block);
                 }
             }
