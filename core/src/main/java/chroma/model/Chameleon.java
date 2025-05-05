@@ -85,6 +85,9 @@ public class Chameleon extends ObstacleSprite {
     private Animation<TextureRegion> walkAnim;
     private Animation<TextureRegion> upWalkAnim;
     private Animation<TextureRegion> downWalkAnim;
+    // new, alongside your other Animations
+    private Animation<TextureRegion> idleAnim;
+
     private float animTime;
     private TextureRegion currentFrame;
     private Music walkSound;
@@ -265,7 +268,8 @@ public class Chameleon extends ObstacleSprite {
                      Animation<TextureRegion> animation,
                      Animation<TextureRegion> upWalkAnim,
                      Animation<TextureRegion> downWalkAnim,
-                     Music walkSound) {
+                     Music walkSound,
+        Animation<TextureRegion> idleAnim) {
         this.data = dataGlobal;
         JsonValue debugInfo = dataGlobal.get("debug");
 
@@ -317,6 +321,7 @@ public class Chameleon extends ObstacleSprite {
         this.walkAnim = animation;
         this.upWalkAnim = upWalkAnim;
         this.downWalkAnim = downWalkAnim;
+        this.idleAnim     = idleAnim;
         animTime = 0;
         TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
         currentFrame = frames[6];
@@ -434,21 +439,26 @@ public class Chameleon extends ObstacleSprite {
         }
 
         if (hmove == 0 && vmove == 0) {
-            switch (lastDirection) {
-                case UP:
-                    currentFrame = upWalkAnim.getKeyFrame(0, false); // first idle up frame
-                    break;
-                case DOWN:
-                    currentFrame = downWalkAnim.getKeyFrame(0, false); // first idle down frame
-                    break;
-                case LEFT:
-                case RIGHT:
-                    TextureRegion[] frames = (TextureRegion[]) walkAnim.getKeyFrames();
-                    currentFrame = frames[6];
-                    break;
+            // 1) Facing UP? keep original static UP frame
+            if (lastDirection == Direction.UP) {
+                currentFrame = upWalkAnim.getKeyFrame(0f, false);
+                animTime = 0f;
+                walkSound.stop();
             }
-            animTime = 0;
-            walkSound.stop();
+            // 2) Facing DOWN? keep original static DOWN frame
+            else if (lastDirection == Direction.DOWN) {
+                currentFrame = downWalkAnim.getKeyFrame(0f, false);
+                animTime = 0f;
+                walkSound.stop();
+            }
+            // 3) LEFT or RIGHT (or anything else): play your two‑frame idle loop
+            else {
+                animTime += dt;
+                currentFrame = idleAnim.getKeyFrame(animTime, true);
+                walkSound.stop();
+            }
+
+
         } else {
             animTime += dt;
 

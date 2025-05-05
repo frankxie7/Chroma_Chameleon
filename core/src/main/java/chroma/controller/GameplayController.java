@@ -73,9 +73,10 @@ public class GameplayController implements Screen {
     private float worldWidth, worldHeight;
 
     private Chameleon player;
-    private float splatterCost = 3f;
-    private static final float BOMB_INITIAL_COST = 6f;
-    private static final float BOMB_SUBSEQUENT_COST = 0.5f;
+    private float splatterCost = 4f;
+//    private static final float BOMB_INITIAL_COST = 6f;
+    private static final float BOMB_SUBSEQUENT_COST = 1f;
+    private boolean waitingForDoorAnim = false;
 
 
     private OrthographicCamera camera;
@@ -454,7 +455,7 @@ public class GameplayController implements Screen {
         globalChase = anyChasing;
 
         // Update the state of aiming
-        player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_INITIAL_COST));
+        player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST ));
         for (Bomb b : level.getBombs()) {
             b.update(dt);
             // If you want to check collisions or do "landing" logic, do it here:
@@ -590,7 +591,7 @@ public class GameplayController implements Screen {
         }
         switch (bombState) {
             case IDLE:
-                if (skillKey && player.hasEnoughPaint(BOMB_INITIAL_COST)) {
+                if (skillKey && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST )) {
                     bombState = BombSkillState.READY;
                     aimRangeCurrent = RANGE_MAX;               // instant full range
                     targetZoom = ZOOM_OUT_MAX;            // start zoom-out
@@ -659,14 +660,14 @@ public class GameplayController implements Screen {
         camera.unproject(raw);
         Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
-        if (!player.hasEnoughPaint(BOMB_INITIAL_COST)) {
+        if (!player.hasEnoughPaint(BOMB_SUBSEQUENT_COST )) {
             bombState = BombSkillState.IDLE;
             aimRangeCurrent = RANGE_MIN;
             targetZoom = ZOOM_DEFAULT;
             return;
         }
 
-        player.setPaint(player.getPaint() - BOMB_INITIAL_COST);
+        player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST );
 
         lastPlanned.set(firstPix);
         planned.add(firstPix.cpy().scl(1f / units));
@@ -778,11 +779,42 @@ public class GameplayController implements Screen {
             setFailure(true);
             physics.resetLaserFlag();
         }
-        // Check winning
-        if (!failed && physics.didWin()) {
-            setVictory();
-            physics.resetCollisionFlags();
-        }
+        // ——— Win + chameleon fall all in controller ———
+            if (!failed && physics.didWin()) {
+                    Door door = level.getGoalDoor();
+                    Chameleon cham = player;
+
+                        // 1) first frame we detect win: start moving‑to‑vent logic
+                           if (!door.isFallPlayed()) {
+                            if (cham != null) {
+                                    Vector2 pos = cham.getObstacle().getPosition();
+                                    Vector2 center = door.getCenter();
+                                   if (pos.dst(center) < 0.05f) {
+                                           // at vent: trigger fall animation
+                                                cham.setFalling(true);
+                                            door.playChameleonFallAnimation();
+                                            door.setFallPlayed(true);
+                                            // reset physics flags but keep waitingForDoorAnim == true
+                                                waitingForDoorAnim = true;
+                                        } else {
+                                           // move toward center
+                                                Vector2 dir = center.cpy().sub(pos).nor();
+                                            cham.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
+                                        }
+                                }
+                        }
+                    physics.resetCollisionFlags();
+               }
+
+                // 2) once animation is done, actually show the win‑UI
+                    if (waitingForDoorAnim) {
+                    Door door = level.getGoalDoor();
+                    if (door != null && !door.isChameleonFalling()) {
+                            setVictory();
+                            waitingForDoorAnim = false;
+                        }
+                }
+
         physics.update(dt);
     }
 
@@ -916,6 +948,7 @@ public class GameplayController implements Screen {
         }
         batch.flush();
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
                 sprite.draw(batch);
@@ -968,6 +1001,33 @@ public class GameplayController implements Screen {
                     0);
             }
         }
+        if (levelSelector.getCurrentLevel() == 2) {
+            Texture hintTex = directory.getEntry("tutorialhints2", Texture.class);
+            float worldX = 2f * units;
+            float worldY = 10f * units;
+            batch.draw(hintTex,
+                worldX, worldY,
+                hintTex.getWidth(),
+                hintTex.getHeight());
+        }
+        if (levelSelector.getCurrentLevel() == 1) {
+            Texture hintTex = directory.getEntry("tutorialhints3", Texture.class);
+            float worldX = 2f * units;
+            float worldY = 17f * units;
+            batch.draw(hintTex,
+                worldX, worldY,
+                hintTex.getWidth(),
+                hintTex.getHeight());
+        }
+        if (levelSelector.getCurrentLevel() == 3) {
+            Texture hintTex = directory.getEntry("tutorialhints1", Texture.class);
+            float worldX = 2f * units;
+            float worldY = 19f * units;
+            batch.draw(hintTex,
+                worldX, worldY,
+                hintTex.getWidth(),
+                hintTex.getHeight());
+        }
         player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {
@@ -1013,6 +1073,11 @@ public class GameplayController implements Screen {
             }
         }
 
+//        batch.flush();
+
+
+//        batch.flush();
+//        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 // ───── new bomb ──────────────────────────
         if (
             bombState == BombSkillState.READY ||

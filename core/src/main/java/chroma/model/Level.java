@@ -134,6 +134,9 @@ public class Level {
             }
         }
 
+
+
+
         //background
         JsonValue goalTileData = findLayer(constants, "goal1");
         if (goalTileData != null && goalTileData.has("data")) {
@@ -418,8 +421,11 @@ public class Level {
         Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
         Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
+        Texture chameleonIdleSheet = directory.getEntry("chameleonIdleSheet", Texture.class);
+        Animation<TextureRegion> idleAnim =
+            createAnimation(chameleonIdleSheet, 2, 0.25f);
         Music walkSound = directory.getEntry("chameleon_walk", Music.class);
-        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound);
+        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound,idleAnim);
         avatar.setBombAnimation(bombAnim);
 
         // Create enemies

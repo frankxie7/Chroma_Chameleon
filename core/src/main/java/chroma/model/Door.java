@@ -86,6 +86,19 @@ public class Door extends ObstacleSprite {
         }
     }
 
+    // at the bottom of Door.java, before the final brace:
+    public boolean isFallPlayed() {
+        return fallPlayed;
+    }
+    public void setFallPlayed(boolean played) {
+        this.fallPlayed = played;
+    }
+    public boolean isMovingToVent() {
+        return movingToVent;
+    }
+
+
+
     public boolean isOpen() {
         return opened;
     }
@@ -98,34 +111,26 @@ public class Door extends ObstacleSprite {
         isChameleonFalling = true;
         animTime = 0f;
     }
+    /** Returns true while the chameleon‐fall animation is playing. */
+    public boolean isChameleonFalling() {
+        return isChameleonFalling;
+    }
 
     @Override
     public void update(float dt) {
         animTime += dt;
-        if (chameleon != null && !fallPlayed) {
-            Vector2 chamPos = chameleon.getObstacle().getPosition();
-            if (chamPos.dst(getCenter()) < 0.05f) {
-                chameleon.setFalling(true);
-                playChameleonFallAnimation();
-                fallPlayed = true;
-                movingToVent = false;
-            } else {
-                Vector2 dir = getCenter().cpy().sub(chamPos).nor();
-                chameleon.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
-                movingToVent = true;
-            }
-        }
-        if (isChameleonFalling) {
-            currentFrame = chameleonFallAnim.getKeyFrame(animTime, false);
-            if (chameleonFallAnim.isAnimationFinished(animTime)) {
-                isChameleonFalling = false;
-            }
-        } else if (opened) {
-            currentFrame = openAnim.getKeyFrame(animTime, false);
-        } else {
-            currentFrame = closedAnim.getKeyFrame(animTime, true);
-        }
-        super.update(dt);
+            // Only handle the _visual_ animation frames here.
+                if (isChameleonFalling) {
+                    currentFrame = chameleonFallAnim.getKeyFrame(animTime, false);
+                    if (chameleonFallAnim.isAnimationFinished(animTime)) {
+                            isChameleonFalling = false;
+                        }
+                } else if (opened) {
+                    currentFrame = openAnim.getKeyFrame(animTime, false);
+                } else {
+                    currentFrame = closedAnim.getKeyFrame(animTime, true);
+                }
+            super.update(dt);
     }
 
     public void draw(SpriteBatch batch) {

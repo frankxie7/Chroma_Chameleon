@@ -21,6 +21,7 @@
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
     "chameleonSkillSheet": "platform/character-animation.png",
+    "chameleonIdleSheet": "platform/updatedidle.png",
     "ventFall": "platform/vent_fall.png",
     "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
@@ -33,7 +34,10 @@
     "tileset-export": "platform/tileset-export.png",
     "tileset":   "shared/tileset.png",
     "vent":   "platform/vent.png",
-    "spray": "platform/spray.png"
+    "spray": "platform/spray.png",
+    "tutorialhints2": "platform/tutorial_paint.png",
+    "tutorialhints3": "platform/tutorialhints3.png",
+    "tutorialhints1": "platform/tutorialhints_bomb.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
@@ -42,12 +46,14 @@
     "level_1" : "constants/level_1.json",
     "level_2" : "constants/level_2.json",
     "level_3" : "constants/level_3.json",
+    "level_3_bomb" : "constants/level_3_bomb.json",
     "level_4" : "constants/level_4.json",
     "level_5" : "constants/level_5.json",
     "level_6" : "constants/level_6.json",
     "level_8" : "constants/level_8.json",
     "alex_level": "constants/alexlevel.json",
     "level_9" : "constants/level_9.json",
+    "level_7" : "constants/level_7.json",
     "laser_test" : "constants/laser_test.json"
   },
   "sounds" : {
