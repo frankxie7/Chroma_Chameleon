@@ -158,15 +158,6 @@
         "startRotation": [0,0,0,270],
         "rotateAngle": [0,0,0,50]
       },
-      "level_7" : {
-          "names": ["enemy1","enemy2","enemy3"],
-          "types": ["CAMERA2", "CAMERA2","CAMERA1"],
-          "patrols": [false,false,false],
-          "patrol_paths": [[],[],[]],
-          "positions": [[9,23],[17,23],[13,12]],
-          "startRotation": [270,270,90],
-          "rotateAngle": [45,45,45]
-        },
   },
 
   "bomb": {

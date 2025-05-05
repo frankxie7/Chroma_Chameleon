@@ -40,6 +40,7 @@ public class Level {
     private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
+    private List<GoalCollision> goalCollisions;
 //    private int mapWidthInTiles;
 //    private int mapHeightInTiles;
 //    public static final int TILE_WIDTH = 16;
@@ -78,6 +79,7 @@ public class Level {
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
         collision = new ArrayList<>();
+        goalCollisions = new ArrayList<>();
         grates = new ArrayList<>();
 
 
@@ -163,7 +165,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
+                float[] coords = createCoords(tx, ty);
                 goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 
 //                bombableTiles.add(new Point(tx, ty));
             }
@@ -195,7 +200,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                goal2Tiles.add(tile);
+                float[] coords = createCoords(tx, ty);
+                goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
             }
         }
@@ -225,7 +233,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                goal3Tiles.add(tile);
+                float[] coords = createCoords(tx, ty);
+                goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
             }
         }
@@ -528,6 +539,10 @@ public class Level {
 
     public Door getGoalDoor() {
         return goalDoor;
+    }
+
+    public List<GoalCollision> getGoalCollisions(){
+        return goalCollisions;
     }
 
     public Chameleon getAvatar() {

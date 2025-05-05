@@ -39,6 +39,7 @@ public class AIController {
     private Chameleon player;
     private List<Collision> collisions; // list of walls for pathfindinga
     private List<Goal> goals;
+    private List<GoalCollision> goalCollisions;
     private State state;
 
     // Camera and detection
@@ -105,6 +106,8 @@ public class AIController {
         this.collisions = level.getCollision();
         this.goals = new ArrayList<>();
         this.goals.addAll(physics.getGoalList());
+        this.goalCollisions = new ArrayList<>();
+        goalCollisions.addAll(level.getGoalCollisions());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
@@ -160,6 +163,11 @@ public class AIController {
                 return true;
             }
         }
+        for(GoalCollision goal : goalCollisions){
+            if (goal.contains(position))
+                return true;
+            }
+
 
         return false;
     }
@@ -759,7 +767,7 @@ public class AIController {
 //            shapeRenderer.setColor(Color.GREEN);
 //            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
 //        }
-
+//
         // 1. Draw all NavNodes first (background layer)
         shapeRenderer.setColor(Color.GRAY);
         for (NavNode node : graph.nodes) {
@@ -793,7 +801,7 @@ public class AIController {
         Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
 
         float halfFOV = (float) Math.toRadians(fov / 2);
-        int numRays = (int) 10;  // high = smoother
+        int numRays = (int) 20f;  // high = smoother
         float angleStep = (halfFOV * 2) / (numRays - 1);
 
         float angleToLook = enemy.getRotation();
