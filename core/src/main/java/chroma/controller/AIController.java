@@ -152,7 +152,7 @@ public class AIController {
             Object hitObject = hitFixture.getBody().getUserData();
 
             // Ignore enemies during visibility/path checks
-            return !(hitObject instanceof Enemy);
+            return !(hitObject instanceof Enemy || hitObject instanceof Chameleon);
         } else {
             return false;
         }
@@ -762,11 +762,11 @@ public class AIController {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-//        // Draw the goal in green
-//        if (lastGoal != null) {
-//            shapeRenderer.setColor(Color.GREEN);
-//            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
-//        }
+        // Draw the goal in green
+        if (lastGoal != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
+        }
 //
 //        // 1. Draw all NavNodes first (background layer)
 //        shapeRenderer.setColor(Color.GRAY);
@@ -774,7 +774,7 @@ public class AIController {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
 //        }
 
-//        // 2. Draw the A* path in yellow
+        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
 //            shapeRenderer.setColor(Color.YELLOW);
 //            for (Vector2 pathPoint : lastPath) {
