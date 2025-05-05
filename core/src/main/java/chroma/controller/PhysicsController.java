@@ -563,7 +563,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goalList.size() > 0.90;
+        return (float)numFilled / goalList.size() > 0.8;
     }
 
     /**
@@ -580,7 +580,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal2List.size() > 0.90;
+        return (float)numFilled / goal2List.size() > 0.8;
     }
 
     /**
@@ -597,7 +597,7 @@ public class PhysicsController implements ContactListener {
                 numFilled +=1;
             }
         }
-        return (float)numFilled / goal3List.size() > 0.90;
+        return (float)numFilled / goal3List.size() > 0.8;
     }
 
 
