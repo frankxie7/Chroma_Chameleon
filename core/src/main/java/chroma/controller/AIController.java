@@ -407,8 +407,8 @@ public class AIController {
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
-            float halfFOV = (float) Math.toRadians(10f / 2);
-            int numRays = (int) 10;
+            float halfFOV = (float) Math.toRadians(fov / 2);
+            int numRays = 10;
             float angleStep = (halfFOV * 2) / (numRays - 1);
 
             for (int i = 0; i < numRays; i++) {
