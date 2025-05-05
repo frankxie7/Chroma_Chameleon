@@ -87,7 +87,7 @@ public class Goal extends ObstacleSprite {
             int texSize = 256;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a green if the goal region we are apart of is full
-            Color purpleTranslucent = new Color(0.0f, 1.0f, 0.0f, 0.1f);
+            Color purpleTranslucent = new Color(1.0f, 1.0f, 0.0f, 0.4f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
             sprayTextureComplete = new Texture(pixmap,true);
