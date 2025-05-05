@@ -182,20 +182,21 @@ public class ChromaRoot extends Game implements ScreenListener {
 
 
             current = exitCode;
+            controllers[current-1].reset();
             setScreen(controllers[current-1]);
 
             // Handling transitions inside gameplay
         } else if (exitCode == GameplayController.EXIT_NEXT) {
 //            levelSelector.nextLevel();
 //            controllers[current].reset();
-            current = Math.min(current + 1, controllers.length - 1);
+            current = Math.min(current + 1, controllers.length);
             controllers[current - 1].reset();
             setScreen(controllers[current-1]);
 
         } else if (exitCode == GameplayController.EXIT_PREV) {
 //            levelSelector.prevLevel();
 //            controllers[current].reset();
-            current = Math.max(current - 1, 0);
+            current = Math.max(current - 1, 1);
             controllers[current-1].reset();
             setScreen(controllers[current-1]);
 

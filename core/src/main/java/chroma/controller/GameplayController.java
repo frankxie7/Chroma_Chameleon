@@ -20,7 +20,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
+//import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -35,7 +35,7 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
 
-import java.awt.*;
+//import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +118,8 @@ public class GameplayController implements Screen {
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
+    Sound enemiesAlertSound;
+
     private final Array<Vector2> planned = new Array<>();
     private Vector2 lastPlanned = new Vector2();
 
@@ -167,6 +169,8 @@ public class GameplayController implements Screen {
         this.worldHeight = worldConf.get("bounds").getFloat(1);
         float gravityY = worldConf.getFloat("gravity", -10f);
 
+        System.out.println(levelSelector.getCurrentLevel());
+
         // For converting input coordinates
         scale = new Vector2();
         bounds = new Rectangle(0, 0, worldWidth, worldHeight);
@@ -212,6 +216,8 @@ public class GameplayController implements Screen {
 
 // Apply the scale to the font
         displayFont.getData().setScale(scale);
+
+        this.enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
 
 // Now make layouts
         goodMessage = new TextLayout();
@@ -429,15 +435,14 @@ public class GameplayController implements Screen {
             }
         }
         if (!aiControllers.isEmpty()) {
-            Sound alertSound = aiControllers.get(0).getEnemy().getAlertSound();
             if (anyThreat) {
                 if (!alertSoundPlaying) {
-                    alertSoundId = alertSound.loop();  // store the ID so we can stop it
+                    alertSoundId = enemiesAlertSound.loop();  // store the ID so we can stop it
                     alertSoundPlaying = true;
                 }
             } else {
                 if (alertSoundPlaying) {
-                    alertSound.stop(alertSoundId);  // stop that specific loop
+                    enemiesAlertSound.stop(alertSoundId);  // stop that specific loop
                     alertSoundPlaying = false;
                 }
             }
@@ -537,28 +542,28 @@ public class GameplayController implements Screen {
         return new Vector2(bombX, bombY);
     }
 
-    private Vector2 clampToValidBombArea(Vector2 worldPos) {
-        int tileX = (int)(worldPos.x);
-        int tileY = (int)(worldPos.y);
-
-        if (level.isTileBombable(tileX, tileY)) {
-            return worldPos;
-        }
-
-        float closestDist = Float.MAX_VALUE;
-        Vector2 closest = null;
-
-        for (Point p : level.getBombableTiles()) {
-            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
-            float dist = tileCenter.dst2(worldPos);
-            if (dist < closestDist) {
-                closestDist = dist;
-                closest = tileCenter;
-            }
-        }
-
-        return closest != null ? closest : new Vector2(0, 0);
-    }
+//    private Vector2 clampToValidBombArea(Vector2 worldPos) {
+//        int tileX = (int)(worldPos.x);
+//        int tileY = (int)(worldPos.y);
+//
+//        if (level.isTileBombable(tileX, tileY)) {
+//            return worldPos;
+//        }
+//
+//        float closestDist = Float.MAX_VALUE;
+//        Vector2 closest = null;
+//
+//        for (Point p : level.getBombableTiles()) {
+//            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
+//            float dist = tileCenter.dst2(worldPos);
+//            if (dist < closestDist) {
+//                closestDist = dist;
+//                closest = tileCenter;
+//            }
+//        }
+//
+//        return closest != null ? closest : new Vector2(0, 0);
+//    }
 
     /**
      * Removes a bomb from the physics world.
@@ -661,8 +666,9 @@ public class GameplayController implements Screen {
         player.setPaint(player.getPaint() - BOMB_INITIAL_COST);
 
         lastPlanned.set(firstPix);
-        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-        planned.add(bombWorld);
+        planned.add(firstPix.cpy().scl(1f / units));
+//        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+//        planned.add(bombWorld);
 
         player.advanceBombFrame(7);         // first frame shown
     }
@@ -675,7 +681,7 @@ public class GameplayController implements Screen {
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
         Vector2 clampedScreen = clampBombPos(raw, aimRangeCurrent);
-        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
+//        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
 
         if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
@@ -683,8 +689,9 @@ public class GameplayController implements Screen {
 
             if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                 player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
-                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-                planned.add(bombWorld);
+                planned.add(clampedScreen.cpy().scl(1f / units));
+//                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+//                planned.add(bombWorld);
 
                 lastPlanned.set(clampedScreen);
 
@@ -1268,6 +1275,10 @@ public class GameplayController implements Screen {
         complete = true;
         gameState = GameState.WON;
         countdown = EXIT_COUNT;
+        if (alertSoundPlaying) {
+            enemiesAlertSound.stop(alertSoundId);
+            alertSoundPlaying = false;
+        }
     }
 
     private void setFailure(boolean value) {
@@ -1278,6 +1289,10 @@ public class GameplayController implements Screen {
         }
         failed = value;
         gameState = GameState.LOST;
+        if (alertSoundPlaying) {
+            enemiesAlertSound.stop(alertSoundId);
+            alertSoundPlaying = false;
+        }
     }
 
     public OrthographicCamera getCamera() {

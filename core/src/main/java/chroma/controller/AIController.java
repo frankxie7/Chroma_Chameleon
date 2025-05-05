@@ -407,8 +407,8 @@ public class AIController {
 
         if (!player.isHidden() && (isCamera || guardInRange)) {
             float angleLooking = enemy.getRotation();
-            float halfFOV = (float) Math.toRadians(10f / 2);
-            int numRays = (int) 10;
+            float halfFOV = (float) Math.toRadians(fov / 2);
+            int numRays = 10;
             float angleStep = (halfFOV * 2) / (numRays - 1);
 
             for (int i = 0; i < numRays; i++) {
@@ -615,84 +615,58 @@ public class AIController {
     }
 
     private void handleCamera(float delta) {
-        float rotationSpeed = getRotationSpeed();
-        float minRotation = enemy.getMinRotation();
-        float maxRotation = enemy.getMaxRotation();
-        float newRotation = (enemy.getRotation() + (float) Math.toRadians(360)) % ((float) Math.toRadians(360)); // Keep rotation within [0,360]
-        boolean wrapsAround = minRotation > maxRotation; // Does range cross 0°?
+        float rotationSpeed = getRotationSpeed(); // Radians per second
+        float minRotation = normalizeRadians(enemy.getMinRotation());
+        float maxRotation = normalizeRadians(enemy.getMaxRotation());
+        float newRotation = normalizeRadians(enemy.getRotation());
 
-        if (rotatingClockwise) {
-            newRotation += rotationSpeed * delta;
-            if (wrapsAround) {
-                // If we are in the wrapped region but exceed maxRotation
-                if (newRotation >= maxRotation && newRotation < minRotation) {
-                    newRotation = maxRotation;
-                    rotatingClockwise = false;
-                }
-            } else {
-                if (newRotation >= maxRotation) {
-                    newRotation = maxRotation;
-                    rotatingClockwise = false;
-                }
+        boolean wrapsAround = minRotation > maxRotation;
+
+        if (state == State.CHASE) {
+            enemy.setAlertAnimationFrame(12);
+
+            Vector2 enemyPos = enemy.getPosition();
+            Vector2 playerPos = player.getPosition();
+            if (enemyPos != null && playerPos != null) {
+                Vector2 toPlayer = playerPos.cpy().sub(enemyPos);
+                float angleToPlayer = (float) Math.atan2(toPlayer.y, toPlayer.x);
+                angleToPlayer = normalizeRadians(angleToPlayer);
+
+                boolean inRange = isWithinBounds(angleToPlayer, minRotation, maxRotation);
+                float clampedAngle = inRange ? angleToPlayer : closestBound(angleToPlayer, minRotation, maxRotation);
+                newRotation = clampedAngle;
             }
-        } else { // Rotating counter-clockwise
-            newRotation -= rotationSpeed * delta;
-            if (wrapsAround) {
-                // If we drop below minRotation but are still in the wrapped region
-                if (newRotation <= minRotation && newRotation > maxRotation) {
-                    newRotation = minRotation;
-                    rotatingClockwise = true;
+        } else {
+            // PATROL MODE — rotate back and forth between min and max
+            if (rotatingClockwise) {
+                newRotation += rotationSpeed * delta;
+                newRotation = normalizeRadians(newRotation);
+
+                if (!isWithinBounds(newRotation, minRotation, maxRotation)) {
+                    newRotation = maxRotation;
+                    rotatingClockwise = false;
                 }
             } else {
-                if (newRotation <= minRotation) {
+                newRotation -= rotationSpeed * delta;
+                newRotation = normalizeRadians(newRotation);
+
+                if (!isWithinBounds(newRotation, minRotation, maxRotation)) {
                     newRotation = minRotation;
                     rotatingClockwise = true;
                 }
             }
         }
-        newRotation = (newRotation + (float) Math.toRadians(360)) % ((float) Math.toRadians(360)); // Keep rotation within [0,360]
 
-        // Detection logic first: always grows/shrinks no matter the state
+        // Detection bar logic (same as before)
         if (playerDetected) {
             detectionTimer = Math.min(detectionThreshold / 2, detectionTimer + delta);
         } else if (alertTimer >= alertLength) {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
 
-        Vector2 enemyPos = enemy.getPosition();
-        Vector2 playerPos = player.getPosition();
+        // ALERT/CHASE/PATROL state transitions
         if (state == State.CHASE) {
-            enemy.setAlertAnimationFrame(12);
-            if (enemyPos != null && playerPos != null) {
-                Vector2 toPlayer = playerPos.cpy().sub(enemyPos);
-                float angleToPlayer = (float) Math.atan2(toPlayer.y, toPlayer.x); // In radians
-                angleToPlayer = (angleToPlayer + MathUtils.PI2) % MathUtils.PI2;   // Normalize to [0, 2π)
-
-                float clampedAngle;
-                if (wrapsAround) {
-                    boolean inRange = (angleToPlayer >= minRotation) || (angleToPlayer <= maxRotation);
-                    clampedAngle = inRange ? angleToPlayer : closestBound(angleToPlayer, minRotation, maxRotation);
-                } else {
-                    boolean inRange = angleToPlayer >= minRotation && angleToPlayer <= maxRotation;
-                    clampedAngle = inRange ? angleToPlayer : MathUtils.clamp(angleToPlayer, minRotation, maxRotation);
-                }
-                newRotation = clampedAngle;
-            }
-        } else if (state == State.ALERT) {
-            enemy.setAlertAnimationFrame(11);
-        } else {
-            int frame = MathUtils.clamp(
-                (int) ((detectionTimer / (detectionThreshold / 2)) * 11f), 0, 11
-            );
-            if (detectionTimer == 0) {
-                frame = -1;
-            }
-            enemy.setAlertAnimationFrame(frame);
-        }
-        enemy.setRotation(newRotation);
-
-        if (state == State.CHASE){
-            Vector2 lastSpotted = new Vector2(playerPos);
+            Vector2 lastSpotted = new Vector2(player.getPosition());
             player.setLastSeen(lastSpotted);
             if (!playerDetected) {
                 state = State.ALERT;
@@ -700,31 +674,44 @@ public class AIController {
             }
         } else if (state == State.ALERT) {
             alertTimer += delta;
-            if (gameplay.isGlobalChase()) {
-                alertTimer = 0f;
-            }
+            if (gameplay.isGlobalChase()) alertTimer = 0f;
+
             if (detectionTimer >= detectionThreshold / 2 && playerDetected) {
                 state = State.CHASE;
             } else if (detectionTimer == 0) {
                 state = State.PATROL;
             }
-        } else {
+            enemy.setAlertAnimationFrame(11);
+        } else { // PATROL
             if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
                 alertTimer = 0f;
             } else if (detectionTimer >= detectionThreshold / 2 && playerDetected) {
                 state = State.CHASE;
             }
+            int frame = MathUtils.clamp((int) ((detectionTimer / (detectionThreshold / 2)) * 11f), 0, 11);
+            if (detectionTimer == 0) frame = -1;
+            enemy.setAlertAnimationFrame(frame);
         }
+
+        enemy.setRotation(newRotation);
+    }
+    private float normalizeRadians(float radians) { return (radians % MathUtils.PI2 + MathUtils.PI2) % MathUtils.PI2; }
+    private float angleDistance(float a, float b) {
+        float diff = Math.abs(a - b) % MathUtils.PI2;
+        return diff > MathUtils.PI ? MathUtils.PI2 - diff : diff;
     }
     private float closestBound(float angle, float min, float max) {
         float distToMin = angleDistance(angle, min);
         float distToMax = angleDistance(angle, max);
         return (distToMin < distToMax) ? min : max;
     }
-    private float angleDistance(float a, float b) {
-        float diff = Math.abs(a - b) % MathUtils.PI2;
-        return diff > MathUtils.PI ? MathUtils.PI2 - diff : diff;
+    private boolean isWithinBounds(float angle, float min, float max) {
+        if (min <= max) {
+            return angle >= min && angle <= max;
+        } else {
+            return angle >= min || angle <= max;
+        }
     }
     private float getRotationSpeed() {
         switch (state) {

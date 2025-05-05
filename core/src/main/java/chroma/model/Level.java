@@ -40,11 +40,11 @@ public class Level {
     private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
-    private int mapWidthInTiles;
-    private int mapHeightInTiles;
-    public static final int TILE_WIDTH = 16;
-    public static final int TILE_HEIGHT = 16;
-    Set<Point> bombableTiles = new HashSet<>();
+//    private int mapWidthInTiles;
+//    private int mapHeightInTiles;
+//    public static final int TILE_WIDTH = 16;
+//    public static final int TILE_HEIGHT = 16;
+//    Set<Point> bombableTiles = new HashSet<>();
 
     /**
      * gid →  corresponding tile
@@ -96,8 +96,8 @@ public class Level {
         //background
         JsonValue backgroundData = findLayer(constants, "background");
         if (backgroundData != null && backgroundData.has("data")) {
-            mapWidthInTiles = backgroundData.getInt("width");
-            mapHeightInTiles = backgroundData.getInt("height");
+//            mapWidthInTiles = backgroundData.getInt("width");
+//            mapHeightInTiles = backgroundData.getInt("height");
             backgroundTiles = new ArrayList<>();
 
 //            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
@@ -128,7 +128,7 @@ public class Level {
                     tile.setPosition(tx, ty);
                     backgroundTiles.add(tile);
                 }
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
             }
         }
 
@@ -162,7 +162,7 @@ public class Level {
                 tile.setPosition(tx, ty);
                 goalTiles.add(tile);
 
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
             }
         }
         JsonValue goalTileData2 = findLayer(constants, "goal2");
@@ -193,7 +193,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 goal2Tiles.add(tile);
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
             }
         }
         JsonValue goalTileData3 = findLayer(constants, "goal3");
@@ -223,7 +223,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 goal3Tiles.add(tile);
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
             }
         }
         // Parse the "walls" tile layer and build a list of Terrain tiles
@@ -243,7 +243,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+//                bombableTiles.remove(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -274,7 +274,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+//                bombableTiles.remove(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -306,7 +306,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;// flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+//                bombableTiles.remove(new Point(tx, ty));
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
@@ -338,7 +338,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
@@ -368,7 +368,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = layerHeight - 1 - (i / layerWidth);
                 doorTiles.add(new Vector2(tx, ty));
-                bombableTiles.add(new Point(tx, ty));
+//                bombableTiles.add(new Point(tx, ty));
             }
 
             if (!doorTiles.isEmpty()) {
@@ -458,7 +458,6 @@ public class Level {
             JsonValue enemyRotateAngles = levelData.get("rotateAngle");
 
             Music playerSpottedSound = directory.getEntry("enemy_spotted", Music.class);
-            Sound enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
 
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords          = enemyPositions.get(i).asFloatArray();
@@ -480,7 +479,7 @@ public class Level {
                     globalEnemy,
                     levelData,
                     anims,
-                    playerSpottedSound, enemiesAlertSound
+                    playerSpottedSound
                 );
                 enemies.add(enemy);
             }
@@ -625,13 +624,13 @@ public class Level {
         };
     }
 
-    public int getWidth() {
-        return mapWidthInTiles * TILE_WIDTH;
-    }
-
-    public int getHeight() {
-        return mapHeightInTiles * TILE_HEIGHT;
-    }
+//    public int getWidth() {
+//        return mapWidthInTiles * TILE_WIDTH;
+//    }
+//
+//    public int getHeight() {
+//        return mapHeightInTiles * TILE_HEIGHT;
+//    }
 
 
     public static Animation<TextureRegion> createAnimation(Texture sheet, int frameCount,
@@ -681,12 +680,12 @@ public class Level {
         }
     }
 
-    public boolean isTileBombable(int x, int y) {
-        return bombableTiles.contains(new Point(x, y));
-    }
-
-    public Set<Point> getBombableTiles() {
-        return bombableTiles;
-    }
+//    public boolean isTileBombable(int x, int y) {
+//        return bombableTiles.contains(new Point(x, y));
+//    }
+//
+//    public Set<Point> getBombableTiles() {
+//        return bombableTiles;
+//    }
 
 }
