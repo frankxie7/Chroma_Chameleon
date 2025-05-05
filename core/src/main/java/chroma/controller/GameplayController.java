@@ -169,6 +169,8 @@ public class GameplayController implements Screen {
         this.worldHeight = worldConf.get("bounds").getFloat(1);
         float gravityY = worldConf.getFloat("gravity", -10f);
 
+        System.out.println(levelSelector.getCurrentLevel());
+
         // For converting input coordinates
         scale = new Vector2();
         bounds = new Rectangle(0, 0, worldWidth, worldHeight);
