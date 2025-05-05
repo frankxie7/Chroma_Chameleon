@@ -132,6 +132,9 @@ public class Level {
             }
         }
 
+
+
+
         //background
         JsonValue goalTileData = findLayer(constants, "goal1");
         if (goalTileData != null && goalTileData.has("data")) {

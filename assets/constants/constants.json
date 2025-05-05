@@ -15,7 +15,7 @@
     "drawScale": 0.6,
     "force"     : 80.0,
     "damping"   : 80.0,
-    "maxspeed"  : 8.0,
+    "maxspeed"  : 7.0,
     "shot_cool" : 60,
     "sensor": {
       "shrink" : 0.6,
@@ -67,6 +67,15 @@
       "startRotation": [0],
       "rotateAngle": [0]
     },
+    "level_3_bomb": {
+      "names": ["enemy1", "enemy2","enemy2","enemy2","enemy2"],
+      "types": ["CAMERA2", "CAMERA2","CAMERA2","CAMERA1","CAMERA1"],
+      "patrols": [false, false,false,false,false],
+      "patrol_paths": [[], [],[],[],[]],
+      "positions": [[15.0, 16.0], [21.0, 14.0],[27.0, 16.0],[18,6],[24,6]],
+      "startRotation": [270, 270,270,90,90],
+      "rotateAngle": [30, 30,30,30,30]
+    },
     "level_3": {
       "names": ["enemy1", "enemy2"],
       "types": ["CAMERA1", "CAMERA1"],
@@ -101,19 +110,19 @@
           "rotateAngle": [0, 100, 100]
         },
     "level_6": {
-      "names": ["enemy1", "enemy2", "enemy3","enemy4","enemy5","enemy6","enemy7"],
-      "types": ["GUARD", "GUARD", "CAMERA2","GUARD","GUARD","GUARD","CAMERA2"],
-      "patrols": [true, true,false,true,true,true,false],
+      "names": ["enemy1", "enemy2", "enemy3","enemy4","enemy5","enemy6","enemy7","enemy8"],
+      "types": ["GUARD", "GUARD", "CAMERA2","GUARD","GUARD","GUARD","CAMERA2","GUARD"],
+      "patrols": [true, true,false,true,true,true,false,false],
       "patrol_paths": [[[6, 22],[15,22],[15,31],[6,31]],
         [[15,31],[6,31],[6, 22],[15,22]],
         [],
         [[28,42],[28,32],[28,42],[43,42]],
         [[49,18],[57,18],[57,36],[49,36]],
         [[16,50],[42,50]],
-      []],
-      "positions": [[5, 21], [16, 32],[11,29],[28,42],[49,18],[16,50],[55,49]],
-      "startRotation": [0, 180,0,90,0,0,0],
-      "rotateAngle": [0, 0, 359,0,0,0,90]
+      [],[]],
+      "positions": [[5, 21], [16, 32],[11,29],[28,42],[49,18],[16,50],[55,49],[48,18]],
+      "startRotation": [0, 180,0,90,0,0,0,180],
+      "rotateAngle": [0, 0, 359,0,0,0,90,0]
     },
     "level_8" : {
       "names": ["enemy1","enemy2","enemy3"],
