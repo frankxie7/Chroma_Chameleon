@@ -458,7 +458,6 @@ public class Level {
             JsonValue enemyRotateAngles = levelData.get("rotateAngle");
 
             Music playerSpottedSound = directory.getEntry("enemy_spotted", Music.class);
-            Sound enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
 
             for (int i = 0; i < enemyPositions.size; i++) {
                 float[] coords          = enemyPositions.get(i).asFloatArray();
@@ -480,7 +479,7 @@ public class Level {
                     globalEnemy,
                     levelData,
                     anims,
-                    playerSpottedSound, enemiesAlertSound
+                    playerSpottedSound
                 );
                 enemies.add(enemy);
             }

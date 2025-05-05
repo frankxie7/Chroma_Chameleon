@@ -118,6 +118,8 @@ public class GameplayController implements Screen {
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
+    Sound enemiesAlertSound;
+
     private final Array<Vector2> planned = new Array<>();
     private Vector2 lastPlanned = new Vector2();
 
@@ -211,6 +213,8 @@ public class GameplayController implements Screen {
 
 // Apply the scale to the font
         displayFont.getData().setScale(scale);
+
+        this.enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
 
 // Now make layouts
         goodMessage = new TextLayout();
@@ -428,15 +432,14 @@ public class GameplayController implements Screen {
             }
         }
         if (!aiControllers.isEmpty()) {
-            Sound alertSound = aiControllers.get(0).getEnemy().getAlertSound();
             if (anyThreat) {
                 if (!alertSoundPlaying) {
-                    alertSoundId = alertSound.loop();  // store the ID so we can stop it
+                    alertSoundId = enemiesAlertSound.loop();  // store the ID so we can stop it
                     alertSoundPlaying = true;
                 }
             } else {
                 if (alertSoundPlaying) {
-                    alertSound.stop(alertSoundId);  // stop that specific loop
+                    enemiesAlertSound.stop(alertSoundId);  // stop that specific loop
                     alertSoundPlaying = false;
                 }
             }
@@ -1263,6 +1266,10 @@ public class GameplayController implements Screen {
         complete = true;
         gameState = GameState.WON;
         countdown = EXIT_COUNT;
+        if (alertSoundPlaying) {
+            enemiesAlertSound.stop(alertSoundId);
+            alertSoundPlaying = false;
+        }
     }
 
     private void setFailure(boolean value) {
@@ -1273,6 +1280,10 @@ public class GameplayController implements Screen {
         }
         failed = value;
         gameState = GameState.LOST;
+        if (alertSoundPlaying) {
+            enemiesAlertSound.stop(alertSoundId);
+            alertSoundPlaying = false;
+        }
     }
 
     public OrthographicCamera getCamera() {

@@ -126,8 +126,6 @@
       "startRotation": [0,180,0],
       "rotateAngle": [0, 40,0]
     },
-
-
     "alex_level": {
       "names": ["enemy1","enemy2","enemy3"],
       "types": ["GUARD","GUARD","GUARD"],
@@ -138,7 +136,20 @@
       "rotateAngle": [0,0,0]
     }
   },
-
+  "level_9" : {
+    "names": ["enemy1","enemy2","enemy3","enemy4"],
+    "types": ["GUARD","GUARD","GUARD","CAMERA2"],
+    "patrols": [true,true,true, false],
+    "patrol_paths": [
+      [[7, 17], [20, 17], [20, 34], [10, 34]],
+      [37, 17],
+      [[2,15],[8,15]],
+      []
+    ],
+    "positions": [[7.0, 30.0],[37.0,34.0],[2,15], [22.0,1.0]],
+    "startRotation": [0,0,0,270],
+    "rotateAngle": [0,0,0,50]
+  },
   "bomb": {
     "size"      : 2.0,
     "aimRange": 8

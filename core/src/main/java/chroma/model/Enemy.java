@@ -89,7 +89,6 @@ public class Enemy extends ObstacleSprite {
 
     // SOUNDS:
     private Music playerSpottedSound;
-    private Sound enemiesAlertSound;
 
     public Enemy(float[] position, String type, boolean patrol, List<float[]> patrolPath,
                 float startRotation, float rotateAngle,
@@ -97,7 +96,7 @@ public class Enemy extends ObstacleSprite {
                 JsonValue globalData,
                 JsonValue levelData,
                 Level.EnemyAnimations animations,
-                Music playerSpottedSound, Sound enemiesAlertSound) {
+                Music playerSpottedSound) {
         this.type = Type.valueOf(type);
         this.patrol = patrol;
         this.patrolPath = patrolPath;
@@ -167,7 +166,6 @@ public class Enemy extends ObstacleSprite {
         blue = true;
 
         this.playerSpottedSound = playerSpottedSound;
-        this.enemiesAlertSound = enemiesAlertSound;
 
         // Create a rectangular mesh for the enemy.
         mesh.set(-size / 2.0f, -size / 2.0f, size, size);
@@ -206,7 +204,6 @@ public class Enemy extends ObstacleSprite {
     public void setBlue(boolean value) { this.blue = value; }
     public float getDrawScale() { return drawScale; }
     public Music getSpottedSound() { return playerSpottedSound; }
-    public Sound getAlertSound() { return enemiesAlertSound; }
 
     public float getRotation() {
         if (type == Type.CAMERA1 || type == Type.CAMERA2) {
