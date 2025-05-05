@@ -141,7 +141,7 @@ public class AIController {
 
     // Checks if a straight line from start to end is blocked by any wall.
     private boolean isLineBlocked(Vector2 start, Vector2 end) {
-        if (start.dst(end) != 0) {
+        if (start.dst(end) > 0.1) {
             Fixture hitFixture = physics.raycast(start, end);
 
             // If nothing is hit, return false (line is not blocked)
