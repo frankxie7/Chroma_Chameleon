@@ -21,6 +21,7 @@
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
     "chameleonSkillSheet": "platform/character-animation.png",
+    "chameleonIdleSheet": "platform/updatedidle.png",
     "ventFall": "platform/vent_fall.png",
     "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
