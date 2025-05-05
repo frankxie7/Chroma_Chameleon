@@ -40,6 +40,7 @@ public class Level {
     private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
+    private List<GoalCollision> goalCollisions;
 //    private int mapWidthInTiles;
 //    private int mapHeightInTiles;
 //    public static final int TILE_WIDTH = 16;
@@ -78,6 +79,7 @@ public class Level {
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
         collision = new ArrayList<>();
+        goalCollisions = new ArrayList<>();
         grates = new ArrayList<>();
 
 
@@ -132,6 +134,9 @@ public class Level {
             }
         }
 
+
+
+
         //background
         JsonValue goalTileData = findLayer(constants, "goal1");
         if (goalTileData != null && goalTileData.has("data")) {
@@ -160,7 +165,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
+                float[] coords = createCoords(tx, ty);
                 goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 
 //                bombableTiles.add(new Point(tx, ty));
             }
@@ -192,7 +200,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                goal2Tiles.add(tile);
+                float[] coords = createCoords(tx, ty);
+                goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
             }
         }
@@ -222,7 +233,10 @@ public class Level {
                 // create BackgroundTile with the region
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                goal3Tiles.add(tile);
+                float[] coords = createCoords(tx, ty);
+                goalTiles.add(tile);
+                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
+                goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
             }
         }
@@ -407,8 +421,11 @@ public class Level {
         Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
         Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
+        Texture chameleonIdleSheet = directory.getEntry("chameleonIdleSheet", Texture.class);
+        Animation<TextureRegion> idleAnim =
+            createAnimation(chameleonIdleSheet, 2, 0.25f);
         Music walkSound = directory.getEntry("chameleon_walk", Music.class);
-        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound);
+        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound,idleAnim);
         avatar.setBombAnimation(bombAnim);
 
         // Create enemies
@@ -522,6 +539,10 @@ public class Level {
 
     public Door getGoalDoor() {
         return goalDoor;
+    }
+
+    public List<GoalCollision> getGoalCollisions(){
+        return goalCollisions;
     }
 
     public Chameleon getAvatar() {
