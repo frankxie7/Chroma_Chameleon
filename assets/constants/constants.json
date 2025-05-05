@@ -67,6 +67,15 @@
       "startRotation": [0],
       "rotateAngle": [0]
     },
+    "level_3_spray" : {
+              "names": ["enemy1","enemy2","enemy3"],
+              "types": ["CAMERA2", "CAMERA2","CAMERA1"],
+              "patrols": [false,false,false],
+              "patrol_paths": [[],[],[]],
+              "positions": [[9,23],[17,23],[13,12]],
+              "startRotation": [270,270,90],
+              "rotateAngle": [45,45,45]
+            },
     "level_3_bomb": {
       "names": ["enemy1", "enemy2","enemy2","enemy2","enemy2"],
       "types": ["CAMERA2", "CAMERA2","CAMERA2","CAMERA1","CAMERA1"],
