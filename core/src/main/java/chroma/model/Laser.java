@@ -49,7 +49,6 @@ public class Laser extends ObstacleSprite {
         }
     }
 
-
     public boolean isActive() { return active; }
 
     @Override

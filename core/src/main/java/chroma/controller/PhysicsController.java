@@ -59,7 +59,6 @@ public class PhysicsController implements ContactListener {
     private int index;
     private Door goalDoor;
 
-
     public PhysicsController(float gravityY,int numGoals,AssetDirectory directory) {
         world = new World(new Vector2(0, gravityY), false);
         world.setContactListener(this);
@@ -186,7 +185,6 @@ public class PhysicsController implements ContactListener {
         }
     }
 
-
     private float computeRadiusForAngle(float angleOffset) {
         float halfFanAngle = (float)(Math.PI / 4.0);
         float normalized = angleOffset / halfFanAngle;
@@ -195,6 +193,7 @@ public class PhysicsController implements ContactListener {
         float factor = tailFactor + (centerFactor - tailFactor) * (float)Math.cos(normalized * Math.PI / 2);
         return rayLength * factor;
     }
+
     /**
      * Adds the Spray objects created by the raycasting code
      * @param avatar the Chameleon
@@ -239,11 +238,7 @@ public class PhysicsController implements ContactListener {
                 }
                 catch(IllegalArgumentException ignored){}
             }
-
-        }
-
-
-
+    }
 
     /**
      * Creates a grid of goals from a given center
@@ -270,8 +265,6 @@ public class PhysicsController implements ContactListener {
             }
         }
     }
-
-
 
     /**
      * Creates a single goal tile from a given x y
@@ -347,7 +340,6 @@ public class PhysicsController implements ContactListener {
                 player.setHidden(false);
             }
         }
-
 
         if ((userDataA instanceof Chameleon && userDataB instanceof Door) ||
             (userDataA instanceof Door && userDataB instanceof Chameleon)) {
@@ -488,7 +480,6 @@ public class PhysicsController implements ContactListener {
         playerHitByLaser = false;
     }
 
-
     @Override public void preSolve(Contact contact, Manifold oldManifold) {
         Object a = contact.getFixtureA().getBody().getUserData();
         Object b = contact.getFixtureB().getBody().getUserData();
@@ -599,7 +590,6 @@ public class PhysicsController implements ContactListener {
         }
         return (float)numFilled / goal3List.size() > 0.8;
     }
-
 
     public void dispose() {
         for (ObstacleSprite spr : objects) {

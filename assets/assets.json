@@ -37,7 +37,8 @@
     "spray": "platform/spray.png",
     "tutorialhints2": "platform/tutorial_paint.png",
     "tutorialhints3": "platform/tutorialhints3.png",
-    "tutorialhints1": "platform/tutorialhints_bomb.png"
+    "tutorialhints1": "platform/tutorialhints_bomb.png",
+    "blank": "platform/blank.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",

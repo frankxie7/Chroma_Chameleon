@@ -225,6 +225,7 @@ public class LoadingMode implements Screen, InputProcessor {
 
         // Height lock the logo
         Texture texture = internal.getEntry( "splash", Texture.class );
+        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         batch.draw(texture,(width-height)/2, 0, height, height);
 
         if (progress < 1.0f) {
@@ -235,6 +236,7 @@ public class LoadingMode implements Screen, InputProcessor {
             float s = constants.getFloat("button.scale")*scale;
             Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
             texture = internal.getEntry("play",Texture.class);
+            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
             SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
                 cx, cy, 0, s, s );
@@ -291,7 +293,6 @@ public class LoadingMode implements Screen, InputProcessor {
             batch.draw(region2, cx-w/2+scale*region1.getRegionWidth(), cy,
                 scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
         }
-
     }
 
     // ADDITIONAL SCREEN METHODS
@@ -345,7 +346,6 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     public void pause() {
         // TODO Auto-generated method stub
-
     }
 
     /**
@@ -355,7 +355,6 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     public void resume() {
         // TODO Auto-generated method stub
-
     }
 
     /**

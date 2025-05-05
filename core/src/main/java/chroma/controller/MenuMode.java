@@ -124,7 +124,9 @@ public class MenuMode implements Screen, InputProcessor {
         buttonPressTexs = new Texture[buttonNum];
         for (int i = 1; i < buttonNum + 1; i++) {
             buttonTexs[i-1] = internal.getEntry("button" + i, Texture.class);
+            buttonTexs[i-1].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             buttonPressTexs[i-1] = internal.getEntry("buttonPress" + i, Texture.class);
+            buttonPressTexs[i-1].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
 
         affine = new Affine2();
@@ -163,6 +165,7 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw background
         Texture background = internal.getEntry("background", Texture.class);
+        background.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         // Get the width and height of the texture
         int bgWidth = background.getWidth();
@@ -227,7 +230,9 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw two arrows
         Texture leftArrow = internal.getEntry("leftArrow", Texture.class);
+        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture rightArrow = internal.getEntry("rightArrow", Texture.class);
+        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture textureLeft = leftPressed ? leftArrow: leftArrow;
         Texture textureRight = rightPressed ? rightArrow : rightArrow;
         float arrScale = constants.getFloat("arrow.scale");
