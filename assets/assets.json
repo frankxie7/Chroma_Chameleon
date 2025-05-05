@@ -47,6 +47,7 @@
     "level_2" : "constants/level_2.json",
     "level_3" : "constants/level_3.json",
     "level_3_bomb" : "constants/level_3_bomb.json",
+    "level_3_spray" : "constants/level_3_spray.json",
     "level_4" : "constants/level_4.json",
     "level_5" : "constants/level_5.json",
     "level_6" : "constants/level_6.json",

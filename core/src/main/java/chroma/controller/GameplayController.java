@@ -1019,7 +1019,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 3) {
+        if (levelSelector.getCurrentLevel() == 4) {
             Texture hintTex = directory.getEntry("tutorialhints1", Texture.class);
             float worldX = 2f * units;
             float worldY = 19f * units;
