@@ -466,7 +466,6 @@ public class GameplayController implements Screen {
         }
 
         if(physics.goals1Full() && !goal1Complete){
-
             goal1Complete = true;
             for(Goal g : physics.getGoalList()){
                 g.setComplete();
