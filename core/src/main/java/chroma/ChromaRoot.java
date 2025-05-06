@@ -145,7 +145,7 @@ public class ChromaRoot extends Game implements ScreenListener {
 
 
 
-            controllers = new GameplayController[27];
+            controllers = new GameplayController[18];
             for (int ii = 0; ii < controllers.length; ii++) {
                 levelSelector = new LevelSelector(directory);
                 levelSelector.setCurrentLevel(ii+1);

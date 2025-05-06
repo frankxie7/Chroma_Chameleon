@@ -44,10 +44,14 @@ public class MenuMode implements Screen, InputProcessor {
     private Bound[] arrBounds;
 
     /** The textures for every button */
-    private Texture[] buttonTexs;
+    private Texture[] buttonTexs1;
+    /** The textures for every button */
+    private Texture[] buttonTexs2;
 
-    /** The textures for every pressed button*/
-    private Texture[] buttonPressTexs;
+    /** The textures for every pressed button on first page */
+    private Texture[] buttonPressTexs1;
+    /** The textures for every pressed button on second page */
+    private Texture[] buttonPressTexs2;
 
     private ScreenListener listener;
 
@@ -120,11 +124,17 @@ public class MenuMode implements Screen, InputProcessor {
         buttonNum = constants.getInt("numButtons");
         bounds = new Bound[buttonNum];
         arrBounds = new Bound[2];
-        buttonTexs = new Texture[buttonNum];
-        buttonPressTexs = new Texture[buttonNum];
+        buttonTexs1 = new Texture[buttonNum];
+        buttonPressTexs1 = new Texture[buttonNum];
         for (int i = 1; i < buttonNum + 1; i++) {
-            buttonTexs[i-1] = internal.getEntry("button" + i, Texture.class);
-            buttonPressTexs[i-1] = internal.getEntry("buttonPress" + i, Texture.class);
+            buttonTexs1[i-1] = internal.getEntry("button" + i, Texture.class);
+            buttonPressTexs1[i-1] = internal.getEntry("buttonPress" + i, Texture.class);
+        }
+        buttonTexs2 = new Texture[buttonNum];
+        buttonPressTexs2 = new Texture[buttonNum];
+        for (int i = 0; i < buttonNum; i++) {
+            buttonTexs2[i] = internal.getEntry("button1" + i, Texture.class);
+            buttonPressTexs2[i] = internal.getEntry("buttonPress1" + i, Texture.class);
         }
 
         affine = new Affine2();
@@ -189,7 +199,7 @@ public class MenuMode implements Screen, InputProcessor {
 //        float panelHeight = height * 0.55f;
 //        float hSpacing = (panelWidth - numCols * buttonSize) / (numCols + 1); // horizontal spacing
 //        float vSpacing = (panelHeight - numRows * buttonSize) / (numRows + 1); // vertical spacing
-        Texture button = buttonTexs[0];
+        Texture button = buttonTexs1[0];
         float buttonHeight = button.getHeight() * scale * buttonScale;
         float buttonWidth = button.getWidth() * scale * buttonScale;
         float boundHeight = buttonHeight * boundScale;
@@ -221,8 +231,13 @@ public class MenuMode implements Screen, InputProcessor {
 
             bounds[i] = new Bound(x, y, boundWidth*2, boundHeight*2);
 
-            Texture texture = i == currLevel - 1 ? buttonPressTexs[currLevel-1]: buttonTexs[i];
-            batch.draw(texture, x, y, buttonWidth, buttonHeight);
+            if (currPage == 0) {
+                Texture texture = i == currLevel - 1 ? buttonPressTexs1[currLevel-1]: buttonTexs1[i];
+                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+            } else {
+                Texture texture = i == currLevel - 10 ? buttonPressTexs2[currLevel-10]: buttonTexs2[i];
+                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+            }
         }
 
         // Draw two arrows
@@ -334,7 +349,7 @@ public class MenuMode implements Screen, InputProcessor {
 
             leftPressed = false;
         } else if (rightPressed) {
-            currPage = Math.min(currPage+1, 2);
+            currPage = Math.min(currPage+1, 1);
             rightPressed = false;
         }
     }
