@@ -376,7 +376,7 @@ public class MenuMode implements Screen, InputProcessor {
         camera.unproject(touch);
 
         for (int i = 0; i < bounds.length; i++) {
-            if (bounds[i].contains(touch.x, touch.y)) {
+            if (bounds[i] != null && bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1 + currPage * 9;
                 System.out.println(currLevel);
                 pressState = 1;
@@ -386,9 +386,9 @@ public class MenuMode implements Screen, InputProcessor {
             }
         }
 
-        if (arrBounds[0].contains(touch.x, touch.y)) {
+        if (arrBounds[0] != null && arrBounds[0].contains(touch.x, touch.y)) {
             leftPressed = true;
-        } else if (arrBounds[1].contains(touch.x, touch.y)) {
+        } else if (arrBounds[1] != null && arrBounds[1].contains(touch.x, touch.y)) {
             rightPressed = true;
         }
         return false;
