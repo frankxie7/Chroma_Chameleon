@@ -33,6 +33,7 @@ public class MenuMode implements Screen, InputProcessor {
 
     private int width, height;
     private float scale;
+    private boolean transitioning = false;
 
     /** Number of buttons */
     private int buttonNum;
@@ -293,6 +294,7 @@ public class MenuMode implements Screen, InputProcessor {
 
         // We are are ready, notify our listener
         if (isReady() && listener != null) {
+            transitioning = true;
             listener.exitScreen(this, currLevel);
         }
     }
@@ -368,6 +370,8 @@ public class MenuMode implements Screen, InputProcessor {
      * @return whether to hand the event to other listeners.
      */
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (bounds == null) return false;
+        if (arrBounds == null) return false;
         if (pressState == 2) {
             return true;
         }
@@ -380,6 +384,7 @@ public class MenuMode implements Screen, InputProcessor {
                 currLevel = i + 1 + currPage * 9;
                 System.out.println(currLevel);
                 pressState = 1;
+                transitioning = true;
                 levelSelectedSound.play();
                 menuSong.stop();
                 return false;
