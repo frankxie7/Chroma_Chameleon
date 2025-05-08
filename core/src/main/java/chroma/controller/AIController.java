@@ -821,7 +821,7 @@ public class AIController {
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
 
-                if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
+                if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Laser) {
                     return -1f; // Skip transparent
                 }
                 if (type == Type.CAMERA2 && (userData instanceof Collision || dst2(point.x, point.y, enemyWorldPos.x, enemyWorldPos.y) < 0.5f)) {

@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 //import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -97,9 +98,9 @@ public class GameplayController implements Screen {
     private TextLayout goodMessage;
     private TextLayout badMessage;
     private TextLayout goalMessage;
-    Rectangle retryButton = new Rectangle(width/2 - 50, height/2 - 80, 100, 40);
-    Rectangle menuButton = new Rectangle(width/2 - 50, height/2 - 140, 100, 40);
-    Rectangle nextButton = new Rectangle(width/2 - 50, height/2 - 200, 100, 40);
+    private Bound retryButton;
+    private Bound menuButton;
+    private Bound nextButton;
 
     //Single scale factor for world→screen
     private float units;
@@ -378,31 +379,49 @@ public class GameplayController implements Screen {
             listener.exitScreen(this, EXIT_MAP);
             return false;
         }
-        if (input.didExit()) {
-            return false;
-        }
+//        if (input.didExit()) {
+//            return false;
+//        }
 
         // Handle the countdown for victory/failure
-        if (countdown > 0) {
-            countdown--;
-            if (countdown == 0) {
-                if (failed) {
-                    reset();
-                } else if (complete && listener != null) {
-                    listener.exitScreen(this, EXIT_NEXT);
-                    return false;
-                }
-            } else {
+//        if (countdown > 0) {
+//            countdown--;
+//            if (countdown == 0) {
+//                if (failed) {
+//                    reset();
+//                } else if (complete && listener != null) {
+//                    listener.exitScreen(this, EXIT_NEXT);
+//                    return false;
+//                }
+//            } else {
                 // This handles proceeding to next level or previous level if this level is done
-                if (input.didRetreat()) {
-                    listener.exitScreen(this, EXIT_PREV);
-                    return false;
-                } else if (input.didAdvance()) {
-                    listener.exitScreen(this, EXIT_NEXT);
-                    return false;
-                }
+        if (complete && !failed) {
+            if (input.didRetreat()) {
+                listener.exitScreen(this, EXIT_PREV);
+                return false;
+            } else if (input.didAdvance()) {
+                listener.exitScreen(this, EXIT_NEXT);
+                return false;
             }
         }
+
+//        if (gameState != GameState.PLAYING && input.didLeftClick()) {
+//            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+//            camera.unproject(touch); // if you’re using a camera
+//            if (retryButton!= null && retryButton.contains(touch.x, touch.y)) {
+//                reset();
+//                return false;
+//            } else if (menuButton != null && menuButton.contains(touch.x, touch.y)) {
+//                listener.exitScreen(this, EXIT_MAP);
+//                return false;
+//            } else if (nextButton != null && nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+//                listener.exitScreen(this, EXIT_NEXT);
+//                return false;
+//            }
+//        }
+
+//            }
+//        }
         handleBombSkill(dt);
         return true;
     }
@@ -881,38 +900,84 @@ public class GameplayController implements Screen {
     /**
      * Draws the Win screen UI.
      */
-    private void drawWinScreen(Texture youWinTexture) {
+    private void drawWinScreen(Texture winTex, Texture resTex, Texture menTex, Texture nexTex) {
         batch.setColor(Color.WHITE); // Just in case you changed it elsewhere
-        batch.draw(youWinTexture, 0, 0, width, height);
+//        batch.setProjectionMatrix(uiCamera.combined);
+        float winWid = winTex.getWidth();
+        float winTexHeight = winTex.getHeight();
+        float winRatio = winTexHeight / winWid;
+        float winDrawWidth = width * 2/3;
+        float winDrawHeight = winDrawWidth * winRatio;
+        batch.draw(winTex, width/2 - winDrawWidth/2, height/2 - winDrawHeight /2, winDrawWidth, winDrawHeight);
+//        batch.draw(winTex, 0,0,width,height);
 
         // Optional: text overlay if needed
         // batch.drawText(goodMessage, width / 2, height / 2);
 
-        drawButton(batch, retryButton);
-        drawButton(batch, menuButton);
-        drawButton(batch, nextButton);
+        float buttonWidth = resTex.getWidth();
+        float buttonHeight = resTex.getHeight();
+        float buttonRatio = buttonHeight / buttonWidth;
+        float buttonDrawWidth = width / 6;
+        float buttonDrawHeight = buttonDrawWidth * buttonRatio;
+
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
+        batch.draw(nexTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
+        batch.draw(resTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
+
+
+
+
+// Update rectangles to match the drawn texture positions
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
+        nextButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
+
+//
+//        drawButton(batch, retryButton);
+//        drawButton(batch, menuButton);
+//        drawButton(batch, nextButton);
     }
 
     /**
      * Draws the Lose screen UI.
      */
-    private void drawLoseScreen(Texture youLoseTexture) {
+    private void drawLoseScreen(Texture losTex, Texture resTex, Texture menTex) {
         batch.setColor(Color.WHITE);
-        batch.draw(youLoseTexture, 0, 0, width, height);
+//        batch.setProjectionMatrix(uiCamera.combined);
+        float losWid = losTex.getWidth();
+        float losTexHeight = losTex.getHeight();
+        float losRatio = losTexHeight / losWid;
+        float losDrawWidth = width * 2/3;
+        float losDrawHeight = losDrawWidth * losRatio;
+        batch.draw(losTex, width/2 - losDrawWidth/2, height/2 - losDrawHeight /2, losDrawWidth, losDrawHeight);
 
+//        batch.draw(losTex, 0,0,width,height);
+
+        float buttonWidth = resTex.getWidth();
+        float buttonHeight = resTex.getHeight();
+        float ratio = buttonHeight / buttonWidth;
+        float buttonDrawWidth = width / 6;
+        float buttonDrawHeight = buttonDrawWidth * ratio;
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/ 2, buttonDrawWidth, buttonDrawHeight);
+        batch.draw(resTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.3f/ 2, buttonDrawWidth, buttonDrawHeight);
         // Optional: text overlay if needed
         // batch.drawText(badMessage, width / 2, height / 2);
 
-        drawButton(batch, retryButton);
-        drawButton(batch, menuButton);
+
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.3f / 2, buttonDrawWidth, buttonDrawHeight);
+
+
+//        drawButton(batch, retryButton);
+//        drawButton(batch, menuButton);
     }
 
-    private void drawButton(SpriteBatch batch, Rectangle rect) {
+    private void drawButton(SpriteBatch batch, Bound rect) {
         // Optional: Draw button background (replace with your own texture if available)
-        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+        shapeRenderer.setProjectionMatrix(uiCamera.combined);
         batch.end();
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1); // dark gray
+        shapeRenderer.begin(ShapeType.Line);
+        shapeRenderer.setColor(Color.YELLOW); // dark gray
         shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
         shapeRenderer.end();
         batch.begin();
@@ -1151,15 +1216,18 @@ public class GameplayController implements Screen {
 
         Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
         Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
+        Texture restartTex = directory.getEntry("restart", Texture.class);
+        Texture menuTex = directory.getEntry("menu", Texture.class);
+        Texture nextlabTex = directory.getEntry("nextlab", Texture.class);
         youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         if (gameState == GameState.WON) {
-            drawWinScreen(youWinTexture);
+            drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
         } else if (gameState == GameState.LOST) {
             // only pop up the lose UI once we've zoomed all the way in
             if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
-                drawLoseScreen(youLoseTexture);
+                drawLoseScreen(youLoseTexture, restartTex, menuTex);
             }
         }
 
@@ -1235,6 +1303,23 @@ public class GameplayController implements Screen {
         camera.update();
     }
 
+    private class Bound {
+        public float x, y, width, height;
+
+        public Bound(float x, float y, float width, float height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        public boolean contains(float px, float py) {
+            float dx = px - x;
+            float dy = py - y;
+            return px >= x && px <= x + width && py >= y && py <= y + height;
+        }
+    }
+
     /**
      * The main render loop.
      */
@@ -1247,19 +1332,21 @@ public class GameplayController implements Screen {
             return;
         }
 
-//        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
-//            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-//            camera.unproject(touch); // if you’re using a camera
-//
-//            if (retryButton.contains(touch.x, touch.y)) {
-//                reset();
-//                gameState = GameState.PLAYING;
-//            } else if (menuButton.contains(touch.x, touch.y)) {
-//                listener.exitScreen(this, EXIT_MAP);
-//            } else if (nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
-//                listener.exitScreen(this, EXIT_NEXT);
-//            }
-//        }
+        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
+            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            uiCamera.unproject(touch); // if you’re using a camera
+            if (retryButton.contains(touch.x, touch.y)) {
+                reset();
+                return;
+
+            } else if (menuButton.contains(touch.x, touch.y)) {
+                listener.exitScreen(this, EXIT_MAP);
+                return;
+            } else if (nextButton != null && nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+                listener.exitScreen(this, EXIT_NEXT);
+                return;
+            }
+        }
 
         float frameTime = Math.min(delta, 0.25f);
         accumulator += frameTime;

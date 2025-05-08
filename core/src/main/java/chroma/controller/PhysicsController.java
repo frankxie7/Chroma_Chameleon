@@ -38,7 +38,7 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 13;
+    private int numRays = 14;
     //Length of the rays
     private float rayLength = 5f;
     //Endpoints of the rays
