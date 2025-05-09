@@ -141,7 +141,7 @@ public class AIController {
 
     // Checks if a straight line from start to end is blocked by any wall.
     private boolean isLineBlocked(Vector2 start, Vector2 end) {
-        if (start.dst(end) != 0) {
+        if (start.dst(end) > 0.1) {
             Fixture hitFixture = physics.raycast(start, end);
 
             // If nothing is hit, return false (line is not blocked)
@@ -152,7 +152,7 @@ public class AIController {
             Object hitObject = hitFixture.getBody().getUserData();
 
             // Ignore enemies during visibility/path checks
-            return !(hitObject instanceof Enemy);
+            return !(hitObject instanceof Enemy || hitObject instanceof Chameleon);
         } else {
             return false;
         }
@@ -762,19 +762,19 @@ public class AIController {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-//        // Draw the goal in green
-//        if (lastGoal != null) {
-//            shapeRenderer.setColor(Color.GREEN);
-//            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
-//        }
-//
-        // 1. Draw all NavNodes first (background layer)
-        shapeRenderer.setColor(Color.GRAY);
-        for (NavNode node : graph.nodes) {
-            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+        // Draw the goal in green
+        if (lastGoal != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
         }
+//
+//        // 1. Draw all NavNodes first (background layer)
+//        shapeRenderer.setColor(Color.GRAY);
+//        for (NavNode node : graph.nodes) {
+//            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
+//        }
 
-//        // 2. Draw the A* path in yellow
+        // 2. Draw the A* path in yellow
 //        if (lastPath != null) {
 //            shapeRenderer.setColor(Color.YELLOW);
 //            for (Vector2 pathPoint : lastPath) {
@@ -821,7 +821,7 @@ public class AIController {
             RayCastCallback callback = (fixture, point, normal, fraction) -> {
                 Object userData = fixture.getBody().getUserData();
 
-                if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy) {
+                if (userData instanceof Grate || userData instanceof Spray || userData instanceof Bomb || userData instanceof Goal || userData instanceof Chameleon || userData instanceof Enemy || userData instanceof Laser) {
                     return -1f; // Skip transparent
                 }
                 if (type == Type.CAMERA2 && (userData instanceof Collision || dst2(point.x, point.y, enemyWorldPos.x, enemyWorldPos.y) < 0.5f)) {

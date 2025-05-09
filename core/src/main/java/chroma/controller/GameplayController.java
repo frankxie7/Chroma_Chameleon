@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 //import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -201,15 +202,36 @@ public class GameplayController implements Screen {
         loseBackground = new Image(new TextureRegionDrawable(loseRegion));
         loseBackground.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
 
-        Button.ButtonStyle transparentStyle = new Button.ButtonStyle();
-        Texture blank = directory.getEntry("blank", Texture.class);
-        TextureRegionDrawable blankDrawable = new TextureRegionDrawable(new TextureRegion(blank));
-        transparentStyle.up = blankDrawable;
-        transparentStyle.down = blankDrawable;
-        transparentStyle.over = blankDrawable;
-        retryButton = new Button(transparentStyle);
-        menuButton = new Button(transparentStyle);
-        nextButton = new Button(transparentStyle);
+        Texture retryTex = directory.getEntry("restart", Texture.class);
+        retryTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture menuTex  = directory.getEntry("menu", Texture.class);
+        menuTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture nextTex  = directory.getEntry("next-lab", Texture.class);
+        nextTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        TextureRegionDrawable retryDrawable = new TextureRegionDrawable(new TextureRegion(retryTex));
+        TextureRegionDrawable menuDrawable  = new TextureRegionDrawable(new TextureRegion(menuTex));
+        TextureRegionDrawable nextDrawable  = new TextureRegionDrawable(new TextureRegion(nextTex));
+
+        Button.ButtonStyle retryStyle = new Button.ButtonStyle();
+        retryStyle.up = retryDrawable;
+        retryStyle.down = retryDrawable;
+        retryStyle.over = retryDrawable;
+
+        Button.ButtonStyle menuStyle = new Button.ButtonStyle();
+        menuStyle.up = menuDrawable;
+        menuStyle.down = menuDrawable;
+        menuStyle.over = menuDrawable;
+
+        Button.ButtonStyle nextStyle = new Button.ButtonStyle();
+        nextStyle.up = nextDrawable;
+        nextStyle.down = nextDrawable;
+        nextStyle.over = nextDrawable;
+
+        // Create buttons with their respective styles
+        retryButton = new Button(retryStyle);
+        menuButton = new Button(menuStyle);
+        nextButton = new Button(nextStyle);
 
         // Set default values (real values assigned in resize)
         this.width = Gdx.graphics.getWidth();
@@ -255,6 +277,8 @@ public class GameplayController implements Screen {
         // Reset game state so overlays disappear
         gameState = GameState.PLAYING;
         stage.clear();
+        buttonsInitialized = false;
+        Gdx.input.setInputProcessor(null);
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -375,24 +399,24 @@ public class GameplayController implements Screen {
         }
 
         // Handle the countdown for victory/failure
-        if (countdown > 0) {
-            countdown--;
-            if (countdown == 0) {
-                if (failed) {
-                    reset();
-                } else if (complete && listener != null) {
-                    listener.exitScreen(this, EXIT_NEXT);
-                    return false;
-                }
-            } else {
-                // This handles proceeding to next level or previous level if this level is done
-                if (input.didRetreat()) {
-                    listener.exitScreen(this, EXIT_PREV);
-                    return false;
-                } else if (input.didAdvance()) {
-                    listener.exitScreen(this, EXIT_NEXT);
-                    return false;
-                }
+//        if (countdown > 0) {
+//            countdown--;
+//            if (countdown == 0) {
+//                if (failed) {
+//                    reset();
+//                } else if (complete && listener != null) {
+//                    listener.exitScreen(this, EXIT_NEXT);
+//                    return false;
+//                }
+//            } else {
+        // This handles proceeding to next level or previous level if this level is done
+        if (complete && !failed) {
+            if (input.didRetreat()) {
+                listener.exitScreen(this, EXIT_PREV);
+                return false;
+            } else if (input.didAdvance()) {
+                listener.exitScreen(this, EXIT_NEXT);
+                return false;
             }
         }
         handleBombSkill(dt);
@@ -421,7 +445,7 @@ public class GameplayController implements Screen {
                 anyChasing = true;
             }
         }
-        // AI enemies, and turn lasers on if any are ALERT or CHASE
+        // Update AI enemies, and turn lasers on if any are ALERT or CHASE
         boolean anyThreat = false;
         for (AIController ai : aiControllers) {
             ai.update(dt);
@@ -458,7 +482,6 @@ public class GameplayController implements Screen {
         }
 
         if(physics.goals1Full() && !goal1Complete){
-
             goal1Complete = true;
             for(Goal g : physics.getGoalList()){
                 g.setComplete();
@@ -871,18 +894,18 @@ public class GameplayController implements Screen {
 
     private void setupUI() {
         if (gameState == GameState.WON) {
-            retryButton.setBounds(width * 0.4f, height * 0.15f, width * 0.24f, height * 0.125f);
-            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.24f, height * 0.125f);
-            nextButton.setBounds(width * 0.4f, height * 0.3f, width * 0.24f, height * 0.125f);
+            retryButton.setBounds(width * 0.4f, height * 0.15f, width * 0.2f, height * 0.125f);
+            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.2f, height * 0.125f);
+            nextButton.setBounds(width * 0.4f, height * 0.3f, width * 0.2f, height * 0.125f);
         } else if (gameState == GameState.LOST) {
-            retryButton.setBounds(width * 0.4f, height * 0.3f, width * 0.24f, height * 0.125f);
-            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.24f, height * 0.125f);
+            retryButton.setBounds(width * 0.4f, height * 0.3f, width * 0.2f, height * 0.125f);
+            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.2f, height * 0.125f);
         }
 
         retryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("clicked retry");
+//                System.out.println("clicked retry");
                 reset();
             }
         });
@@ -890,7 +913,7 @@ public class GameplayController implements Screen {
         menuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("clicked menu");
+//                System.out.println("clicked menu");
                 listener.exitScreen(GameplayController.this, EXIT_MAP);
             }
         });
@@ -898,7 +921,7 @@ public class GameplayController implements Screen {
         nextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("clicked next");
+//                System.out.println("clicked next");
                 listener.exitScreen(GameplayController.this, EXIT_NEXT);
             }
         });
@@ -1362,7 +1385,6 @@ public class GameplayController implements Screen {
             enemiesAlertSound.stop(alertSoundId);
             alertSoundPlaying = false;
         }
-
     }
 
     private void setFailure(boolean value) {

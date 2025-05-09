@@ -201,7 +201,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 float[] coords = createCoords(tx, ty);
-                goalTiles.add(tile);
+                goal2Tiles.add(tile);
                 GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
                 goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
@@ -234,7 +234,7 @@ public class Level {
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
                 float[] coords = createCoords(tx, ty);
-                goalTiles.add(tile);
+                goal3Tiles.add(tile);
                 GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
                 goalCollisions.add(goalthing);
 //                bombableTiles.add(new Point(tx, ty));
