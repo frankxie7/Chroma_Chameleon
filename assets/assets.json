@@ -18,7 +18,7 @@
     "win-screen": "platform/ui_you_wint2.png",
     "lose-screen": "platform/ui_game_ovet2.png",
     "restart" : "platform/Restart.png",
-    "nextlab" : "platform/Nextlevel.png",
+    "next-lab" : "platform/Nextlevel.png",
     "menu": "platform/menu.png",
     "chameleonSheet": "platform/chameleon.png",
     "chameleonUpWalk": "platform/up_walk.png",
@@ -40,7 +40,8 @@
     "spray": "platform/spray.png",
     "tutorialhints2": "platform/tutorial_paint.png",
     "tutorialhints3": "platform/tutorialhints3.png",
-    "tutorialhints1": "platform/tutorialhints_bomb.png"
+    "tutorialhints1": "platform/tutorialhints_bomb.png",
+    "blank": "platform/blank.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",

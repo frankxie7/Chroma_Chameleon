@@ -129,13 +129,17 @@ public class MenuMode implements Screen, InputProcessor {
         buttonPressTexs1 = new Texture[buttonNum];
         for (int i = 1; i < buttonNum + 1; i++) {
             buttonTexs1[i-1] = internal.getEntry("button" + i, Texture.class);
+            buttonTexs1[i-1].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             buttonPressTexs1[i-1] = internal.getEntry("buttonPress" + i, Texture.class);
+            buttonPressTexs1[i-1].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
         buttonTexs2 = new Texture[buttonNum];
         buttonPressTexs2 = new Texture[buttonNum];
         for (int i = 0; i < buttonNum; i++) {
             buttonTexs2[i] = internal.getEntry("button1" + i, Texture.class);
+            buttonTexs2[i].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             buttonPressTexs2[i] = internal.getEntry("buttonPress1" + i, Texture.class);
+            buttonPressTexs2[i].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
 
         affine = new Affine2();
@@ -174,6 +178,7 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw background
         Texture background = internal.getEntry("background", Texture.class);
+        background.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         // Get the width and height of the texture
         int bgWidth = background.getWidth();
@@ -243,7 +248,9 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw two arrows
         Texture leftArrow = internal.getEntry("leftArrow", Texture.class);
+        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture rightArrow = internal.getEntry("rightArrow", Texture.class);
+        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture textureLeft = leftPressed ? leftArrow: leftArrow;
         Texture textureRight = rightPressed ? rightArrow : rightArrow;
         float arrScale = constants.getFloat("arrow.scale");
@@ -382,7 +389,6 @@ public class MenuMode implements Screen, InputProcessor {
         for (int i = 0; i < bounds.length; i++) {
             if (bounds[i] != null && bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1 + currPage * 9;
-                System.out.println(currLevel);
                 pressState = 1;
                 transitioning = true;
                 levelSelectedSound.play();

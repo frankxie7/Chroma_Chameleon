@@ -143,9 +143,7 @@ public class ChromaRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-
-
-            controllers = new GameplayController[18];
+            controllers = new GameplayController[27];
             for (int ii = 0; ii < controllers.length; ii++) {
                 levelSelector = new LevelSelector(directory);
                 levelSelector.setCurrentLevel(ii+1);
@@ -179,7 +177,6 @@ public class ChromaRoot extends Game implements ScreenListener {
 //            setScreen(controllers[current]);
             selecting.dispose();
             selecting = null;
-
 
             current = exitCode;
             controllers[current-1].reset();

@@ -168,7 +168,6 @@
         "rotateAngle": [0,0,0,50]
       }
   },
-
   "bomb": {
     "size"      : 2.0,
     "aimRange": 8
