@@ -177,7 +177,6 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw background
         Texture background = internal.getEntry("background", Texture.class);
-        background.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         // Get the width and height of the texture
         int bgWidth = background.getWidth();

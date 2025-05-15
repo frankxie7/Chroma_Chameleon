@@ -54,7 +54,7 @@ public class GameplayController implements Screen {
     public static final int EXIT_NEXT = 101;
     public static final int EXIT_PREV = 102;
     public static final int EXIT_MAP = 103;
-    public static final int EXIT_COUNT = 300;
+    public static final int EXIT_COUNT = 180;
 
     private boolean debug;
     private boolean active;
@@ -78,6 +78,7 @@ public class GameplayController implements Screen {
 //    private static final float BOMB_INITIAL_COST = 6f;
     private static final float BOMB_SUBSEQUENT_COST = 1f;
     private boolean waitingForDoorAnim = false;
+
 
     private OrthographicCamera camera;
     private OrthographicCamera uiCamera;
@@ -114,6 +115,8 @@ public class GameplayController implements Screen {
     // ───── new Bomb ───────────────────────────────
     // ───── new Bomb ───────────────────────────────
     private enum BombSkillState {IDLE, READY, PAINTING, FIRING, COOLDOWN}
+
+    ;
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
@@ -374,6 +377,9 @@ public class GameplayController implements Screen {
         }
         if (input.didMenu()) {
             listener.exitScreen(this, EXIT_MAP);
+            return false;
+        }
+        if (input.didExit()) {
             return false;
         }
 
@@ -774,40 +780,40 @@ public class GameplayController implements Screen {
             physics.resetLaserFlag();
         }
         // ——— Win + chameleon fall all in controller ———
-        if (!failed && physics.didWin()) {
-            Door door = level.getGoalDoor();
-            Chameleon cham = player;
+            if (!failed && physics.didWin()) {
+                    Door door = level.getGoalDoor();
+                    Chameleon cham = player;
 
-            // 1) first frame we detect win: start moving‑to‑vent logic
-            if (!door.isFallPlayed()) {
-                if (cham != null) {
-                    Vector2 pos = cham.getObstacle().getPosition();
-                    Vector2 center = door.getCenter();
-                    if (pos.dst(center) < 0.05f) {
-                        // at vent: trigger fall animation
-                        cham.setFalling(true);
-                        door.playChameleonFallAnimation();
-                        door.setFallPlayed(true);
-                        // reset physics flags but keep waitingForDoorAnim == true
-                        waitingForDoorAnim = true;
-                    } else {
-                        // move toward center
-                        Vector2 dir = center.cpy().sub(pos).nor();
-                        cham.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
-                    }
+                        // 1) first frame we detect win: start moving‑to‑vent logic
+                           if (!door.isFallPlayed()) {
+                            if (cham != null) {
+                                    Vector2 pos = cham.getObstacle().getPosition();
+                                    Vector2 center = door.getCenter();
+                                   if (pos.dst(center) < 0.05f) {
+                                           // at vent: trigger fall animation
+                                                cham.setFalling(true);
+                                            door.playChameleonFallAnimation();
+                                            door.setFallPlayed(true);
+                                            // reset physics flags but keep waitingForDoorAnim == true
+                                                waitingForDoorAnim = true;
+                                        } else {
+                                           // move toward center
+                                                Vector2 dir = center.cpy().sub(pos).nor();
+                                            cham.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
+                                        }
+                                }
+                        }
+                    physics.resetCollisionFlags();
+               }
+
+                // 2) once animation is done, actually show the win‑UI
+                    if (waitingForDoorAnim) {
+                    Door door = level.getGoalDoor();
+                    if (door != null && !door.isChameleonFalling()) {
+                            setVictory();
+                            waitingForDoorAnim = false;
+                        }
                 }
-            }
-            physics.resetCollisionFlags();
-       }
-
-        // 2) once animation is done, actually show the win‑UI
-        if (waitingForDoorAnim) {
-            Door door = level.getGoalDoor();
-            if (door != null && !door.isChameleonFalling()) {
-                setVictory();
-                waitingForDoorAnim = false;
-            }
-        }
 
         physics.update(dt);
     }
@@ -1073,7 +1079,9 @@ public class GameplayController implements Screen {
 //        batch.flush();
 //        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 // ───── new bomb ──────────────────────────
-        if (bombState == BombSkillState.READY || bombState == BombSkillState.PAINTING) {
+        if (
+            bombState == BombSkillState.READY ||
+                bombState == BombSkillState.PAINTING) {
             float r = aimRangeCurrent * units;
             Vector2 p = player.getPosition();
             batch.end();
@@ -1089,7 +1097,7 @@ public class GameplayController implements Screen {
 
         if (bombState == BombSkillState.PAINTING) {
             Texture ghost = directory.getEntry("aiming-range", Texture.class);
-            ghost.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            ghost.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             float s = constants.get("bomb").getFloat("size") * units;
             for (Vector2 phys : planned) {
                 batch.draw(ghost, phys.x * units - s / 2, phys.y * units - s / 2, s, s);
@@ -1187,20 +1195,20 @@ public class GameplayController implements Screen {
             }
         }
 
-        // compute percent painted
+// compute percent painted
         float pct = (float) numFilled / ((float) goals1.size() + (float) goals2.size()
             + (float) goals3.size()) * 100f;
         if(Float.isNaN(pct)){
             pct = 100;
         }
 
-        // update the TextLayout
+// update the TextLayout
         goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
         goalMessage.setColor(Color.YELLOW);
         goalMessage.setAlignment(TextAlign.middleCenter);
         goalMessage.setFont(displayFont);
 
-        // draw it at the top center, 20px down from the top
+// draw it at the top center, 20px down from the top
         batch.drawText(goalMessage, width / 2, height - 20);
 
         batch.setColor(Color.WHITE);
