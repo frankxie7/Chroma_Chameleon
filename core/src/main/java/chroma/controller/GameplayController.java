@@ -97,7 +97,6 @@ public class GameplayController implements Screen {
     private BitmapFont displayFont;
     private TextLayout goodMessage;
     private TextLayout badMessage;
-    private TextLayout goalMessage;
     private Bound retryButton;
     private Bound menuButton;
     private Bound nextButton;
@@ -235,7 +234,6 @@ public class GameplayController implements Screen {
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
 
-        goalMessage = new TextLayout();
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
 
@@ -864,6 +862,43 @@ public class GameplayController implements Screen {
         batch.setColor(Color.WHITE);
     }
 
+    private int getGoalCount() {
+        int count = 0;
+        if (!physics.getGoalList().isEmpty()) count++;
+        if (!physics.getGoal2List().isEmpty()) count++;
+        if (!physics.getGoal3List().isEmpty()) count++;
+        return count;
+    }
+
+    private void drawGoalUI(Texture incompleteIcon, Texture completeIcon) {
+        batch.setProjectionMatrix(uiCamera.combined);
+
+        float iconWidthRatio = 0.05f;
+        float iconHeightRatio = 0.09f;
+        float paddingRatio = 0.01f;
+
+        float iconWidth = width * iconWidthRatio;
+        float iconHeight = height * iconHeightRatio;
+        float padding = width * paddingRatio;
+
+        float startX = padding;
+        float startY = height - iconHeight - padding;
+
+        int goalCount = getGoalCount();
+
+        for (int i = 0; i < goalCount; i++) {
+            Texture icon = incompleteIcon;
+            if (i == 0 && goal1Complete) icon = completeIcon;
+            if (i == 1 && goal2Complete) icon = completeIcon;
+            if (i == 2 && goal3Complete) icon = completeIcon;
+
+            float drawX = startX + i * (iconWidth + padding);
+            batch.draw(icon, drawX, startY, iconWidth, iconHeight);
+        }
+    }
+
+
+
 //    /**
 //     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in
 //     * 'draw' method to view.
@@ -1273,16 +1308,10 @@ public class GameplayController implements Screen {
             pct = 100;
         }
 
-// update the TextLayout
-        goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
-        goalMessage.setColor(Color.YELLOW);
-        goalMessage.setAlignment(TextAlign.middleCenter);
-        goalMessage.setFont(displayFont);
+        Texture goalIncompleteIcon = directory.getEntry("goal_unpainted", Texture.class);
+        Texture goalCompleteIcon = directory.getEntry("goal_painted", Texture.class);
+        drawGoalUI(goalIncompleteIcon, goalCompleteIcon);
 
-// draw it at the top center, 20px down from the top
-        batch.drawText(goalMessage, width / 2, height - 20);
-
-        batch.setColor(Color.WHITE);
         batch.end();
     }
 
