@@ -37,6 +37,7 @@ import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
 
 //import java.awt.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -542,28 +543,28 @@ public class GameplayController implements Screen {
         return new Vector2(bombX, bombY);
     }
 
-//    private Vector2 clampToValidBombArea(Vector2 worldPos) {
-//        int tileX = (int)(worldPos.x);
-//        int tileY = (int)(worldPos.y);
-//
-//        if (level.isTileBombable(tileX, tileY)) {
-//            return worldPos;
-//        }
-//
-//        float closestDist = Float.MAX_VALUE;
-//        Vector2 closest = null;
-//
-//        for (Point p : level.getBombableTiles()) {
-//            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
-//            float dist = tileCenter.dst2(worldPos);
-//            if (dist < closestDist) {
-//                closestDist = dist;
-//                closest = tileCenter;
-//            }
-//        }
-//
-//        return closest != null ? closest : new Vector2(0, 0);
-//    }
+    private Vector2 clampToValidBombArea(Vector2 worldPos) {
+        int tileX = (int)(worldPos.x);
+        int tileY = (int)(worldPos.y);
+
+        if (level.isTileBombable(tileX, tileY)) {
+            return worldPos;
+        }
+
+        float closestDist = Float.MAX_VALUE;
+        Vector2 closest = null;
+
+        for (Point p : level.getBombableTiles()) {
+            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
+            float dist = tileCenter.dst2(worldPos);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = tileCenter;
+            }
+        }
+
+        return closest != null ? closest : new Vector2(0, 0);
+    }
 
     /**
      * Removes a bomb from the physics world.
@@ -668,9 +669,8 @@ public class GameplayController implements Screen {
         player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST );
 
         lastPlanned.set(firstPix);
-        planned.add(firstPix.cpy().scl(1f / units));
-//        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//        planned.add(bombWorld);
+        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+        planned.add(bombWorld);
 
 //        player.advanceBombFrame(7);         // first frame shown
     }
@@ -683,7 +683,6 @@ public class GameplayController implements Screen {
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
         Vector2 clampedScreen = clampBombPos(raw, aimRangeCurrent);
-//        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
 
         if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
@@ -691,9 +690,9 @@ public class GameplayController implements Screen {
 
             if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                 player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
-                planned.add(clampedScreen.cpy().scl(1f / units));
-//                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//                planned.add(bombWorld);
+                Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
+                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+                planned.add(bombWorld);
 
                 lastPlanned.set(clampedScreen);
 
