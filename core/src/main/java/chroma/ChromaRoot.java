@@ -6,6 +6,8 @@ import chroma.controller.LoadingMode;
 import chroma.controller.MenuMode;
 import chroma.model.Level;
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Texture;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.*;
@@ -38,6 +40,7 @@ public class ChromaRoot extends Game implements ScreenListener {
     /** Array of gameplay controllers (or could be just one) */
     private GameplayController[] controllers;
 
+//    private AssetManager assets;
     /**
      * Creates a new game from the configuration settings.
      *
@@ -52,14 +55,31 @@ public class ChromaRoot extends Game implements ScreenListener {
      * Immediately loads assets for the loading screen, preparing the loader for
      * other assets. Then sets the loading screen as the active screen.
      */
+    @Override
     public void create() {
-        batch  = new SpriteBatch();
 
-        // If you still want a loading screen:
+        /* 1 ─── sprite batch for every screen */
+        batch = new SpriteBatch();
+
+        /* 2 ─── AssetManager that forces Nearest on every Texture             */
+        AssetManager assets = new AssetManager() {
+            @Override
+            public <T> T get(String fileName, Class<T> type, boolean finishLoading) {
+                T obj = super.get(fileName, type, finishLoading);
+                if (obj instanceof Texture) {
+                    ((Texture) obj).setFilter(Texture.TextureFilter.Nearest,
+                        Texture.TextureFilter.Nearest);
+                }
+                return obj;
+            }
+        };
+
+        /* 3 ─── loading screen that queues assets.json with the custom manager */
         loading = new LoadingMode("assets.json", batch, 1);
         loading.setScreenListener(this);
         setScreen(loading);
     }
+
 
     /**
      * Disposes of all resources on application shutdown.

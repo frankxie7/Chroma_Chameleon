@@ -605,6 +605,7 @@ public class GameplayController implements Screen {
                     startPainting();               // first bomb + first frame
                 } else if (skillKey) {
                     bombState = BombSkillState.IDLE;
+                    player.cancelBomb();
                     targetZoom = ZOOM_DEFAULT;
                     aimRangeCurrent = RANGE_MIN;
                 }
@@ -733,10 +734,12 @@ public class GameplayController implements Screen {
                 float speed = 6f;
                 Vector2 vel = new Vector2(target).sub(playerPos).nor().scl(speed);
                 Texture bombTex = directory.getEntry("platform-bullet", Texture.class);
+                bombTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture bulletTex = directory.getEntry("platform-bullet", Texture.class);
+                bulletTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+                splatterTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Sound splatterSound = directory.getEntry("bomb", Sound.class);
-                splatterTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
                     playerPos, vel, target,

@@ -612,6 +612,11 @@ public class Chameleon extends ObstacleSprite {
             }
         }
     }
+    /** Abort the bomb animation immediately and return to the normal set. */
+    public void cancelBomb() {
+        bombPhase = BombPhase.NONE;
+        bombTime  = 0f;
+    }
 
 
 //    public void setBombAnimation(Animation<TextureRegion> anim){

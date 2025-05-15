@@ -392,7 +392,9 @@ public class Level {
                 Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
 
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
+                ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
+                ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
@@ -438,16 +440,29 @@ public class Level {
         Texture downSheet  = directory.getEntry("chameleonDownWalk", Texture.class);
         Texture idleSheet  = directory.getEntry("chameleonIdleSheet", Texture.class);
 
+        walkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        upSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        downSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        idleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
         // ─── PINK sheets (new) ───────────────────────────────────────────
         Texture pinkIdle   = directory.getEntry("chameleonPinkIdle",     Texture.class);
         Texture pinkWalk   = directory.getEntry("chameleonPinkWalk",     Texture.class);
         Texture pinkUp     = directory.getEntry("chameleonPinkUpWalk",   Texture.class);
         Texture pinkDown   = directory.getEntry("chameleonPinkDownWalk", Texture.class);
+
+        pinkIdle.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkWalk.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkUp.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkDown.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 // NEW bomb sheets
         Texture windupSheet   = directory.getEntry("chameleonBombWindup",   Texture.class);
         Texture shootSheet    = directory.getEntry("chameleonBombShoot",    Texture.class);
         Texture winddownSheet = directory.getEntry("chameleonBombWinddown", Texture.class);
 
+        windupSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        shootSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        winddownSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 // standard animations
         Animation<TextureRegion> walkAnim   = createAnimation(walkSheet,  13, 0.07f);
         Animation<TextureRegion> upAnim     = createAnimation(upSheet,    15, 0.07f);
