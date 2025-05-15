@@ -161,6 +161,7 @@ public class Level {
                 int ty = layerHeight - 1 - (i / layerWidth);
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
+                bombableTiles.add(new Point(tx,ty));
                 goalRegion.add(new Vector2(tx, ty));
                 goalTiles.add(tile);
             }
@@ -178,7 +179,7 @@ public class Level {
                 GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
                 goal.getObstacle().setName("goal");
                 goalCollisions = goal;
-                bombableTiles.add(new Point(tx,ty));
+
             }
         }
         JsonValue goal2TileLayer = findLayer(constants, "goal2");
