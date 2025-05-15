@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.physics2.PolygonObstacle;
@@ -20,8 +21,10 @@ public class Spray extends ObstacleSprite {
      * (Reused by all Spray objects so we only create it once.)
      */
     private static Texture sprayTexture = null;
-    private static final float LIFETIME = 10f;
+    private static final float LIFETIME = 7f;
+    private static final float FADE_DURATION = 3f;
     private float timeAlive;
+    private float alpha     = 1f;
     private float[] trianglePoints;
     private Poly2 poly;
     /**
@@ -81,7 +84,12 @@ public class Spray extends ObstacleSprite {
     public void update(float dt) {
         // Calculate time existing
         timeAlive += dt;
-
+        float remaining = LIFETIME - timeAlive;
+        if (remaining <= FADE_DURATION) {
+            alpha = Math.max(0f, remaining / FADE_DURATION); // linear fade
+        } else {
+            alpha = 1f;
+        }
         // Then call the superclass update
         super.update(dt);
     }
@@ -95,6 +103,33 @@ public class Spray extends ObstacleSprite {
         }
         return new Vector2(cx / count, cy / count);
     }
+    @Override
+    public void draw(SpriteBatch batch) {
+        // 1. Save current tint
+        Color saved = new Color(batch.getColor());
+
+        // 2. Apply fading alpha
+        batch.setColor(saved.r, saved.g, saved.b, alpha);
+
+        // 3. Build the local transform (copied from ObstacleSprite)
+        float x = obstacle.getX();
+        float y = obstacle.getY();
+        float a = obstacle.getAngle();
+        float u = obstacle.getPhysicsUnits();
+
+        transform.idt();
+        transform.preRotate(a * 180f / (float)Math.PI);
+        transform.preTranslate(x * u, y * u);
+
+        // 4. Draw the mesh **with tinting enabled**
+        batch.setTextureRegion(sprite);
+        batch.drawMesh(mesh, transform, true);   //  ← true multiplies by batch color
+        batch.setTexture((Texture) null);
+
+        // 5. Restore tint for everything that follows
+        batch.setColor(saved);
+    }
+
 
     public boolean contains(Vector2 point){
         return poly.contains(point);

@@ -37,6 +37,7 @@ import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
 
 //import java.awt.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,7 +98,6 @@ public class GameplayController implements Screen {
     private BitmapFont displayFont;
     private TextLayout goodMessage;
     private TextLayout badMessage;
-    private TextLayout goalMessage;
     private Bound retryButton;
     private Bound menuButton;
     private Bound nextButton;
@@ -235,7 +235,6 @@ public class GameplayController implements Screen {
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
 
-        goalMessage = new TextLayout();
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
 
@@ -544,28 +543,28 @@ public class GameplayController implements Screen {
         return new Vector2(bombX, bombY);
     }
 
-//    private Vector2 clampToValidBombArea(Vector2 worldPos) {
-//        int tileX = (int)(worldPos.x);
-//        int tileY = (int)(worldPos.y);
-//
-//        if (level.isTileBombable(tileX, tileY)) {
-//            return worldPos;
-//        }
-//
-//        float closestDist = Float.MAX_VALUE;
-//        Vector2 closest = null;
-//
-//        for (Point p : level.getBombableTiles()) {
-//            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
-//            float dist = tileCenter.dst2(worldPos);
-//            if (dist < closestDist) {
-//                closestDist = dist;
-//                closest = tileCenter;
-//            }
-//        }
-//
-//        return closest != null ? closest : new Vector2(0, 0);
-//    }
+    private Vector2 clampToValidBombArea(Vector2 worldPos) {
+        int tileX = (int)(worldPos.x);
+        int tileY = (int)(worldPos.y);
+
+        if (level.isTileBombable(tileX, tileY)) {
+            return worldPos;
+        }
+
+        float closestDist = Float.MAX_VALUE;
+        Vector2 closest = null;
+
+        for (Point p : level.getBombableTiles()) {
+            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
+            float dist = tileCenter.dst2(worldPos);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = tileCenter;
+            }
+        }
+
+        return closest != null ? closest : new Vector2(0, 0);
+    }
 
     /**
      * Removes a bomb from the physics world.
@@ -670,9 +669,8 @@ public class GameplayController implements Screen {
         player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST );
 
         lastPlanned.set(firstPix);
-        planned.add(firstPix.cpy().scl(1f / units));
-//        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//        planned.add(bombWorld);
+        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+        planned.add(bombWorld);
 
 //        player.advanceBombFrame(7);         // first frame shown
     }
@@ -685,7 +683,6 @@ public class GameplayController implements Screen {
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
         Vector2 clampedScreen = clampBombPos(raw, aimRangeCurrent);
-//        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
 
         if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
@@ -693,9 +690,9 @@ public class GameplayController implements Screen {
 
             if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                 player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
-                planned.add(clampedScreen.cpy().scl(1f / units));
-//                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//                planned.add(bombWorld);
+                Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
+                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+                planned.add(bombWorld);
 
                 lastPlanned.set(clampedScreen);
 
@@ -864,6 +861,43 @@ public class GameplayController implements Screen {
         batch.setColor(Color.WHITE);
     }
 
+    private int getGoalCount() {
+        int count = 0;
+        if (!physics.getGoalList().isEmpty()) count++;
+        if (!physics.getGoal2List().isEmpty()) count++;
+        if (!physics.getGoal3List().isEmpty()) count++;
+        return count;
+    }
+
+    private void drawGoalUI(Texture incompleteIcon, Texture completeIcon) {
+        batch.setProjectionMatrix(uiCamera.combined);
+
+        float iconWidthRatio = 0.05f;
+        float iconHeightRatio = 0.09f;
+        float paddingRatio = 0.01f;
+
+        float iconWidth = width * iconWidthRatio;
+        float iconHeight = height * iconHeightRatio;
+        float padding = width * paddingRatio;
+
+        float startX = padding;
+        float startY = height - iconHeight - padding;
+
+        int goalCount = getGoalCount();
+
+        for (int i = 0; i < goalCount; i++) {
+            Texture icon = incompleteIcon;
+            if (i == 0 && goal1Complete) icon = completeIcon;
+            if (i == 1 && goal2Complete) icon = completeIcon;
+            if (i == 2 && goal3Complete) icon = completeIcon;
+
+            float drawX = startX + i * (iconWidth + padding);
+            batch.draw(icon, drawX, startY, iconWidth, iconHeight);
+        }
+    }
+
+
+
 //    /**
 //     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in
 //     * 'draw' method to view.
@@ -987,7 +1021,7 @@ public class GameplayController implements Screen {
         }
 
         batch.flush();
-        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {
@@ -998,7 +1032,7 @@ public class GameplayController implements Screen {
             }
         }
         batch.flush();
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
@@ -1273,16 +1307,10 @@ public class GameplayController implements Screen {
             pct = 100;
         }
 
-// update the TextLayout
-        goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
-        goalMessage.setColor(Color.YELLOW);
-        goalMessage.setAlignment(TextAlign.middleCenter);
-        goalMessage.setFont(displayFont);
+        Texture goalIncompleteIcon = directory.getEntry("goal_unpainted", Texture.class);
+        Texture goalCompleteIcon = directory.getEntry("goal_painted", Texture.class);
+        drawGoalUI(goalIncompleteIcon, goalCompleteIcon);
 
-// draw it at the top center, 20px down from the top
-        batch.drawText(goalMessage, width / 2, height - 20);
-
-        batch.setColor(Color.WHITE);
         batch.end();
     }
 
