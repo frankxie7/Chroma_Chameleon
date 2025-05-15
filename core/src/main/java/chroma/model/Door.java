@@ -97,6 +97,8 @@ public class Door extends ObstacleSprite {
         return movingToVent;
     }
 
+
+
     public boolean isOpen() {
         return opened;
     }

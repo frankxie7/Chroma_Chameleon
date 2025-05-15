@@ -394,7 +394,7 @@ public class Level {
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
                 ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
-                chameleonFallSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+                ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
@@ -415,25 +415,81 @@ public class Level {
         // Create the chameleon (player) using animation
         JsonValue globalCham = globalConstants.get("chameleon");
         JsonValue levelCham = constants.get("chameleon");
-        Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
-        chameleonSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
-        chameleonUpWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
-        chameleonDownWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
-        bombSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.07f);
-        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
-        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
-        Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
-        Texture chameleonIdleSheet = directory.getEntry("chameleonIdleSheet", Texture.class);
-        chameleonIdleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Animation<TextureRegion> idleAnim =
-            createAnimation(chameleonIdleSheet, 2, 0.25f);
+//        Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
+//        chameleonSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
+//        chameleonUpWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
+//        chameleonDownWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
+//        bombSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.07f);
+//        Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
+//        Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
+//        Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
+//        Texture chameleonIdleSheet = directory.getEntry("chameleonIdleSheet", Texture.class);
+//        chameleonIdleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Animation<TextureRegion> idleAnim =
+//            createAnimation(chameleonIdleSheet, 2, 0.25f);
+//        Music walkSound = directory.getEntry("chameleon_walk", Music.class);
+//        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound,idleAnim);
+//        avatar.setBombAnimation(bombAnim);
+// --- Chameleon sheets -------------------------------------------------
+        Texture walkSheet  = directory.getEntry("chameleonSheet", Texture.class);
+        Texture upSheet    = directory.getEntry("chameleonUpWalk", Texture.class);
+        Texture downSheet  = directory.getEntry("chameleonDownWalk", Texture.class);
+        Texture idleSheet  = directory.getEntry("chameleonIdleSheet", Texture.class);
+
+        walkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        upSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        downSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        idleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        // ─── PINK sheets (new) ───────────────────────────────────────────
+        Texture pinkIdle   = directory.getEntry("chameleonPinkIdle",     Texture.class);
+        Texture pinkWalk   = directory.getEntry("chameleonPinkWalk",     Texture.class);
+        Texture pinkUp     = directory.getEntry("chameleonPinkUpWalk",   Texture.class);
+        Texture pinkDown   = directory.getEntry("chameleonPinkDownWalk", Texture.class);
+
+        pinkIdle.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkWalk.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkUp.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkDown.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+// NEW bomb sheets
+        Texture windupSheet   = directory.getEntry("chameleonBombWindup",   Texture.class);
+        Texture shootSheet    = directory.getEntry("chameleonBombShoot",    Texture.class);
+        Texture winddownSheet = directory.getEntry("chameleonBombWinddown", Texture.class);
+
+        windupSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        shootSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        winddownSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+// standard animations
+        Animation<TextureRegion> walkAnim   = createAnimation(walkSheet,  13, 0.07f);
+        Animation<TextureRegion> upAnim     = createAnimation(upSheet,    15, 0.07f);
+        Animation<TextureRegion> downAnim   = createAnimation(downSheet,  15, 0.07f);
+        Animation<TextureRegion> idleAnim   = createAnimation(idleSheet,   2, 0.25f);
+        Animation<TextureRegion> pinkIdleAnim = createAnimation(pinkIdle,   2,  0.25f);
+        Animation<TextureRegion> pinkWalkAnim = createAnimation(pinkWalk,  13,  0.07f);
+        Animation<TextureRegion> pinkUpAnim   = createAnimation(pinkUp,    15,  0.07f);
+        Animation<TextureRegion> pinkDownAnim = createAnimation(pinkDown,  15,  0.07f);
+
+// bomb animations
+        Animation<TextureRegion> bombWindup   = createAnimation(windupSheet,   17, 0.03f);
+        Animation<TextureRegion> bombShoot    = createAnimation(shootSheet,    13, 0.11f);
+        Animation<TextureRegion> bombWinddown = createAnimation(winddownSheet, 18, 0.04f);
+        bombWindup.setPlayMode(Animation.PlayMode.NORMAL);
+        bombShoot.setPlayMode(Animation.PlayMode.NORMAL);
+        bombWinddown.setPlayMode(Animation.PlayMode.NORMAL);
         Music walkSound = directory.getEntry("chameleon_walk", Music.class);
-        avatar = new Chameleon(units, globalCham,levelCham, chameleonAnim, chameleonUpWalkAnim, chameleonDownWalkAnim, walkSound,idleAnim);
-        avatar.setBombAnimation(bombAnim);
+// build the avatar
+        avatar = new Chameleon(units,
+            globalCham, levelCham,
+            walkAnim, upAnim, downAnim,
+            walkSound, idleAnim);
+
+// hand all three bomb clips to the chameleon
+        avatar.setPinkAnimations(pinkIdleAnim, pinkWalkAnim, pinkUpAnim, pinkDownAnim);
+        avatar.setBombAnimations(bombWindup, bombShoot, bombWinddown);
 
         // Create enemies
         enemies = new ArrayList<>();

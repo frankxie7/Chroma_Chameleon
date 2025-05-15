@@ -12,10 +12,12 @@ import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 //import com.badlogic.gdx.math.MathUtils;
@@ -23,19 +25,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
@@ -62,7 +54,7 @@ public class GameplayController implements Screen {
     public static final int EXIT_NEXT = 101;
     public static final int EXIT_PREV = 102;
     public static final int EXIT_MAP = 103;
-    public static final int EXIT_COUNT = 300;
+    public static final int EXIT_COUNT = 180;
 
     private boolean debug;
     private boolean active;
@@ -75,7 +67,6 @@ public class GameplayController implements Screen {
     private SpriteBatch batch;
     private AssetDirectory directory;
     private JsonValue constants;
-    private Stage stage;
 
     // Dimensions in pixels
     private float width, height;
@@ -87,6 +78,7 @@ public class GameplayController implements Screen {
 //    private static final float BOMB_INITIAL_COST = 6f;
     private static final float BOMB_SUBSEQUENT_COST = 1f;
     private boolean waitingForDoorAnim = false;
+
 
     private OrthographicCamera camera;
     private OrthographicCamera uiCamera;
@@ -103,13 +95,12 @@ public class GameplayController implements Screen {
 
     // For UI messages
     private BitmapFont displayFont;
+    private TextLayout goodMessage;
+    private TextLayout badMessage;
     private TextLayout goalMessage;
-    Image winBackground;
-    Image loseBackground;
-    Button retryButton;
-    Button menuButton;
-    Button nextButton;
-    private boolean buttonsInitialized = false;
+    private Bound retryButton;
+    private Bound menuButton;
+    private Bound nextButton;
 
     //Single scale factor for world→screen
     private float units;
@@ -124,6 +115,8 @@ public class GameplayController implements Screen {
     // ───── new Bomb ───────────────────────────────
     // ───── new Bomb ───────────────────────────────
     private enum BombSkillState {IDLE, READY, PAINTING, FIRING, COOLDOWN}
+
+    ;
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
@@ -141,10 +134,11 @@ public class GameplayController implements Screen {
     private float bombFireDelay = 0.05f;
     private float bombFireTimer = 0f;
 
+
     private static final float RANGE_MIN = 5f;
     private static final float RANGE_MAX = 20f;
     private static final float RANGE_GROWTH = 12f;
-    private static final float ZOOM_DEFAULT = 0.45f;
+    private static final float ZOOM_DEFAULT = 0.4f;
     private static final float ZOOM_OUT_MAX = 0.6f;
     private static final float ZOOM_FOCUS = 0.20f;  // tune this until the chameleon fills the view
     private static final float ZOOM_LERP = 5f;
@@ -175,6 +169,8 @@ public class GameplayController implements Screen {
         this.worldHeight = worldConf.get("bounds").getFloat(1);
         float gravityY = worldConf.getFloat("gravity", -10f);
 
+        System.out.println(levelSelector.getCurrentLevel());
+
         // For converting input coordinates
         scale = new Vector2();
         bounds = new Rectangle(0, 0, worldWidth, worldHeight);
@@ -183,55 +179,6 @@ public class GameplayController implements Screen {
         camera = new OrthographicCamera();
         uiCamera = new OrthographicCamera();
         uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        // Create a viewport matching the UI camera
-        Viewport uiViewport = new ScreenViewport(uiCamera);
-        stage = new Stage(uiViewport);
-
-        Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
-        Texture youLoseTexture = directory.getEntry("lose-screen", Texture.class);
-        youWinTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        youLoseTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-
-        // Create background images
-        TextureRegion winRegion = new TextureRegion(youWinTexture, 0, 0, youWinTexture.getWidth(), youWinTexture.getHeight());
-        TextureRegion loseRegion = new TextureRegion(youLoseTexture, 0, 0, youLoseTexture.getWidth(), youLoseTexture.getHeight());
-
-        winBackground = new Image(new TextureRegionDrawable(winRegion));
-        winBackground.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
-        loseBackground = new Image(new TextureRegionDrawable(loseRegion));
-        loseBackground.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
-
-        Texture retryTex = directory.getEntry("restart", Texture.class);
-        retryTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture menuTex  = directory.getEntry("menu", Texture.class);
-        menuTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture nextTex  = directory.getEntry("next-lab", Texture.class);
-        nextTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-
-        TextureRegionDrawable retryDrawable = new TextureRegionDrawable(new TextureRegion(retryTex));
-        TextureRegionDrawable menuDrawable  = new TextureRegionDrawable(new TextureRegion(menuTex));
-        TextureRegionDrawable nextDrawable  = new TextureRegionDrawable(new TextureRegion(nextTex));
-
-        Button.ButtonStyle retryStyle = new Button.ButtonStyle();
-        retryStyle.up = retryDrawable;
-        retryStyle.down = retryDrawable;
-        retryStyle.over = retryDrawable;
-
-        Button.ButtonStyle menuStyle = new Button.ButtonStyle();
-        menuStyle.up = menuDrawable;
-        menuStyle.down = menuDrawable;
-        menuStyle.over = menuDrawable;
-
-        Button.ButtonStyle nextStyle = new Button.ButtonStyle();
-        nextStyle.up = nextDrawable;
-        nextStyle.down = nextDrawable;
-        nextStyle.over = nextDrawable;
-
-        // Create buttons with their respective styles
-        retryButton = new Button(retryStyle);
-        menuButton = new Button(menuStyle);
-        nextButton = new Button(nextStyle);
 
         // Set default values (real values assigned in resize)
         this.width = Gdx.graphics.getWidth();
@@ -245,11 +192,45 @@ public class GameplayController implements Screen {
         float targetWidth = Gdx.graphics.getWidth() * 0.8f;
         float targetHeight = Gdx.graphics.getHeight() * 0.1f; // optional for height limit
 
-        // Set a default font scale
+// Set a default font scale
         float baseScale = 1.0f;
         displayFont.getData().setScale(baseScale);
 
+// Measure both messages
+        GlyphLayout layout = new GlyphLayout();
+
+        layout.setText(displayFont, "VICTORY!");
+        float victoryWidth = layout.width;
+        float victoryHeight = layout.height;
+
+        layout.setText(displayFont, "FAILURE!");
+        float failureWidth = layout.width;
+        float failureHeight = layout.height;
+
+// Choose the larger width or height to normalize
+        float maxWidth = Math.max(victoryWidth, failureWidth);
+        float maxHeight = Math.max(victoryHeight, failureHeight);
+
+// Scale factor to make both messages fit the same bounding box
+        float scale = Math.min(targetWidth / maxWidth, targetHeight / maxHeight);
+
+// Apply the scale to the font
+        displayFont.getData().setScale(scale);
+
         this.enemiesAlertSound = directory.getEntry("enemies_alert", Sound.class);
+
+// Now make layouts
+        goodMessage = new TextLayout();
+        goodMessage.setText("VICTORY!");
+        goodMessage.setColor(Color.YELLOW);
+        goodMessage.setAlignment(TextAlign.middleCenter);
+        goodMessage.setFont(displayFont);
+
+        badMessage = new TextLayout();
+        badMessage.setText("FAILURE!");
+        badMessage.setColor(Color.RED);
+        badMessage.setAlignment(TextAlign.middleCenter);
+        badMessage.setFont(displayFont);
 
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
@@ -263,6 +244,8 @@ public class GameplayController implements Screen {
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int) this.width, (int) this.height);
+
+
     }
 
     public void setBaseResolution(int width, int height) {
@@ -276,9 +259,6 @@ public class GameplayController implements Screen {
     public void reset() {
         // Reset game state so overlays disappear
         gameState = GameState.PLAYING;
-        stage.clear();
-        buttonsInitialized = false;
-        Gdx.input.setInputProcessor(null);
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -397,6 +377,9 @@ public class GameplayController implements Screen {
             listener.exitScreen(this, EXIT_MAP);
             return false;
         }
+//        if (input.didExit()) {
+//            return false;
+//        }
 
         // Handle the countdown for victory/failure
 //        if (countdown > 0) {
@@ -606,21 +589,25 @@ public class GameplayController implements Screen {
         }
         switch (bombState) {
             case IDLE:
-                if (skillKey && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST )) {
+                if (skillKey && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                     bombState = BombSkillState.READY;
-                    aimRangeCurrent = RANGE_MAX;               // instant full range
-                    targetZoom = ZOOM_OUT_MAX;            // start zoom-out
+                    aimRangeCurrent = RANGE_MAX;
+                    targetZoom = ZOOM_OUT_MAX;
+
+                    player.startBombWindup();          // NEW
                 }
                 break;
 
+
             case READY:
                 if (in.didLeftClick()) {
-                    player.startBombAnimation();   // start fresh
-                    player.pauseBombAnimation();   // freeze at frame‑0
+//                    player.startBombAnimation();   // start fresh
+//                    player.pauseBombAnimation();   // freeze at frame‑0
                     bombState = BombSkillState.PAINTING;
                     startPainting();               // first bomb + first frame
                 } else if (skillKey) {
                     bombState = BombSkillState.IDLE;
+                    player.cancelBomb();
                     targetZoom = ZOOM_DEFAULT;
                     aimRangeCurrent = RANGE_MIN;
                 }
@@ -687,8 +674,9 @@ public class GameplayController implements Screen {
 //        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
 //        planned.add(bombWorld);
 
-        player.advanceBombFrame(7);         // first frame shown
+//        player.advanceBombFrame(7);         // first frame shown
     }
+
 
     /**
      * decide if a new region is selected
@@ -711,7 +699,7 @@ public class GameplayController implements Screen {
 
                 lastPlanned.set(clampedScreen);
 
-                player.advanceBombFrame(7);      // one frame per bomb
+//                player.advanceBombFrame(7);      // one frame per bomb
             } else {
                 firePlannedBombs();
             }
@@ -722,7 +710,8 @@ public class GameplayController implements Screen {
      * launch bomb & consume
      */
     private void firePlannedBombs() {
-        player.resumeBombAnimation();   // play the rest of the clip
+        player.startBombShoot();
+//        player.resumeBombAnimation();   // play the rest of the clip
         int n = planned.size;
         if (n == 0) {
             bombState = BombSkillState.IDLE;
@@ -751,7 +740,7 @@ public class GameplayController implements Screen {
                 Texture bulletTex = directory.getEntry("platform-bullet", Texture.class);
                 bulletTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
-//                splatterTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+                splatterTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Sound splatterSound = directory.getEntry("bomb", Sound.class);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
@@ -767,11 +756,14 @@ public class GameplayController implements Screen {
                 bombFireTimer = bombFireDelay;
             }
             if (bombQueue.size == 0) {
+                player.startBombWinddown();            // NEW
                 bombState = BombSkillState.COOLDOWN;
                 cooldownTimer = BOMB_COOLDOWN;
             }
+
         }
     }
+
 
     /**
      * Step physics after update.
@@ -793,40 +785,40 @@ public class GameplayController implements Screen {
             physics.resetLaserFlag();
         }
         // ——— Win + chameleon fall all in controller ———
-        if (!failed && physics.didWin()) {
-            Door door = level.getGoalDoor();
-            Chameleon cham = player;
+            if (!failed && physics.didWin()) {
+                    Door door = level.getGoalDoor();
+                    Chameleon cham = player;
 
-            // 1) first frame we detect win: start moving‑to‑vent logic
-            if (!door.isFallPlayed()) {
-                if (cham != null) {
-                    Vector2 pos = cham.getObstacle().getPosition();
-                    Vector2 center = door.getCenter();
-                    if (pos.dst(center) < 0.05f) {
-                        // at vent: trigger fall animation
-                        cham.setFalling(true);
-                        door.playChameleonFallAnimation();
-                        door.setFallPlayed(true);
-                        // reset physics flags but keep waitingForDoorAnim == true
-                        waitingForDoorAnim = true;
-                    } else {
-                        // move toward center
-                        Vector2 dir = center.cpy().sub(pos).nor();
-                        cham.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
-                    }
+                        // 1) first frame we detect win: start moving‑to‑vent logic
+                           if (!door.isFallPlayed()) {
+                            if (cham != null) {
+                                    Vector2 pos = cham.getObstacle().getPosition();
+                                    Vector2 center = door.getCenter();
+                                   if (pos.dst(center) < 0.05f) {
+                                           // at vent: trigger fall animation
+                                                cham.setFalling(true);
+                                            door.playChameleonFallAnimation();
+                                            door.setFallPlayed(true);
+                                            // reset physics flags but keep waitingForDoorAnim == true
+                                                waitingForDoorAnim = true;
+                                        } else {
+                                           // move toward center
+                                                Vector2 dir = center.cpy().sub(pos).nor();
+                                            cham.getObstacle().getBody().setLinearVelocity(dir.scl(5.0f));
+                                        }
+                                }
+                        }
+                    physics.resetCollisionFlags();
+               }
+
+                // 2) once animation is done, actually show the win‑UI
+                    if (waitingForDoorAnim) {
+                    Door door = level.getGoalDoor();
+                    if (door != null && !door.isChameleonFalling()) {
+                            setVictory();
+                            waitingForDoorAnim = false;
+                        }
                 }
-            }
-            physics.resetCollisionFlags();
-       }
-
-        // 2) once animation is done, actually show the win‑UI
-        if (waitingForDoorAnim) {
-            Door door = level.getGoalDoor();
-            if (door != null && !door.isChameleonFalling()) {
-                setVictory();
-                waitingForDoorAnim = false;
-            }
-        }
 
         physics.update(dt);
     }
@@ -892,97 +884,97 @@ public class GameplayController implements Screen {
 //        }
 //    }
 
-    private void setupUI() {
-        if (gameState == GameState.WON) {
-            retryButton.setBounds(width * 0.4f, height * 0.15f, width * 0.2f, height * 0.125f);
-            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.2f, height * 0.125f);
-            nextButton.setBounds(width * 0.4f, height * 0.3f, width * 0.2f, height * 0.125f);
-        } else if (gameState == GameState.LOST) {
-            retryButton.setBounds(width * 0.4f, height * 0.3f, width * 0.2f, height * 0.125f);
-            menuButton.setBounds(width * 0.4f, height * 0.45f, width * 0.2f, height * 0.125f);
-        }
-
-        retryButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-//                System.out.println("clicked retry");
-                reset();
-            }
-        });
-
-        menuButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-//                System.out.println("clicked menu");
-                listener.exitScreen(GameplayController.this, EXIT_MAP);
-            }
-        });
-
-        nextButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-//                System.out.println("clicked next");
-                listener.exitScreen(GameplayController.this, EXIT_NEXT);
-            }
-        });
-
-        stage.addActor(winBackground);
-        stage.addActor(loseBackground);
-
-        stage.addActor(retryButton);
-        stage.addActor(menuButton);
-        stage.addActor(nextButton);
-
-        winBackground.setVisible(false);
-        loseBackground.setVisible(false);
-
-        retryButton.setVisible(false);
-        menuButton.setVisible(false);
-        nextButton.setVisible(false);
-
-        buttonsInitialized = true;
-    }
-
     /**
      * Draws the Win screen UI.
      */
-    private void drawWinScreen() {
-        if (!buttonsInitialized) {
-            setupUI();
-        }
+    private void drawWinScreen(Texture winTex, Texture resTex, Texture menTex, Texture nexTex) {
+        batch.setColor(Color.WHITE); // Just in case you changed it elsewhere
+//        batch.setProjectionMatrix(uiCamera.combined);
+        float winWid = winTex.getWidth();
+        float winTexHeight = winTex.getHeight();
+        float winRatio = winTexHeight / winWid;
+        float winDrawWidth = width * 2/3;
+        float winDrawHeight = winDrawWidth * winRatio;
+        batch.draw(winTex, width/2 - winDrawWidth/2, height/2 - winDrawHeight /2, winDrawWidth, winDrawHeight);
+//        batch.draw(winTex, 0,0,width,height);
 
-        Gdx.input.setInputProcessor(stage);
+        // Optional: text overlay if needed
+        // batch.drawText(goodMessage, width / 2, height / 2);
 
-        winBackground.setVisible(true);
-        loseBackground.setVisible(false);
+        float buttonWidth = resTex.getWidth();
+        float buttonHeight = resTex.getHeight();
+        float buttonRatio = buttonHeight / buttonWidth;
+        float buttonDrawWidth = width / 6;
+        float buttonDrawHeight = buttonDrawWidth * buttonRatio;
 
-        retryButton.setVisible(true);
-        menuButton.setVisible(true);
-        nextButton.setVisible(true);
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
+        batch.draw(nexTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
+        batch.draw(resTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
+
+
+
+
+// Update rectangles to match the drawn texture positions
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
+        nextButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
+
+//
+//        drawButton(batch, retryButton);
+//        drawButton(batch, menuButton);
+//        drawButton(batch, nextButton);
     }
 
     /**
      * Draws the Lose screen UI.
      */
-    private void drawLoseScreen() {
-        if (!buttonsInitialized) {
-            setupUI();
-        }
+    private void drawLoseScreen(Texture losTex, Texture resTex, Texture menTex) {
+        batch.setColor(Color.WHITE);
 
-        Gdx.input.setInputProcessor(stage);
+//        batch.setProjectionMatrix(uiCamera.combined);
+        float losWid = losTex.getWidth();
+        float losTexHeight = losTex.getHeight();
+        float losRatio = losTexHeight / losWid;
+        float losDrawWidth = width * 2/3;
+        float losDrawHeight = losDrawWidth * losRatio;
+        batch.draw(losTex, width/2 - losDrawWidth/2, height/2 - losDrawHeight /2, losDrawWidth, losDrawHeight);
 
-        winBackground.setVisible(false);
-        loseBackground.setVisible(true);
+//        batch.draw(losTex, 0,0,width,height);
 
-        retryButton.setVisible(true);
-        menuButton.setVisible(true);
-        nextButton.setVisible(false); // No "Next" button on lose screen
+        float buttonWidth = resTex.getWidth();
+        float buttonHeight = resTex.getHeight();
+        float ratio = buttonHeight / buttonWidth;
+        float buttonDrawWidth = width / 6;
+        float buttonDrawHeight = buttonDrawWidth * ratio;
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/ 2, buttonDrawWidth, buttonDrawHeight);
+        batch.draw(resTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.3f/ 2, buttonDrawWidth, buttonDrawHeight);
+        // Optional: text overlay if needed
+        // batch.drawText(badMessage, width / 2, height / 2);
+
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.3f / 2, buttonDrawWidth, buttonDrawHeight);
+
+
+//        drawButton(batch, retryButton);
+//        drawButton(batch, menuButton);
+    }
+
+    private void drawButton(SpriteBatch batch, Bound rect) {
+        // Optional: Draw button background (replace with your own texture if available)
+        shapeRenderer.setProjectionMatrix(uiCamera.combined);
+        batch.end();
+        shapeRenderer.begin(ShapeType.Line);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+        shapeRenderer.end();
+        batch.begin();
     }
 
     /**
      * Main draw method.
      */
     private void draw(float dt) {
+
         ScreenUtils.clear(new Color(0.12f, 0.16f, 0.2f, 1f));
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -993,9 +985,9 @@ public class GameplayController implements Screen {
                 tile.draw(batch);
             }
         }
+
         batch.flush();
         batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {
@@ -1033,6 +1025,7 @@ public class GameplayController implements Screen {
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
+
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("enemy")) {
                 sprite.draw(batch);
@@ -1059,10 +1052,11 @@ public class GameplayController implements Screen {
                     0);
             }
         }
-        if (levelSelector.getCurrentLevel() == 2) {
-            Texture hintTex = directory.getEntry("tutorialhints2", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            float worldX = 2f * units;
+        batch.flush();
+        if (levelSelector.getCurrentLevel() == 1) {
+            Texture hintTex = directory.getEntry("tutorialhints_walk", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            float worldX = 1f * units;
             float worldY = 10f * units;
 
             batch.draw(hintTex,
@@ -1070,28 +1064,41 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 1) {
-            Texture hintTex = directory.getEntry("tutorialhints3", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        if (levelSelector.getCurrentLevel() == 2) {
+            Texture hintTex = directory.getEntry("tutorialhints_goal", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
-            float worldY = 17f * units;
+            float worldY = 6f * units;
 
             batch.draw(hintTex,
                 worldX, worldY,
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+        if (levelSelector.getCurrentLevel() == 3) {
+            Texture hintTex = directory.getEntry("tutorialhints_spray", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            float worldX = 2f * units;
+            float worldY = 14f * units;
+
+            batch.draw(hintTex,
+                worldX, worldY,
+                hintTex.getWidth(),
+                hintTex.getHeight());
+        }
+
         if (levelSelector.getCurrentLevel() == 4) {
-            Texture hintTex = directory.getEntry("tutorialhints1", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            Texture hintTex = directory.getEntry("tutorialhints_bomb", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
-            float worldY = 19f * units;
+            float worldY = 14f * units;
 
             batch.draw(hintTex,
                 worldX, worldY,
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+        batch.flush();
         player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {
@@ -1140,7 +1147,9 @@ public class GameplayController implements Screen {
 //        batch.flush();
 //        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 // ───── new bomb ──────────────────────────
-        if (bombState == BombSkillState.READY || bombState == BombSkillState.PAINTING) {
+        if (
+            bombState == BombSkillState.READY ||
+                bombState == BombSkillState.PAINTING) {
             float r = aimRangeCurrent * units;
             Vector2 p = player.getPosition();
             batch.end();
@@ -1156,7 +1165,7 @@ public class GameplayController implements Screen {
 
         if (bombState == BombSkillState.PAINTING) {
             Texture ghost = directory.getEntry("aiming-range", Texture.class);
-            ghost.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//            ghost.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             float s = constants.get("bomb").getFloat("size") * units;
             for (Vector2 phys : planned) {
                 batch.draw(ghost, phys.x * units - s / 2, phys.y * units - s / 2, s, s);
@@ -1205,18 +1214,34 @@ public class GameplayController implements Screen {
         // Draw the paint container (UI) after objects
         Texture barTex = directory.getEntry("paintBar", Texture.class);
         Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
-        barTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        barOverlayTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         drawPaintContainer(barTex, barOverlayTex);
 
+        Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
+        Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
+        Texture restartTex = directory.getEntry("restart", Texture.class);
+        Texture menuTex = directory.getEntry("menu", Texture.class);
+        Texture nextlabTex = directory.getEntry("next-lab", Texture.class);
+//        youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
         if (gameState == GameState.WON) {
-            drawWinScreen();
+            drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
         } else if (gameState == GameState.LOST) {
             // only pop up the lose UI once we've zoomed all the way in
             if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
-                drawLoseScreen();
+                drawLoseScreen(youLoseTexture, restartTex, menuTex);
             }
         }
+
+
+//        // UI messages
+//        if (complete && !failed) {
+//            batch.drawText(goodMessage, width / 2, height / 2);
+//        } else if (failed) {
+//            batch.drawText(badMessage, width / 2, height / 2);
+//        }
 
         // ——— Goal-region percentage notification ———
         int numFilled = 0;
@@ -1241,28 +1266,24 @@ public class GameplayController implements Screen {
             }
         }
 
-        // compute percent painted
+// compute percent painted
         float pct = (float) numFilled / ((float) goals1.size() + (float) goals2.size()
             + (float) goals3.size()) * 100f;
         if(Float.isNaN(pct)){
             pct = 100;
         }
 
-        // update the TextLayout
+// update the TextLayout
         goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
         goalMessage.setColor(Color.YELLOW);
         goalMessage.setAlignment(TextAlign.middleCenter);
         goalMessage.setFont(displayFont);
 
-        // draw it at the top center, 20px down from the top
+// draw it at the top center, 20px down from the top
         batch.drawText(goalMessage, width / 2, height - 20);
 
         batch.setColor(Color.WHITE);
         batch.end();
-
-        stage.getViewport().apply();
-        stage.act(dt);
-        stage.draw();
     }
 
     /**
@@ -1286,6 +1307,23 @@ public class GameplayController implements Screen {
         camera.update();
     }
 
+    private class Bound {
+        public float x, y, width, height;
+
+        public Bound(float x, float y, float width, float height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        public boolean contains(float px, float py) {
+            float dx = px - x;
+            float dy = py - y;
+            return px >= x && px <= x + width && py >= y && py <= y + height;
+        }
+    }
+
     /**
      * The main render loop.
      */
@@ -1296,6 +1334,35 @@ public class GameplayController implements Screen {
         }
         if (!preUpdate(delta)) {
             return;
+        }
+
+//        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
+//            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+//            camera.unproject(touch); // if you’re using a camera
+//
+//            if (retryButton.contains(touch.x, touch.y)) {
+//                reset();
+//                gameState = GameState.PLAYING;
+//            } else if (menuButton.contains(touch.x, touch.y)) {
+//                listener.exitScreen(this, EXIT_MAP);
+//            } else if (nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+//                listener.exitScreen(this, EXIT_NEXT);
+//            }
+//        }
+        if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
+            Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            uiCamera.unproject(touch); // if you’re using a camera
+            if (retryButton.contains(touch.x, touch.y)) {
+                reset();
+                return;
+
+            } else if (menuButton.contains(touch.x, touch.y)) {
+                listener.exitScreen(this, EXIT_MAP);
+                return;
+            } else if (nextButton != null && nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+                listener.exitScreen(this, EXIT_NEXT);
+                return;
+            }
         }
 
         float frameTime = Math.min(delta, 0.25f);
@@ -1347,7 +1414,6 @@ public class GameplayController implements Screen {
             uiCamera = new OrthographicCamera();
         }
         uiCamera.setToOrtho(false, width, height);
-        stage.getViewport().update(width, height, true);
 
         // 1) Compute the uniform scale factor from world→screen
         //    so that worldHeight always fits the new window height
@@ -1366,7 +1432,6 @@ public class GameplayController implements Screen {
     public void dispose() {
         physics.dispose();
         shapeRenderer.dispose();
-        stage.dispose();
     }
 
     public void setScreenListener(ScreenListener listener) {

@@ -6,6 +6,8 @@ import chroma.controller.LoadingMode;
 import chroma.controller.MenuMode;
 import chroma.model.Level;
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Texture;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.*;
@@ -38,6 +40,7 @@ public class ChromaRoot extends Game implements ScreenListener {
     /** Array of gameplay controllers (or could be just one) */
     private GameplayController[] controllers;
 
+//    private AssetManager assets;
     /**
      * Creates a new game from the configuration settings.
      *
@@ -52,14 +55,17 @@ public class ChromaRoot extends Game implements ScreenListener {
      * Immediately loads assets for the loading screen, preparing the loader for
      * other assets. Then sets the loading screen as the active screen.
      */
+    @Override
     public void create() {
-        batch  = new SpriteBatch();
 
-        // If you still want a loading screen:
+
+        batch = new SpriteBatch();
+
         loading = new LoadingMode("assets.json", batch, 1);
         loading.setScreenListener(this);
         setScreen(loading);
     }
+
 
     /**
      * Disposes of all resources on application shutdown.
@@ -143,14 +149,22 @@ public class ChromaRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-            controllers = new GameplayController[27];
+
+
+            controllers = new GameplayController[18];
             for (int ii = 0; ii < controllers.length; ii++) {
                 levelSelector = new LevelSelector(directory);
                 levelSelector.setCurrentLevel(ii+1);
                 controllers[ii] = new GameplayController(directory, levelSelector);
                 controllers[ii].setScreenListener(this);
                 controllers[ii].setSpriteBatch(batch);
+
+                int w = Gdx.graphics.getWidth();
+                int h = Gdx.graphics.getHeight();
+                controllers[ii].resize(w, h);
+
                 controllers[ii].reset();
+
             }
 
             selecting = new MenuMode("assets.json", batch);
@@ -177,6 +191,7 @@ public class ChromaRoot extends Game implements ScreenListener {
 //            setScreen(controllers[current]);
             selecting.dispose();
             selecting = null;
+
 
             current = exitCode;
             controllers[current-1].reset();
