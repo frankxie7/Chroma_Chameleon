@@ -1163,7 +1163,7 @@ public class GameplayController implements Screen {
 
         if (bombState == BombSkillState.PAINTING) {
             Texture ghost = directory.getEntry("aiming-range", Texture.class);
-            ghost.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//            ghost.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             float s = constants.get("bomb").getFloat("size") * units;
             for (Vector2 phys : planned) {
                 batch.draw(ghost, phys.x * units - s / 2, phys.y * units - s / 2, s, s);
@@ -1212,8 +1212,8 @@ public class GameplayController implements Screen {
         // Draw the paint container (UI) after objects
         Texture barTex = directory.getEntry("paintBar", Texture.class);
         Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
-        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         drawPaintContainer(barTex, barOverlayTex);
 
         Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
@@ -1221,8 +1221,8 @@ public class GameplayController implements Screen {
         Texture restartTex = directory.getEntry("restart", Texture.class);
         Texture menuTex = directory.getEntry("menu", Texture.class);
         Texture nextlabTex = directory.getEntry("next-lab", Texture.class);
-        youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         if (gameState == GameState.WON) {
             drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
