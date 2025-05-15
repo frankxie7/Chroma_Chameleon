@@ -392,9 +392,7 @@ public class Level {
                 Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
 
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
-                ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
-                chameleonFallSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
