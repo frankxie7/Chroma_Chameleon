@@ -775,12 +775,12 @@ public class AIController {
 //        }
 
         // 2. Draw the A* path in yellow
-//        if (lastPath != null) {
-//            shapeRenderer.setColor(Color.YELLOW);
-//            for (Vector2 pathPoint : lastPath) {
-//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
-//            }
-//        }
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+            }
+        }
 //
 //        // 3. Draw the last visible target point on top
 //        if (lastVisible != null) {
