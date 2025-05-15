@@ -1407,11 +1407,11 @@ public class GameplayController implements Screen {
         if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
             Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             uiCamera.unproject(touch); // if you’re using a camera
-            if (retryButton.contains(touch.x, touch.y)) {
+            if (retryButton != null && retryButton.contains(touch.x, touch.y)) {
                 reset();
                 return;
 
-            } else if (menuButton.contains(touch.x, touch.y)) {
+            } else if (menuButton != null && menuButton.contains(touch.x, touch.y)) {
                 listener.exitScreen(this, EXIT_MAP);
                 return;
             } else if (nextButton != null && nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
