@@ -29,7 +29,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -83,6 +85,13 @@ public class LoadingMode implements Screen, InputProcessor {
     /** Whether or not this player mode is still active */
     private boolean active;
 
+    private Rectangle playBounds;
+    private Rectangle quitBounds;
+    private boolean play_hovered;
+    private boolean quit_hovered;
+
+    private ShapeRenderer debugRenderer = new ShapeRenderer();
+
     /**
      * Returns the budget for the asset loader.
      *
@@ -107,7 +116,7 @@ public class LoadingMode implements Screen, InputProcessor {
      * animation frame. This allows you to do something other than load assets.
      * An animation frame is ~16 milliseconds. So if the budget is 10, you have
      * 6 milliseconds to do something else. This is how game companies animate
-     * their loading screens.
+     * their loadingscreens.
      *
      * @param millis the budget in milliseconds
      */
@@ -174,6 +183,8 @@ public class LoadingMode implements Screen, InputProcessor {
         // No progress so far.
         progress = 0;
         pressState = 0;
+        play_hovered = false;
+        quit_hovered = false;
 
         affine = new Affine2();
         Gdx.input.setInputProcessor( this );
@@ -229,33 +240,83 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     private void draw() {
         // Cornell colors
-        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f  );
+//        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f  );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
         // Height lock the logo
-        Texture texture = internal.getEntry( "splash", Texture.class );
-        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        batch.draw(texture,(width-height)/2, 0, height, height);
+        Texture bg = internal.getEntry( "background", Texture.class );
+        bg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        batch.draw(bg,0, 0, width, height);
 
-        if (progress < 1.0f) {
-            drawProgress();
-        } else {
-            float cx = width/2;
-            float cy = (int)(constants.getFloat( "bar.height" )*height);
-            float s = constants.getFloat("button.scale")*scale;
-            Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-            texture = internal.getEntry("play",Texture.class);
-            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        drawButtons();
 
-            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-                cx, cy, 0, s, s );
+//        if (progress < 1.0f) {
+//            drawProgress();
+//        } else {
+//            float cx = width/2;
+//            float cy = (int)(constants.getFloat( "bar.height" )*height);
+//            float s = constants.getFloat("button.scale")*scale;
+//            Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
+//            texture = internal.getEntry("play",Texture.class);
+//            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//
+//            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
+//                cx, cy, 0, s, s );
+//
+//            batch.setColor( tint );
+//            batch.draw( texture, affine );
+//        }
+//        batch.end();
+    }
 
-            batch.setColor( tint );
-            batch.draw( texture, affine );
-        }
+    private void drawButtons() {
+        Texture play = internal.getEntry("play_button", Texture.class);
+        Texture play_hover = internal.getEntry("play_hover", Texture.class);
+        play.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        play_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        float s = constants.getFloat("button.scale") * scale;
+        float pw = play.getWidth() * s;
+        float ph = play.getHeight() * s;
+        float px = width / 2 - pw / 2;
+        float py = constants.getFloat("play.height") * height;
+
+        playBounds = new Rectangle(px, py - ph / 2, pw, ph); // y centered
+
+        SpriteBatch.computeTransform(affine, play.getWidth() / 2f, play.getHeight() / 2f,
+            px + pw / 2, py, 0, s, s);
+
+        batch.draw(play_hovered ? play_hover : play, affine);
+
+        Texture quit = internal.getEntry("quit_button", Texture.class);
+        Texture quit_hover = internal.getEntry("quit_hover", Texture.class);
+        quit.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        quit_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        float qw = quit.getWidth() * s;
+        float qh = quit.getHeight() * s;
+        float qx = width / 2 - qw / 2;
+        float qy = constants.getFloat("quit.height") * height;
+
+        quitBounds = new Rectangle(qx, qy - qh / 2, qw, qh); // y centered
+
+        SpriteBatch.computeTransform(affine, quit.getWidth() / 2f, quit.getHeight() / 2f,
+            qx + qw / 2, qy, 0, s, s);
+
+        batch.draw(quit_hovered ? quit_hover : quit, affine);
         batch.end();
+
+        // DEBUG rectangles
+//        debugRenderer.setProjectionMatrix(camera.combined);
+//        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+//        debugRenderer.setColor(Color.RED);
+//        debugRenderer.rect(playBounds.x, playBounds.y, playBounds.width, playBounds.height);
+//        debugRenderer.setColor(Color.BLUE);
+//        debugRenderer.rect(quitBounds.x, quitBounds.y, quitBounds.width, quitBounds.height);
+//        debugRenderer.end();
+
     }
 
     /**
@@ -414,19 +475,32 @@ public class LoadingMode implements Screen, InputProcessor {
             return true;
         }
 
-        // Flip to match graphics coordinates
-        screenY = height-screenY;
+//        // Flip to match graphics coordinates
+//        screenY = height-screenY;
+//
+//        // Play button is a circle.
+//        float cx = width/2;
+//        float cy = (int)(constants.getFloat( "bar.height" )*height);
+//        float s = constants.getFloat( "button.scale" )*scale;
+//        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
+//        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
+//        if (dist < radius*radius) {
+//            pressState = 1;
+//        }
+//        return false;
 
-        // Play button is a circle.
-        float cx = width/2;
-        float cy = (int)(constants.getFloat( "bar.height" )*height);
-        float s = constants.getFloat( "button.scale" )*scale;
-        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
-        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
-        if (dist < radius*radius) {
-            pressState = 1;
+
+        screenY = height - screenY;
+
+        if (playBounds != null && playBounds.contains(screenX, screenY)) {
+            pressState = 1; // Play pressed
+            return false;
+        } else if (quitBounds != null && quitBounds.contains(screenX, screenY)) {
+            pressState = 3; // Quit pressed (use 3 as new state)
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     /**
@@ -442,7 +516,12 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (pressState == 1) {
+            // Start game
             pressState = 2;
+            return false;
+        } else if (pressState == 3) {
+            // Quit game
+            Gdx.app.exit(); // or any quit logic
             return false;
         }
         return true;
@@ -480,6 +559,14 @@ public class LoadingMode implements Screen, InputProcessor {
         return true;
     }
 
+    private void updateHover(int screenX, int screenY) {
+        screenY = height - screenY;
+
+        play_hovered = playBounds != null && playBounds.contains(screenX, screenY);
+        quit_hovered = quitBounds != null && quitBounds.contains(screenX, screenY);
+    }
+
+
     /**
      * Called when the mouse was moved without any buttons being pressed. (UNSUPPORTED)
      *
@@ -488,6 +575,7 @@ public class LoadingMode implements Screen, InputProcessor {
      * @return whether to hand the event to other listeners.
      */
     public boolean mouseMoved(int screenX, int screenY) {
+        updateHover(screenX, screenY);
         return true;
     }
 

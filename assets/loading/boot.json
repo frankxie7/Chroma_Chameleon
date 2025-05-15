@@ -1,12 +1,16 @@
 {
 	"textures": {
-        "splash": {
+        "background": {
             "file": "loading/homescreen.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
-		"play":     {
-			"file" : "loading/play.png",
+        "play_button": "loading/mainmenubuttons2.png",
+        "play_hover": "loading/mainmenubuttons1.png",
+        "quit_button": "loading/mainmenubuttons4.png",
+        "quit_hover": "loading/mainmenubuttons3.png",
+	"play":     {
+	    "file" : "loading/play.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
 		},
@@ -27,7 +31,9 @@
         "height" : 576,
         "bar.width" : 0.66,
         "bar.height" : 0.25,
-        "button.scale" : 0.75
+        "button.scale" : 1.8,
+        "play.height": 0.5,
+        "quit.height": 0.4,
       }
     }
 }
