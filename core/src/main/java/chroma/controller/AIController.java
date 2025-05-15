@@ -107,7 +107,9 @@ public class AIController {
         this.goals = new ArrayList<>();
         this.goals.addAll(physics.getGoalList());
         this.goalCollisions = new ArrayList<>();
-        goalCollisions.addAll(level.getGoalCollisions());
+        goalCollisions.add(level.getGoalCollisions());
+        goalCollisions.add(level.getGoal2Collisions());
+        goalCollisions.add(level.getGoal3Collisions());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
@@ -163,10 +165,7 @@ public class AIController {
                 return true;
             }
         }
-        for(GoalCollision goal : goalCollisions){
-            if (goal.contains(position))
-                return true;
-            }
+
 
 
         return false;
@@ -775,12 +774,12 @@ public class AIController {
 //        }
 
         // 2. Draw the A* path in yellow
-//        if (lastPath != null) {
-//            shapeRenderer.setColor(Color.YELLOW);
-//            for (Vector2 pathPoint : lastPath) {
-//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
-//            }
-//        }
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+            }
+        }
 //
 //        // 3. Draw the last visible target point on top
 //        if (lastVisible != null) {

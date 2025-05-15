@@ -29,7 +29,7 @@
   },
   "enemies" : {
   "global": {
-    "inner": [0.2, 0.35],
+    "inner": [0.1, 0.25],
     "size": 3.2,
     "drawScale": 0.6,
     "force": 15.0,
