@@ -1,9 +1,12 @@
 
 package chroma.model;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Filter;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.math.PolyTriangulator;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -13,31 +16,44 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
 public class GoalCollision extends ObstacleSprite {
     private Polygon polygon;
     private float units;
-    private Vector2 pos;// physics-to-world scale
+    private Vector2 pos;
+    private TextureRegion notFullTex;
+    private TextureRegion fullTex;
+    private static final float WIDTH = 4f;  // goal width in world units
+    private static final float HEIGHT = 5f;// goal height in world units
+    private boolean complete = false;
 
-    public GoalCollision(float[] points, float units,Vector2 location) {
+    public GoalCollision(Vector2 center, float units, Texture notFull, Texture full) {
         super();
         this.units = units;
 
-        Poly2 poly = new Poly2();
-        PolyTriangulator triangulator = new PolyTriangulator();
-        triangulator.set(points);
-        triangulator.calculate();
-        triangulator.getPolygon(poly);
-        obstacle = new PolygonObstacle(points);
-        obstacle.setBodyType(BodyDef.BodyType.StaticBody);
-        obstacle.setPhysicsUnits(units);
-        obstacle.setSensor(true);
-        obstacle.setUserData(this);
-        obstacle.setName("goal_collision");
-        pos = location;
 
-        // Scale the polygon and create the mesh.
-        poly.scl(units);
-        mesh.set(poly, 16, 16);
+        float halfWidth = WIDTH / 2f;
+        float halfHeight = HEIGHT / 2f;
 
-        // Create a Polygon for point containment checks
-        this.polygon = new Polygon(points);
+        float[] verts = {
+            -halfWidth, -halfHeight,   // bottom-left
+            halfWidth, -halfHeight,   // bottom-right
+            halfWidth,  halfHeight,   // top-right
+            -halfWidth,  halfHeight    // top-left
+        };
+        PolygonObstacle poly = new PolygonObstacle(verts);
+        poly.setBodyType(BodyDef.BodyType.StaticBody);
+        poly.setPhysicsUnits(units);
+        poly.setPosition(center);
+        poly.setUserData(this);
+        poly.setName("goal");
+        Filter filter = new Filter(); filter.groupIndex = -1;
+        poly.setFilterData(filter);
+        this.obstacle = poly;
+
+        // Fix texture scaling
+
+        fullTex = new TextureRegion(full);
+        notFullTex = new TextureRegion(notFull);
+
+        // Scale the polygon and create the mesh
+        mesh.set(-halfWidth, -halfHeight, halfWidth*2, halfHeight*2);
 
     }
 
@@ -46,28 +62,26 @@ public class GoalCollision extends ObstacleSprite {
         return this.polygon;
     }
 
-    public boolean contains(Vector2 point) {
-        if (polygon.contains(point.x, point.y)) {
-            return true;
-        }
-
-        float[] vertices = polygon.getTransformedVertices();
-        int numVertices = vertices.length / 2;
-
-        for (int i = 0; i < numVertices; i++) {
-            int next = (i + 1) % numVertices;
-            float x1 = vertices[i * 2], y1 = vertices[i * 2 + 1];
-            float x2 = vertices[next * 2], y2 = vertices[next * 2 + 1];
-
-            // Check if point is on the right or top edge
-            if ((point.x == x1 && point.y == y1) || (point.x == x2 && point.y == y2)) {
-                return true;
-            }
-            if ((point.x == x1 && point.x == x2 && point.y >= Math.min(y1, y2) && point.y <= Math.max(y1, y2)) ||
-                (point.y == y1 && point.y == y2 && point.x >= Math.min(x1, x2) && point.x <= Math.max(x1, x2))) {
-                return true;
-            }
-        }
-        return false;
+    public void setComplete() {
+        this.complete = true;
     }
+
+    public void draw(SpriteBatch batch) {
+        float px = obstacle.getX() * units;
+        float py = obstacle.getY() * units;
+        float w  = WIDTH * units;
+        float h  = HEIGHT * units;
+        if(complete){
+            batch.draw(fullTex,
+                px - w/2, py - h/2,
+                w, h);
+        }else{
+            batch.draw(notFullTex,
+                px - w/2, py - h/2,
+                w, h);
+        }
+
+    }
+
+
 }

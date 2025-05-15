@@ -293,9 +293,18 @@ public class GameplayController implements Screen {
         for (Collision wall : level.getCollision()) {
             physics.addObject(wall);
         }
-        for(GoalCollision goal : level.getGoalCollisions()){
-            physics.addObject(goal);
+        if(level.getGoalCollisions() != null){
+            physics.addObject(level.getGoalCollisions());
         }
+
+        if(level.getGoal2Collisions() != null){
+            physics.addObject(level.getGoal2Collisions());
+        }
+
+        if(level.getGoal3Collisions() != null){
+            physics.addObject(level.getGoal3Collisions());
+        }
+
 
         for (Grate grates : level.getGrates()) {
             physics.addObject(grates);
@@ -317,6 +326,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
+            physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
             physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
         }
 
@@ -469,17 +479,27 @@ public class GameplayController implements Screen {
             for(Goal g : physics.getGoalList()){
                 g.setComplete();
             }
+            if(level.getGoalCollisions() != null){
+                level.getGoalCollisions().setComplete();
+            }
         }
         if(physics.goals2Full() && !goal2Complete) {
             goal2Complete = true;
             for(Goal g : physics.getGoal2List()){
                 g.setComplete();
             }
+            if(level.getGoal2Collisions() != null){
+                level.getGoal2Collisions().setComplete();
+            }
+
         }
         if(physics.goals3Full() && !goal3Complete){
             goal3Complete = true;
             for(Goal g : physics.getGoal3List()){
                 g.setComplete();
+            }
+            if(level.getGoal3Collisions() != null){
+                level.getGoal3Collisions().setComplete();
             }
         }
         for (Laser laser : level.getLasers()) {
@@ -1005,6 +1025,15 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+//        if (level.getGoalCollisions() != null) {
+//            level.getGoalCollisions().draw(batch);
+//        }
+//        if(level.getGoal2Collisions() != null){
+//            level.getGoal2Collisions().draw(batch);
+//        }
+//        if(level.getGoal3Collisions() != null){
+//            level.getGoal3Collisions().draw(batch);
+//        }
 
         if (level.getWallsNoCover() != null) {
             for (BackgroundTile tile : level.getWallsNoCover()) {
@@ -1021,6 +1050,7 @@ public class GameplayController implements Screen {
         if (level.getGoalDoor() != null) {
             level.getGoalDoor().draw(batch);
         }
+
 
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
@@ -1117,21 +1147,17 @@ public class GameplayController implements Screen {
         }
 
         // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
+
+//        if (level.getGoal2Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal2Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
+//        if (level.getGoal3Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal3Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
         if (level.getWallsTop() != null) {
             for (BackgroundTile tile : level.getWallsTop()) {
                 tile.draw(batch);
@@ -1143,6 +1169,7 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+
 
 //        batch.flush();
 //        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);

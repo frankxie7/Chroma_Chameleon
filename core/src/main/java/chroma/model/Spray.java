@@ -65,7 +65,7 @@ public class Spray extends ObstacleSprite {
             int texSize = 128;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent purple color
-            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
+            Color pinkTranslucent = new Color(1.0f, 0.1f, 0.7f, 1.0f);
             pixmap.setColor(pinkTranslucent);
             pixmap.fill();
             sprayTexture = new Texture(pixmap);

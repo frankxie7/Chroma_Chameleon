@@ -47,6 +47,8 @@
     "tileset":   "shared/tileset.png",
     "vent":   "platform/vent.png",
     "spray": "platform/spray.png",
+    "pinkmachine":"platform/pinkmachine.png",
+    "blackmachine" : "platform/blackmachine.png",
     "tutorialhints_spray": "platform/tutorialhints_spray.png",
     "tutorialhints_walk": "platform/tutorialhints_walk.png",
     "tutorialhints_bomb": "platform/tutorialhints_bomb.png",

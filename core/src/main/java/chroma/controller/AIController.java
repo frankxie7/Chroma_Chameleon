@@ -107,7 +107,9 @@ public class AIController {
         this.goals = new ArrayList<>();
         this.goals.addAll(physics.getGoalList());
         this.goalCollisions = new ArrayList<>();
-        goalCollisions.addAll(level.getGoalCollisions());
+        goalCollisions.add(level.getGoalCollisions());
+        goalCollisions.add(level.getGoal2Collisions());
+        goalCollisions.add(level.getGoal3Collisions());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
@@ -163,10 +165,7 @@ public class AIController {
                 return true;
             }
         }
-        for(GoalCollision goal : goalCollisions){
-            if (goal.contains(position))
-                return true;
-            }
+
 
 
         return false;
