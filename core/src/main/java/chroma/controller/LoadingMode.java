@@ -196,6 +196,7 @@ public class LoadingMode implements Screen, InputProcessor {
         loadingImages = new Texture[13];
         for (int i = 0; i < 13; i++) {
             loadingImages[i] = internal.getEntry("load" + (i + 1), Texture.class);
+            loadingImages[i].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
 
         // No progress so far.
