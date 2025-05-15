@@ -70,6 +70,7 @@
     "level_6" : "constants/level_6.json",
     "level_8" : "constants/level_8.json",
     "alex_level": "constants/alexlevel.json",
+    "alex_level6" : "constants/alexlevel6.json",
     "level_9" : "constants/level_9.json",
     "laser_test" : "constants/laser_test.json"
   },

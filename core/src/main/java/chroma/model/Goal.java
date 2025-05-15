@@ -76,7 +76,7 @@ public class Goal extends ObstacleSprite {
             int texSize = 1;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent pink color if we just got hit
-            Color pinkTranslucent = new Color(1.0f, 0.1f, 0.7f, 1.0f);
+            Color pinkTranslucent = new Color(1.0f, 0.1f, 0.7f, 0.5f);
             pixmap.setColor(pinkTranslucent);
             pixmap.setBlending(Blending.None);
             pixmap.fill();
