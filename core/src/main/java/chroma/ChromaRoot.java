@@ -58,23 +58,9 @@ public class ChromaRoot extends Game implements ScreenListener {
     @Override
     public void create() {
 
-        /* 1 ─── sprite batch for every screen */
+
         batch = new SpriteBatch();
 
-        /* 2 ─── AssetManager that forces Nearest on every Texture             */
-        AssetManager assets = new AssetManager() {
-            @Override
-            public <T> T get(String fileName, Class<T> type, boolean finishLoading) {
-                T obj = super.get(fileName, type, finishLoading);
-                if (obj instanceof Texture) {
-                    ((Texture) obj).setFilter(Texture.TextureFilter.Nearest,
-                        Texture.TextureFilter.Nearest);
-                }
-                return obj;
-            }
-        };
-
-        /* 3 ─── loading screen that queues assets.json with the custom manager */
         loading = new LoadingMode("assets.json", batch, 1);
         loading.setScreenListener(this);
         setScreen(loading);

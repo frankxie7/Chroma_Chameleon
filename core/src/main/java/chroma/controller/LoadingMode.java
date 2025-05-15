@@ -97,6 +97,8 @@ public class LoadingMode implements Screen, InputProcessor {
     public int getBudget() {
         return budget;
     }
+    // LoadingMode.java  (add near the other fields)
+    private boolean filtersSet = false;
 
     /**
      * Sets the budget for the asset loader.
@@ -206,6 +208,15 @@ public class LoadingMode implements Screen, InputProcessor {
             if (progress >= 1.0f) {
                 this.progress = 1.0f;
             }
+        }
+        if (progress >= 1.0f && !filtersSet) {
+            // Make every texture crisp once and for all
+            com.badlogic.gdx.utils.Array<Texture> textures = new com.badlogic.gdx.utils.Array<>();
+            assets.getAll(Texture.class, textures);
+            for (Texture tex : textures) {
+                tex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            }
+            filtersSet = true;   // ensure we only do this once
         }
     }
 

@@ -244,6 +244,8 @@ public class GameplayController implements Screen {
         // Now that everything is ready, build the level, etc.
         // (But we will do the final init after calling resize)
         resize((int) this.width, (int) this.height);
+
+
     }
 
     public void setBaseResolution(int width, int height) {
