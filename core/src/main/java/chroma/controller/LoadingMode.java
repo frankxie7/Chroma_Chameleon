@@ -90,6 +90,14 @@ public class LoadingMode implements Screen, InputProcessor {
     private boolean play_hovered;
     private boolean quit_hovered;
 
+    private boolean loading;
+    private GameplayController[] controllers;
+    /** LevelSelector for backend logic */
+    private LevelSelector levelSelector;
+    private int controllersInitialized = 0;
+    private static final int TOTAL_CONTROLLERS = 18;
+    private Texture[] loadingImages;
+
     private ShapeRenderer debugRenderer = new ShapeRenderer();
 
     /**
@@ -132,6 +140,11 @@ public class LoadingMode implements Screen, InputProcessor {
     public boolean isReady() {
         return pressState == 2;
     }
+
+    /**
+     * Returns the initialized controllers
+     * */
+    public GameplayController[] getControllers() {return controllers;}
 
     /**
      * Returns the asset directory produced by this loading screen
@@ -180,11 +193,17 @@ public class LoadingMode implements Screen, InputProcessor {
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
+        loadingImages = new Texture[13];
+        for (int i = 0; i < 13; i++) {
+            loadingImages[i] = internal.getEntry("load" + (i + 1), Texture.class);
+        }
+
         // No progress so far.
         progress = 0;
         pressState = 0;
         play_hovered = false;
         quit_hovered = false;
+        loading = true;
 
         affine = new Affine2();
         Gdx.input.setInputProcessor( this );
@@ -192,6 +211,8 @@ public class LoadingMode implements Screen, InputProcessor {
         // Start loading the REAL assets
         assets = new AssetDirectory( file );
         assets.loadAssets();
+
+        controllers = new GameplayController[TOTAL_CONTROLLERS];
         active = true;
     }
 
@@ -229,6 +250,22 @@ public class LoadingMode implements Screen, InputProcessor {
             }
             filtersSet = true;   // ensure we only do this once
         }
+
+        // Incrementally initialize controllers
+        if (filtersSet && controllersInitialized < TOTAL_CONTROLLERS) {
+            levelSelector = new LevelSelector(assets);
+            levelSelector.setCurrentLevel(controllersInitialized + 1);
+            controllers[controllersInitialized] = new GameplayController(assets, levelSelector);
+            controllers[controllersInitialized].setScreenListener(listener);  // You'll need to pass the listener in constructor or setter
+            controllers[controllersInitialized].setSpriteBatch(batch);
+            controllers[controllersInitialized].reset();
+            controllersInitialized++;
+        }
+
+        // Mark as finished loading only when all done
+        if (controllersInitialized >= TOTAL_CONTROLLERS) {
+            loading = false;
+        }
     }
 
     /**
@@ -245,12 +282,25 @@ public class LoadingMode implements Screen, InputProcessor {
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        // Height lock the logo
-        Texture bg = internal.getEntry( "background", Texture.class );
-        bg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        batch.draw(bg,0, 0, width, height);
+        if (loading) {
+            // Draw one of the 13 loading images
+            int imageIndex = Math.min(controllersInitialized * 13 / TOTAL_CONTROLLERS, 12);
+            Texture loadingImage = loadingImages[imageIndex];
+            if (loadingImage != null) {
+                batch.draw(loadingImage, 0, 0, width, height);
+            }
+        } else {
+            // Draw the background
+            Texture bg = internal.getEntry( "background", Texture.class );
+            bg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            batch.draw(bg,0, 0, width, height);
 
-        drawButtons();
+            drawButtons();
+        }
+        batch.end();
+
+
+
 
 //        if (progress < 1.0f) {
 //            drawProgress();
@@ -306,7 +356,8 @@ public class LoadingMode implements Screen, InputProcessor {
             qx + qw / 2, qy, 0, s, s);
 
         batch.draw(quit_hovered ? quit_hover : quit, affine);
-        batch.end();
+
+//        batch.end();
 
         // DEBUG rectangles
 //        debugRenderer.setProjectionMatrix(camera.combined);
@@ -521,6 +572,7 @@ public class LoadingMode implements Screen, InputProcessor {
             return false;
         } else if (pressState == 3) {
             // Quit game
+            dispose();
             Gdx.app.exit(); // or any quit logic
             return false;
         }

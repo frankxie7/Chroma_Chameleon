@@ -146,26 +146,37 @@ public class ChromaRoot extends Game implements ScreenListener {
         // Transition from loading → menu
         if (screen == loading) {
             directory = loading.getAssets();
+            controllers = loading.getControllers();
+//            for (int ii = 0; ii < controllers.length; ii++) {
+//                controllers[ii].setScreenListener(this);
+//                controllers[ii].setSpriteBatch(batch);
+//
+////                int w = Gdx.graphics.getWidth();
+////                int h = Gdx.graphics.getHeight();
+////                controllers[ii].resize(w, h);
+//                controllers[ii].reset();
+//
+//            }
             loading.dispose();
             loading = null;
 
 
 
-            controllers = new GameplayController[18];
-            for (int ii = 0; ii < controllers.length; ii++) {
-                levelSelector = new LevelSelector(directory);
-                levelSelector.setCurrentLevel(ii+1);
-                controllers[ii] = new GameplayController(directory, levelSelector);
-                controllers[ii].setScreenListener(this);
-                controllers[ii].setSpriteBatch(batch);
-
-                int w = Gdx.graphics.getWidth();
-                int h = Gdx.graphics.getHeight();
-                controllers[ii].resize(w, h);
-
-                controllers[ii].reset();
-
-            }
+//            controllers = new GameplayController[18];
+//            for (int ii = 0; ii < controllers.length; ii++) {
+//                levelSelector = new LevelSelector(directory);
+//                levelSelector.setCurrentLevel(ii+1);
+//                controllers[ii] = new GameplayController(directory, levelSelector);
+//                controllers[ii].setScreenListener(this);
+//                controllers[ii].setSpriteBatch(batch);
+//
+//                int w = Gdx.graphics.getWidth();
+//                int h = Gdx.graphics.getHeight();
+//                controllers[ii].resize(w, h);
+//
+//                controllers[ii].reset();
+//
+//            }
 
             selecting = new MenuMode("assets.json", batch);
             selecting.setScreenListener(this);
