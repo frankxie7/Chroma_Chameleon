@@ -16,7 +16,7 @@ public class Bomb extends ObstacleSprite {
 
     // For the bomb to appear “in flight” visually
     private static final float GRAVITY = 60f; // tune as needed for arc
-    static final float LIFETIME = 25f;
+    static final float LIFETIME = 20f;
 
     // Random rotation for splatter
     private float splatterRotation = 0f;
@@ -26,6 +26,12 @@ public class Bomb extends ObstacleSprite {
     private Texture flyTex;
     private Texture splatterTex;
     private Sound splatterSound;
+    // Bomb.java  – add near the other constants
+    private static final float FADE_DURATION = 5f;   // seconds to fade out
+    private float fadeClock  = 15f;     // counts from 0 → FADE_DURATION
+    private float alpha      = 1f;
+    private boolean fading   = false;  // start after we “pop”
+
     /**
      * Horizontal velocity in physics units (straight line)
      */
@@ -122,6 +128,18 @@ public class Bomb extends ObstacleSprite {
     @Override
     public void update(float dt) {
         timeAlive += dt;
+        if (!fading && timeAlive >= LIFETIME - FADE_DURATION) {
+            beginFade();                       // will set fading = true, fadeClock = 0
+        }
+        if (fading) {
+            fadeClock += dt;
+            float t = Math.min(fadeClock / FADE_DURATION, 1f); // 0 → 1
+            alpha = 1f - t;            // linear fade-out
+
+            if (fadeClock >= FADE_DURATION) {
+                alpha = 0f;
+            }
+        }
         if (!flying) {
             return;
         }
@@ -138,7 +156,9 @@ public class Bomb extends ObstacleSprite {
             splatterRotation = MathUtils.random(0f, 360f);
 
             splatterSound.play();
+//            beginFade();
         }
+
     }
 
     /**
@@ -178,9 +198,19 @@ public class Bomb extends ObstacleSprite {
         }
         transform.preTranslate(center.x * u, center.y * u);
 
+        Color saved = new Color(batch.getColor());
+
+        // Apply fading alpha; keep existing RGB
+        batch.setColor(saved.r, saved.g, saved.b, alpha);
         batch.setTextureRegion(sprite);
-        batch.drawMesh(mesh, transform, false);
+        batch.drawMesh(mesh, transform, true);
         batch.setTexture(null);
+        batch.setColor(saved);
     }
+    public void beginFade() {
+        fading    = true;
+        fadeClock = 0f;
+    }
+
 }
 

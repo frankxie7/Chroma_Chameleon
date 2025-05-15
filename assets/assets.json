@@ -15,6 +15,8 @@
     "aiming-range": "platform/circle.png",
     "paintBar": "platform/bar.png",
     "paintBar-overlay": "platform/paintbaroverlay.png",
+    "goal_unpainted": "platform/placeholderindicator1.png",
+    "goal_painted": "platform/placeholderindicator2.png",
     "win-screen": "platform/ui_you_wint2.png",
     "lose-screen": "platform/ui_game_ovet2.png",
     "restart" : "platform/Restart.png",
