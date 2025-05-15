@@ -144,7 +144,7 @@ public class GameplayController implements Screen {
     private static final float RANGE_MIN = 5f;
     private static final float RANGE_MAX = 20f;
     private static final float RANGE_GROWTH = 12f;
-    private static final float ZOOM_DEFAULT = 0.45f;
+    private static final float ZOOM_DEFAULT = 0.4f;
     private static final float ZOOM_OUT_MAX = 0.6f;
     private static final float ZOOM_FOCUS = 0.20f;  // tune this until the chameleon fills the view
     private static final float ZOOM_LERP = 5f;
@@ -606,17 +606,20 @@ public class GameplayController implements Screen {
         }
         switch (bombState) {
             case IDLE:
-                if (skillKey && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST )) {
+                if (skillKey && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                     bombState = BombSkillState.READY;
-                    aimRangeCurrent = RANGE_MAX;               // instant full range
-                    targetZoom = ZOOM_OUT_MAX;            // start zoom-out
+                    aimRangeCurrent = RANGE_MAX;
+                    targetZoom = ZOOM_OUT_MAX;
+
+                    player.startBombWindup();          // NEW
                 }
                 break;
 
+
             case READY:
                 if (in.didLeftClick()) {
-                    player.startBombAnimation();   // start fresh
-                    player.pauseBombAnimation();   // freeze at frame‑0
+//                    player.startBombAnimation();   // start fresh
+//                    player.pauseBombAnimation();   // freeze at frame‑0
                     bombState = BombSkillState.PAINTING;
                     startPainting();               // first bomb + first frame
                 } else if (skillKey) {
@@ -687,7 +690,7 @@ public class GameplayController implements Screen {
 //        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
 //        planned.add(bombWorld);
 
-        player.advanceBombFrame(7);         // first frame shown
+//        player.advanceBombFrame(7);         // first frame shown
     }
 
     /**
@@ -711,7 +714,7 @@ public class GameplayController implements Screen {
 
                 lastPlanned.set(clampedScreen);
 
-                player.advanceBombFrame(7);      // one frame per bomb
+//                player.advanceBombFrame(7);      // one frame per bomb
             } else {
                 firePlannedBombs();
             }
@@ -722,7 +725,8 @@ public class GameplayController implements Screen {
      * launch bomb & consume
      */
     private void firePlannedBombs() {
-        player.resumeBombAnimation();   // play the rest of the clip
+        player.startBombShoot();
+//        player.resumeBombAnimation();   // play the rest of the clip
         int n = planned.size;
         if (n == 0) {
             bombState = BombSkillState.IDLE;
@@ -767,9 +771,11 @@ public class GameplayController implements Screen {
                 bombFireTimer = bombFireDelay;
             }
             if (bombQueue.size == 0) {
+                player.startBombWinddown();            // NEW
                 bombState = BombSkillState.COOLDOWN;
                 cooldownTimer = BOMB_COOLDOWN;
             }
+
         }
     }
 
@@ -1059,10 +1065,11 @@ public class GameplayController implements Screen {
                     0);
             }
         }
-        if (levelSelector.getCurrentLevel() == 2) {
-            Texture hintTex = directory.getEntry("tutorialhints2", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            float worldX = 2f * units;
+        batch.flush();
+        if (levelSelector.getCurrentLevel() == 1) {
+            Texture hintTex = directory.getEntry("tutorialhints_walk", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            float worldX = 1f * units;
             float worldY = 10f * units;
 
             batch.draw(hintTex,
@@ -1070,28 +1077,41 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 1) {
-            Texture hintTex = directory.getEntry("tutorialhints3", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        if (levelSelector.getCurrentLevel() == 2) {
+            Texture hintTex = directory.getEntry("tutorialhints_goal", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
-            float worldY = 17f * units;
+            float worldY = 6f * units;
 
             batch.draw(hintTex,
                 worldX, worldY,
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+        if (levelSelector.getCurrentLevel() == 3) {
+            Texture hintTex = directory.getEntry("tutorialhints_spray", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            float worldX = 2f * units;
+            float worldY = 14f * units;
+
+            batch.draw(hintTex,
+                worldX, worldY,
+                hintTex.getWidth(),
+                hintTex.getHeight());
+        }
+
         if (levelSelector.getCurrentLevel() == 4) {
-            Texture hintTex = directory.getEntry("tutorialhints1", Texture.class);
-//            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            Texture hintTex = directory.getEntry("tutorialhints_bomb", Texture.class);
+            hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
-            float worldY = 19f * units;
+            float worldY = 14f * units;
 
             batch.draw(hintTex,
                 worldX, worldY,
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+        batch.flush();
         player.draw(batch);
         batch.end();
         for (AIController aiController : aiControllers) {

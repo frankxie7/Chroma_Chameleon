@@ -150,7 +150,13 @@ public class ChromaRoot extends Game implements ScreenListener {
                 controllers[ii] = new GameplayController(directory, levelSelector);
                 controllers[ii].setScreenListener(this);
                 controllers[ii].setSpriteBatch(batch);
+
+                int w = Gdx.graphics.getWidth();
+                int h = Gdx.graphics.getHeight();
+                controllers[ii].resize(w, h);
+
                 controllers[ii].reset();
+
             }
 
             selecting = new MenuMode("assets.json", batch);

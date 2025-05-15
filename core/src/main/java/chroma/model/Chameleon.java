@@ -92,12 +92,31 @@ public class Chameleon extends ObstacleSprite {
     private TextureRegion currentFrame;
     private Music walkSound;
 
-    private Animation<TextureRegion> bombAnim;
-    private float  bombAnimTime  = 0f;
-    private boolean bombPlaying  = false;
-    private boolean bombPaused = false;
+//    private Animation<TextureRegion> bombAnim;
+//    private float  bombAnimTime  = 0f;
+//    private boolean bombPlaying  = false;
+//    private boolean bombPaused = false;
 
     private float drawScale;
+
+    /* ---------- bomb animations ---------- */
+    private Animation<TextureRegion> bombWindup;
+    private Animation<TextureRegion> bombShoot;
+    private Animation<TextureRegion> bombWinddown;
+
+    private enum BombPhase { NONE, WINDUP, SHOOT, WINDDOWN }
+    private BombPhase bombPhase = BombPhase.NONE;
+    private float bombTime = 0f;
+
+// keep the setters you already have …
+
+    public boolean isBombPlaying() {            // NEW helper for controller
+        return bombPhase != BombPhase.NONE;
+    }
+
+    /** advance the three-phase state machine and pick the video frame */
+
+
     /**
      * Returns the posiiton of the Chameleon
      * @return position the position of the chameleon
@@ -389,6 +408,7 @@ public class Chameleon extends ObstacleSprite {
         }
         InputController input = InputController.getInstance();
 
+        updateBomb(dt);
         // Update player (chameleon) movement based on input
         float hmove = input.getHorizontal();
         float vmove = input.getVertical();
@@ -404,12 +424,15 @@ public class Chameleon extends ObstacleSprite {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
 
-        stepBombAnim(dt);
-        if (bombPlaying) {
-            super.update(dt);
-            return;
+//        stepBombAnim(dt);
+//        if (bombPlaying) {
+//            super.update(dt);
+//            return;
+//        }
+        if (isBombPlaying()) {
+            super.update(dt);           // still step the physics body
+            return;                     // skip walk animation changes
         }
-
         if (hmove > 0) {
             faceRight = true;
             faceUp = false;
@@ -437,24 +460,29 @@ public class Chameleon extends ObstacleSprite {
             faceRight = false;
             lastDirection = Direction.DOWN;
         }
+        /* ---- choose the correct animation bank (normal vs pink) ---- */
+        Animation<TextureRegion> bankIdle     = isHidden() ? pinkIdleAnim     : idleAnim;
+        Animation<TextureRegion> bankWalk     = isHidden() ? pinkWalkAnim     : walkAnim;
+        Animation<TextureRegion> bankUpWalk   = isHidden() ? pinkUpWalkAnim   : upWalkAnim;
+        Animation<TextureRegion> bankDownWalk = isHidden() ? pinkDownWalkAnim : downWalkAnim;
 
         if (hmove == 0 && vmove == 0) {
             // 1) Facing UP? keep original static UP frame
             if (lastDirection == Direction.UP) {
-                currentFrame = upWalkAnim.getKeyFrame(0f, false);
+                currentFrame = bankUpWalk.getKeyFrame(0f, false);
                 animTime = 0f;
                 walkSound.stop();
             }
             // 2) Facing DOWN? keep original static DOWN frame
             else if (lastDirection == Direction.DOWN) {
-                currentFrame = downWalkAnim.getKeyFrame(0f, false);
+                currentFrame = bankDownWalk.getKeyFrame(0f, false);
                 animTime = 0f;
                 walkSound.stop();
             }
             // 3) LEFT or RIGHT (or anything else): play your two‑frame idle loop
             else {
                 animTime += dt;
-                currentFrame = idleAnim.getKeyFrame(animTime, true);
+                currentFrame = bankIdle.getKeyFrame(animTime, true);
                 walkSound.stop();
             }
 
@@ -467,18 +495,18 @@ public class Chameleon extends ObstacleSprite {
             if (Math.abs(vmove) > Math.abs(hmove)) {
                 if (vmove > 0) {
                     obstacle.setAngle(1.57f);
-                    currentFrame = upWalkAnim.getKeyFrame(animTime, true);
+                    currentFrame = bankUpWalk.getKeyFrame(animTime, true);
                 } else {
                     obstacle.setAngle(1.57f);
-                    currentFrame = downWalkAnim.getKeyFrame(animTime, true);
+                    currentFrame = bankDownWalk.getKeyFrame(animTime, true);
                 }
             } else {
-                currentFrame = walkAnim.getKeyFrame(animTime, true);
+                currentFrame = bankWalk.getKeyFrame(animTime, true);
             }
         }
         // Then call the superclass update
         super.update(dt);
-        stepBombAnim(dt);
+//        stepBombAnim(dt);
     }
 
     /**
@@ -585,24 +613,24 @@ public class Chameleon extends ObstacleSprite {
         }
     }
 
-    // ② 公共接口
-    public void setBombAnimation(Animation<TextureRegion> anim){
-        this.bombAnim = anim;
-    }
 
-    private void stepBombAnim(float dt) {
-        if (!bombPlaying || bombAnim == null) { return; }
-        if (!bombPaused) {
-            bombAnimTime += dt;
-        }
-        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
-        if (bombAnim.isAnimationFinished(bombAnimTime)) {
-            bombPlaying  = false;
-            bombAnimTime = 0f;
-            bombPaused   = false;
-            resetToIdleFrame();
-        }
-    }
+//    public void setBombAnimation(Animation<TextureRegion> anim){
+//        this.bombAnim = anim;
+//    }
+//
+//    private void stepBombAnim(float dt) {
+//        if (!bombPlaying || bombAnim == null) { return; }
+//        if (!bombPaused) {
+//            bombAnimTime += dt;
+//        }
+//        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
+//        if (bombAnim.isAnimationFinished(bombAnimTime)) {
+//            bombPlaying  = false;
+//            bombAnimTime = 0f;
+//            bombPaused   = false;
+//            resetToIdleFrame();
+//        }
+//    }
     private void resetToIdleFrame() {
         animTime = 0f;
         switch (lastDirection) {
@@ -617,32 +645,32 @@ public class Chameleon extends ObstacleSprite {
                 break;
         }
     }
-    public void startBombAnimation() {
-        bombPlaying  = true;
-        bombPaused   = false;    // reset pause
-        bombAnimTime = 0f;
-    }
-    public boolean isBombPlaying() {
-        return bombPlaying;
-    }
-    public void pauseBombAnimation() {
-        bombPaused = true;
-    }
-
-    public void resumeBombAnimation() {
-        bombPaused = false;
-    }
-    public void advanceBombFrame(int maxFrame) {
-        if (!bombPlaying || bombAnim == null) return;
-
-        float frameDur   = bombAnim.getFrameDuration();
-        int   currIndex  = (int)(bombAnimTime / frameDur);
-        if (currIndex >= maxFrame) return;                 // already at cap
-
-        bombAnimTime = Math.min(bombAnimTime + frameDur,
-            maxFrame * frameDur);
-        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
-    }
+//    public void startBombAnimation() {
+//        bombPlaying  = true;
+//        bombPaused   = false;    // reset pause
+//        bombAnimTime = 0f;
+//    }
+//    public boolean isBombPlaying() {
+//        return bombPlaying;
+//    }
+//    public void pauseBombAnimation() {
+//        bombPaused = true;
+//    }
+//
+//    public void resumeBombAnimation() {
+//        bombPaused = false;
+//    }
+//    public void advanceBombFrame(int maxFrame) {
+//        if (!bombPlaying || bombAnim == null) return;
+//
+//        float frameDur   = bombAnim.getFrameDuration();
+//        int   currIndex  = (int)(bombAnimTime / frameDur);
+//        if (currIndex >= maxFrame) return;                 // already at cap
+//
+//        bombAnimTime = Math.min(bombAnimTime + frameDur,
+//            maxFrame * frameDur);
+//        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
+//    }
 
     /**
      * Returns the primary fixture associated with this game object.
@@ -686,4 +714,72 @@ public class Chameleon extends ObstacleSprite {
 
     public void setMaxSpeed (float factor) { this.currentMaxSpeed = factor * maxspeed;}
 
+
+
+    public void setBombAnimations(Animation<TextureRegion> wind, Animation<TextureRegion> shoot,
+        Animation<TextureRegion> down) {
+        this.bombWindup   = wind;
+        this.bombShoot    = shoot;
+        this.bombWinddown = down;
+    }
+
+    public void startBombWindup()   { bombPhase = BombPhase.WINDUP;   bombTime = 0; }
+    public void startBombShoot()    { bombPhase = BombPhase.SHOOT;    bombTime = 0; }
+    public void startBombWinddown() { bombPhase = BombPhase.WINDDOWN; bombTime = 0; }
+
+//    public boolean isBombPlaying()  { return bombPhase != BombPhase.NONE; }
+
+    /** advance the three-phase state machine and pick the video frame */
+    private void updateBomb(float dt) {
+        if (bombPhase == BombPhase.NONE) return;
+
+        bombTime += dt;
+
+        switch (bombPhase) {
+            case WINDUP:
+                // stay on the last frame instead of auto-switching
+                if (bombWindup.isAnimationFinished(bombTime)) {
+                    bombTime = bombWindup.getAnimationDuration();   // clamp & freeze
+                }
+                break;
+
+            case SHOOT:
+                if (bombShoot.isAnimationFinished(bombTime)) {
+                    bombPhase = BombPhase.WINDDOWN;
+                    bombTime  = 0f;
+                }
+                break;
+
+            case WINDDOWN:
+                if (bombWinddown.isAnimationFinished(bombTime)) {
+                    bombPhase = BombPhase.NONE;                     // hand control back
+                }
+                break;
+        }
+
+        Animation<TextureRegion> strip =
+            bombPhase == BombPhase.WINDUP   ? bombWindup   :
+                bombPhase == BombPhase.SHOOT    ? bombShoot    :
+                    bombWinddown;
+
+        currentFrame = strip.getKeyFrame(bombTime, false);
+    }
+
+    /* ───────── pink animations (hidden-in-paint) ───────── */
+    private Animation<TextureRegion> pinkIdleAnim, pinkWalkAnim,
+        pinkUpWalkAnim, pinkDownWalkAnim;
+
+    public void setPinkAnimations(Animation<TextureRegion> idle,
+        Animation<TextureRegion> walk,
+        Animation<TextureRegion> up,
+        Animation<TextureRegion> down) {
+        pinkIdleAnim  = idle;
+        pinkWalkAnim  = walk;
+        pinkUpWalkAnim= up;
+        pinkDownWalkAnim = down;
+    }
 }
+
+
+    /* override your ordinary draw() */
+
