@@ -392,9 +392,7 @@ public class Level {
                 Vector2 doorCenter = new Vector2(minX + 2f, minY + 2f);
 
                 Texture ventSheet = directory.getEntry("vent", Texture.class);
-                ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
-                chameleonFallSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
                 TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
@@ -416,19 +414,14 @@ public class Level {
         JsonValue globalCham = globalConstants.get("chameleon");
         JsonValue levelCham = constants.get("chameleon");
         Texture chameleonSheet = directory.getEntry("chameleonSheet", Texture.class);
-        chameleonSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture chameleonUpWalkSheet = directory.getEntry("chameleonUpWalk", Texture.class);
-        chameleonUpWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture chameleonDownWalkSheet = directory.getEntry("chameleonDownWalk", Texture.class);
-        chameleonDownWalkSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture bombSheet = directory.getEntry("chameleonSkillSheet", Texture.class);
-        bombSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Animation<TextureRegion> chameleonAnim = createAnimation(chameleonSheet, 13, 0.07f);
         Animation<TextureRegion> chameleonUpWalkAnim = createAnimation(chameleonUpWalkSheet, 15, 0.07f);
         Animation<TextureRegion> chameleonDownWalkAnim = createAnimation(chameleonDownWalkSheet, 15, 0.07f);
         Animation<TextureRegion> bombAnim = createAnimation(bombSheet, 27, 0.07f);
         Texture chameleonIdleSheet = directory.getEntry("chameleonIdleSheet", Texture.class);
-        chameleonIdleSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Animation<TextureRegion> idleAnim =
             createAnimation(chameleonIdleSheet, 2, 0.25f);
         Music walkSound = directory.getEntry("chameleon_walk", Music.class);
@@ -442,30 +435,22 @@ public class Level {
         if (enemiesData != null) {
 //            Texture enemyTex = directory.getEntry("enemy", Texture.class);
             Texture enemyAlertSheet = directory.getEntry("enemyAlertSheet", Texture.class);
-            enemyAlertSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyAlertAnim = createAnimation(enemyAlertSheet, 13, 0.2f);
             Texture enemyBlueRedSheet = directory.getEntry("enemyBlueRedSheet", Texture.class);
-            enemyBlueRedSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyBlueRedAnim = createAnimation(enemyBlueRedSheet, 8, 0.2f);
             // BLUE
             Texture enemySideSheetBlue = directory.getEntry("enemySideSheetBlue", Texture.class);
-            enemySideSheetBlue.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemySideAnimBlue = createAnimation(enemySideSheetBlue, 8, 0.3f);
             Texture enemyFrontSheetBlue = directory.getEntry("enemyFrontSheetBlue", Texture.class);
-            enemyFrontSheetBlue.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyFrontAnimBlue = createAnimation(enemyFrontSheetBlue, 12, 0.2f);
             Texture enemyBackSheetBlue = directory.getEntry("enemyBackSheetBlue", Texture.class);
-            enemyBackSheetBlue.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyBackAnimBlue = createAnimation(enemyBackSheetBlue, 12, 0.2f);
             // RED
             Texture enemySideSheetRed = directory.getEntry("enemySideSheetRed", Texture.class);
-            enemySideSheetRed.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemySideAnimRed = createAnimation(enemySideSheetRed, 8, 0.15f);
             Texture enemyFrontSheetRed = directory.getEntry("enemyFrontSheetRed", Texture.class);
-            enemyFrontSheetRed.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyFrontAnimRed = createAnimation(enemyFrontSheetRed, 12, 0.1f);
             Texture enemyBackSheetRed = directory.getEntry("enemyBackSheetRed", Texture.class);
-            enemyBackSheetRed.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> enemyBackAnimRed = createAnimation(enemyBackSheetRed, 12, 0.1f);
 
             // Store all animations together
@@ -635,6 +620,9 @@ public class Level {
             }
         }
     }
+
+
+
 
     private JsonValue findLayer(JsonValue mapRoot, String layerName) {
         JsonValue layers = mapRoot.get("layers");

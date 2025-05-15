@@ -33,7 +33,6 @@ public class MenuMode implements Screen, InputProcessor {
 
     private int width, height;
     private float scale;
-    private boolean transitioning = false;
 
     /** Number of buttons */
     private int buttonNum;
@@ -248,9 +247,9 @@ public class MenuMode implements Screen, InputProcessor {
 
         // Draw two arrows
         Texture leftArrow = internal.getEntry("leftArrow", Texture.class);
-        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture rightArrow = internal.getEntry("rightArrow", Texture.class);
-        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture textureLeft = leftPressed ? leftArrow: leftArrow;
         Texture textureRight = rightPressed ? rightArrow : rightArrow;
         float arrScale = constants.getFloat("arrow.scale");
@@ -301,7 +300,6 @@ public class MenuMode implements Screen, InputProcessor {
 
         // We are are ready, notify our listener
         if (isReady() && listener != null) {
-            transitioning = true;
             listener.exitScreen(this, currLevel);
         }
     }
@@ -390,7 +388,6 @@ public class MenuMode implements Screen, InputProcessor {
             if (bounds[i] != null && bounds[i].contains(touch.x, touch.y)) {
                 currLevel = i + 1 + currPage * 9;
                 pressState = 1;
-                transitioning = true;
                 levelSelectedSound.play();
                 menuSong.stop();
                 return false;

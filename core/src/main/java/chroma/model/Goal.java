@@ -127,6 +127,7 @@ public class Goal extends ObstacleSprite {
     public boolean isComplete(){return complete;}
     public float getId(){return id;}
 
+
     public void update(float dt) {
         // Then call the superclass update
         super.update(dt);
@@ -156,4 +157,6 @@ public class Goal extends ObstacleSprite {
         }
         return false;
     }
+
+
 }
