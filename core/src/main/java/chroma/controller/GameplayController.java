@@ -892,16 +892,20 @@ public class GameplayController implements Screen {
     private void drawGoalUI(Texture incompleteIcon, Texture completeIcon) {
         batch.setProjectionMatrix(uiCamera.combined);
 
-        float iconWidthRatio = 0.05f;
-        float iconHeightRatio = 0.09f;
-        float paddingRatio = 0.01f;
+        JsonValue goalUI = constants.get("goalUI");
+
+        float iconWidthRatio = goalUI.getFloat("iconWidth");
+        float aspectRatio = goalUI.getFloat("aspectRatio");
+        float paddingRatio = goalUI.getFloat("paddingX");
+        float posXRatio = goalUI.getFloat("posX");
+        float posYRatio = goalUI.getFloat("posY");
 
         float iconWidth = width * iconWidthRatio;
-        float iconHeight = height * iconHeightRatio;
+        float iconHeight = iconWidth / aspectRatio;
         float padding = width * paddingRatio;
 
-        float startX = padding;
-        float startY = height - iconHeight - padding;
+        float startX = width * posXRatio;
+        float startY = height * posYRatio;
 
         int goalCount = getGoalCount();
 

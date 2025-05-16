@@ -189,5 +189,12 @@
     "posY": 0.1,
     "textRatio": 110,
     "textOffset": 0.01
+  },
+  "goalUI": {
+    "iconWidth": 0.0375,
+    "aspectRatio": 0.84,
+    "posX": 0.01,
+    "posY": 0.9,
+    "paddingX": 0.005
   }
 }
