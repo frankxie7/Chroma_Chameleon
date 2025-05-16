@@ -163,13 +163,13 @@
       "rotateAngle": [0]
     },
     "alex_level8": {
-      "names": ["camera1"],
-      "types": ["CAMERA2"],
-      "patrols": [false],
-      "patrol_paths": [[]],
-      "positions": [[22,11.25]],
-      "startRotation": [270],
-      "rotateAngle": [45]
+      "names": ["camera1","camera2","enemy1"],
+      "types": ["CAMERA2","CAMERA1","GUARD"],
+      "patrols": [false,false,true],
+      "patrol_paths": [[],[],[[28,24],[28,5]]],
+      "positions": [[22,11.25],[22,3],[28,24]],
+      "startRotation": [270,90,0],
+      "rotateAngle": [45,45,0]
     },
     "level_9" : {
         "names": ["enemy1","enemy2","enemy3","enemy4"],
