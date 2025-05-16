@@ -274,7 +274,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;
@@ -306,7 +306,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -446,7 +446,7 @@ public class Level {
                 ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 24, 0.08f);
 
-                TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
+                TextureRegion[] frames = createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
 
                 Animation<TextureRegion> closedAnim = new Animation<>(1f, frames[0]);
                 closedAnim.setPlayMode(Animation.PlayMode.LOOP);
