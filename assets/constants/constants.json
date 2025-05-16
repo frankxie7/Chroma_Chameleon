@@ -194,6 +194,15 @@
         "startRotation": [80, 80,180],
         "rotateAngle": [40, 40,0]
     },
+    "level_13" : {
+      "names": ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5"],
+      "types": ["CAMERA1", "GUARD", "CAMERA2", "GUARD", "GUARD"],
+      "patrols": [false,true,false,true,true],
+      "patrol_paths": [[],[[5,24], [28,24]], [], [[20,12],[30,12],[30,5],[20,5]], [[38,24],[38,8]]],
+      "positions": [[7,20], [18,24], [27,20], [28,8], [36,8]],
+      "startRotation": [230, 180, 270, 180, 180],
+      "rotateAngle": [40, 0, 40, 0, 0]
+    },
     "level_14" : {
         "names": ["enemy1","enemy2","enemy3","enemy4","enemy5","enemy6","enemy7","enemy8","enemy9","enemy10","enemy11"],
         "types": ["CAMERA1","CAMERA1","CAMERA2","CAMERA1","CAMERA1","CAMERA1","CAMERA1","CAMERA1","GUARD","GUARD","GUARD"],

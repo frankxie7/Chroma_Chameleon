@@ -8,6 +8,8 @@ package chroma.controller;
  * Rendering all game objects and UI messages.
  */
 
+import static chroma.model.Level.createAnimation;
+
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -770,14 +772,16 @@ public class GameplayController implements Screen {
                 bombTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture bulletTex = directory.getEntry("platform-bullet", Texture.class);
                 bulletTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+//                Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+                Texture splatterTex = directory.getEntry("bomb_fade", Texture.class);
+                Animation<TextureRegion> fadeAnim   = createAnimation(splatterTex,  12, 0.6f);
                 splatterTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Sound splatterSound = directory.getEntry("bomb", Sound.class);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
                     playerPos, vel, target,
                     bulletTex, splatterTex,
-                    splatterSound);
+                    splatterSound, fadeAnim);
                 bomb.setTexture(bombTex);
                 bomb.getObstacle().setName("bomb");
 
