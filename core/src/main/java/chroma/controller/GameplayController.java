@@ -38,6 +38,7 @@ import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
 
 //import java.awt.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,11 +100,20 @@ public class GameplayController implements Screen {
     private BitmapFont displayFont;
     private TextLayout goodMessage;
     private TextLayout badMessage;
-    private TextLayout goalMessage;
     private Bound retryButton;
     private Bound menuButton;
     private Bound nextButton;
     private Bound resumeButton;
+
+    // Cage for LOSE animation
+    private Texture cageTopTex;
+    private Texture cageBottomTex;
+    private float cageY = 0;
+    private float cageDropSpeed = 600f; // pixels per second (adjust as needed)
+    private boolean cageDropping;
+    private boolean cageDropped;
+    private float cageTime;
+    private float cageDone = 2;
 
     //Single scale factor for world→screen
     private float units;
@@ -123,7 +133,7 @@ public class GameplayController implements Screen {
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
-    Sound enemiesAlertSound;
+    private Sound enemiesAlertSound;
 
     private final Array<Vector2> planned = new Array<>();
     private Vector2 lastPlanned = new Vector2();
@@ -239,7 +249,6 @@ public class GameplayController implements Screen {
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
 
-        goalMessage = new TextLayout();
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
 
@@ -250,6 +259,12 @@ public class GameplayController implements Screen {
         resize((int) this.width, (int) this.height);
 
         animTime = 0;
+
+        cageBottomTex = directory.getEntry("cage-bottom", Texture.class);
+        cageTopTex = directory.getEntry("cage-top", Texture.class);
+        cageTime = 0;
+        cageDropping = false;
+        cageDropped = false;
     }
 
     public void setBaseResolution(int width, int height) {
@@ -263,6 +278,9 @@ public class GameplayController implements Screen {
     public void reset() {
         // Reset game state so overlays disappear
         gameState = GameState.PLAYING;
+        cageTime = 0;
+        cageDropping = false;
+        cageDropped = false;
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -297,9 +315,18 @@ public class GameplayController implements Screen {
         for (Collision wall : level.getCollision()) {
             physics.addObject(wall);
         }
-        for(GoalCollision goal : level.getGoalCollisions()){
-            physics.addObject(goal);
+        if(level.getGoalCollisions() != null){
+            physics.addObject(level.getGoalCollisions());
         }
+
+        if(level.getGoal2Collisions() != null){
+            physics.addObject(level.getGoal2Collisions());
+        }
+
+        if(level.getGoal3Collisions() != null){
+            physics.addObject(level.getGoal3Collisions());
+        }
+
 
         for (Grate grates : level.getGrates()) {
             physics.addObject(grates);
@@ -321,6 +348,7 @@ public class GameplayController implements Screen {
             float y = (rec.getY() / 16) + 0.1f;
             float x = (rec.getX() / 16) + 0.1f;
 
+            physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
             physics.createGoal(new Vector2(x, y), 4, 0.125f, units, constants, 1);
         }
 
@@ -483,17 +511,27 @@ public class GameplayController implements Screen {
             for(Goal g : physics.getGoalList()){
                 g.setComplete();
             }
+            if(level.getGoalCollisions() != null){
+                level.getGoalCollisions().setComplete();
+            }
         }
         if(physics.goals2Full() && !goal2Complete) {
             goal2Complete = true;
             for(Goal g : physics.getGoal2List()){
                 g.setComplete();
             }
+            if(level.getGoal2Collisions() != null){
+                level.getGoal2Collisions().setComplete();
+            }
+
         }
         if(physics.goals3Full() && !goal3Complete){
             goal3Complete = true;
             for(Goal g : physics.getGoal3List()){
                 g.setComplete();
+            }
+            if(level.getGoal3Collisions() != null){
+                level.getGoal3Collisions().setComplete();
             }
         }
         for (Laser laser : level.getLasers()) {
@@ -558,28 +596,28 @@ public class GameplayController implements Screen {
         return new Vector2(bombX, bombY);
     }
 
-//    private Vector2 clampToValidBombArea(Vector2 worldPos) {
-//        int tileX = (int)(worldPos.x);
-//        int tileY = (int)(worldPos.y);
-//
-//        if (level.isTileBombable(tileX, tileY)) {
-//            return worldPos;
-//        }
-//
-//        float closestDist = Float.MAX_VALUE;
-//        Vector2 closest = null;
-//
-//        for (Point p : level.getBombableTiles()) {
-//            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
-//            float dist = tileCenter.dst2(worldPos);
-//            if (dist < closestDist) {
-//                closestDist = dist;
-//                closest = tileCenter;
-//            }
-//        }
-//
-//        return closest != null ? closest : new Vector2(0, 0);
-//    }
+    private Vector2 clampToValidBombArea(Vector2 worldPos) {
+        int tileX = (int)(worldPos.x);
+        int tileY = (int)(worldPos.y);
+
+        if (level.isTileBombable(tileX, tileY)) {
+            return worldPos;
+        }
+
+        float closestDist = Float.MAX_VALUE;
+        Vector2 closest = null;
+
+        for (Point p : level.getBombableTiles()) {
+            Vector2 tileCenter = new Vector2(p.x + 0.5f, p.y + 0.5f);
+            float dist = tileCenter.dst2(worldPos);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = tileCenter;
+            }
+        }
+
+        return closest != null ? closest : new Vector2(0, 0);
+    }
 
     /**
      * Removes a bomb from the physics world.
@@ -684,9 +722,8 @@ public class GameplayController implements Screen {
         player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST );
 
         lastPlanned.set(firstPix);
-        planned.add(firstPix.cpy().scl(1f / units));
-//        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//        planned.add(bombWorld);
+        Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+        planned.add(bombWorld);
 
 //        player.advanceBombFrame(7);         // first frame shown
     }
@@ -699,7 +736,6 @@ public class GameplayController implements Screen {
         Vector3 raw = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(raw);
         Vector2 clampedScreen = clampBombPos(raw, aimRangeCurrent);
-//        Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
 
 
         if (clampedScreen.dst2(lastPlanned) >= STEP_PX * STEP_PX
@@ -707,9 +743,9 @@ public class GameplayController implements Screen {
 
             if (player.hasEnoughPaint(BOMB_SUBSEQUENT_COST)) {
                 player.setPaint(player.getPaint() - BOMB_SUBSEQUENT_COST);
-                planned.add(clampedScreen.cpy().scl(1f / units));
-//                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
-//                planned.add(bombWorld);
+                Vector2 firstPix = clampBombPos(raw, aimRangeCurrent);
+                Vector2 bombWorld = clampToValidBombArea(firstPix.cpy().scl(1f / units));
+                planned.add(bombWorld);
 
                 lastPlanned.set(clampedScreen);
 
@@ -784,6 +820,15 @@ public class GameplayController implements Screen {
      */
     private void postUpdate(float dt) {
         if (gameState == GameState.WON || gameState == GameState.LOST) {
+            if (cageDropping) {
+                float targetY = camera.position.y - cageBottomTex.getHeight() / 3f;
+                cageY -= cageDropSpeed * dt;
+                if (cageY <= targetY) {
+                    cageY = targetY;
+                    cageDropping = false;
+                    cageDropped = true;
+                }
+            }
             return; // Skip updates
         }
 
@@ -798,6 +843,7 @@ public class GameplayController implements Screen {
             setFailure(true);
             physics.resetLaserFlag();
         }
+
         // ——— Win + chameleon fall all in controller ———
             if (!failed && physics.didWin()) {
                     Door door = level.getGoalDoor();
@@ -840,24 +886,23 @@ public class GameplayController implements Screen {
     /**
      * Draw the paint container UI with a solid color fill.
      */
-    private void drawPaintContainer(Texture bar, Texture barOverlay) {
+    private void drawPaintContainer(Texture paintBodyTex, Texture paintTopTex, Texture paintOverlayTex) {
         if (player == null) {
             return;
         }
 
         batch.setProjectionMatrix(uiCamera.combined);
 
-        float heightRatio = constants.get("paintBar").getFloat("height");
-        float widthRatio = constants.get("paintBar").getFloat("width");
-        float posXRatio = constants.get("paintBar").getFloat("posX");
-        float posYRatio = constants.get("paintBar").getFloat("posY");
-        float textRatio = constants.get("paintBar").getFloat("textRatio");
-        float textOffset = constants.get("paintBar").getFloat("textOffset");
+        float heightRatio = constants.get("paintBar").getFloat("bar-height");
+        float widthRatio = constants.get("paintBar").getFloat("bar-width");
+        float posXRatio = constants.get("paintBar").getFloat("bar-posX");
+        float posYRatio = constants.get("paintBar").getFloat("bar-posY");
+        float heightTop = constants.get("paintBar").getFloat("top-height");
+        float widthTop = constants.get("paintBar").getFloat("top-width");
+        float posXTop = constants.get("paintBar").getFloat("top-posX");
         float paintPercent = player.getPaint() / player.getMaxPaint();
         float currentBarHeight = paintPercent * heightRatio;
-
-        batch.draw(barOverlay, width * posXRatio, height * posYRatio, width * widthRatio,
-            height * heightRatio);
+        float currentTopY = posYRatio + currentBarHeight * 0.9f;
 
         if (paintPercent > 0.5f) {
             batch.setColor(Color.WHITE);
@@ -867,16 +912,58 @@ public class GameplayController implements Screen {
             batch.setColor(Color.RED);
         }
 
-        batch.draw(bar, width * posXRatio, height * posYRatio, width * widthRatio,
-            height * currentBarHeight);
+        batch.draw(paintBodyTex, width * posXRatio * 1.01f, height * posYRatio * 1.1f,
+            width * widthRatio * 0.6f, height * currentBarHeight * 0.9f);
 
-        displayFont.getData().setScale(width * widthRatio / textRatio);
-        String paintText = String.format("%.0f%%", paintPercent * 100);
-        batch.drawText(paintText, displayFont, width * posXRatio,
-            height * (posYRatio - textOffset));
+        batch.draw(paintTopTex, width * posXTop * 1.01f, height * currentTopY,
+            width * widthTop * 0.6f, height * heightTop * 0.9f);
 
         batch.setColor(Color.WHITE);
+
+        batch.draw(paintOverlayTex, width * posXRatio, height * posYRatio,
+            width * widthRatio, height * heightRatio);
     }
+
+    private int getGoalCount() {
+        int count = 0;
+        if (!physics.getGoalList().isEmpty()) count++;
+        if (!physics.getGoal2List().isEmpty()) count++;
+        if (!physics.getGoal3List().isEmpty()) count++;
+        return count;
+    }
+
+    private void drawGoalUI(Texture incompleteIcon, Texture completeIcon) {
+        batch.setProjectionMatrix(uiCamera.combined);
+
+        JsonValue goalUI = constants.get("goalUI");
+
+        float iconWidthRatio = goalUI.getFloat("iconWidth");
+        float aspectRatio = goalUI.getFloat("aspectRatio");
+        float paddingRatio = goalUI.getFloat("paddingX");
+        float posXRatio = goalUI.getFloat("posX");
+        float posYRatio = goalUI.getFloat("posY");
+
+        float iconWidth = width * iconWidthRatio;
+        float iconHeight = iconWidth / aspectRatio;
+        float padding = width * paddingRatio;
+
+        float startX = width * posXRatio;
+        float startY = height * posYRatio;
+
+        int goalCount = getGoalCount();
+
+        for (int i = 0; i < goalCount; i++) {
+            Texture icon = incompleteIcon;
+            if (i == 0 && goal1Complete) icon = completeIcon;
+            if (i == 1 && goal2Complete) icon = completeIcon;
+            if (i == 2 && goal3Complete) icon = completeIcon;
+
+            float drawX = startX + i * (iconWidth + padding);
+            batch.draw(icon, drawX, startY, iconWidth, iconHeight);
+        }
+    }
+
+
 
 //    /**
 //     * Debug helper to see all tiles and coordinates labelled in debug view. Uncomment call in
@@ -949,8 +1036,6 @@ public class GameplayController implements Screen {
         float losDrawHeight = losDrawWidth * losRatio;
         batch.draw(losTex, width/2 - losDrawWidth/2, height/2 - losDrawHeight /2, losDrawWidth, losDrawHeight);
 
-//        batch.draw(losTex, 0,0,width,height);
-
         float buttonWidth = resTex.getWidth();
         float buttonHeight = resTex.getHeight();
         float ratio = buttonHeight / buttonWidth;
@@ -991,14 +1076,14 @@ public class GameplayController implements Screen {
         float buttonDrawWidth = width / 6;
         float buttonDrawHeight = buttonDrawWidth * buttonRatio;
 
-        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
-        batch.draw(restartTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
-        batch.draw(resumeTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
+        batch.draw(menTex, width/2 - width/14, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
+        batch.draw(restartTex, width/2 - width/14, height/2 - buttonDrawHeight * 6/2, width/6, width/6 * buttonRatio);
+        batch.draw(resumeTex, width/2 - width/14, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
 
 // Update rectangles to match the drawn texture positions
-        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
-        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
-        resumeButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
+        menuButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight/2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight * 6/2, buttonDrawWidth, buttonDrawHeight);
+        resumeButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight * 3.5f/2, buttonDrawWidth, buttonDrawHeight);
 
 //        drawButton(batch, retryButton);
 //        drawButton(batch, menuButton);
@@ -1022,7 +1107,7 @@ public class GameplayController implements Screen {
         }
 
         batch.flush();
-        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         // Draw all bombs
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("bomb")) {
@@ -1033,13 +1118,22 @@ public class GameplayController implements Screen {
             }
         }
         batch.flush();
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("spray")) {
                 sprite.draw(batch);
             }
         }
+//        if (level.getGoalCollisions() != null) {
+//            level.getGoalCollisions().draw(batch);
+//        }
+//        if(level.getGoal2Collisions() != null){
+//            level.getGoal2Collisions().draw(batch);
+//        }
+//        if(level.getGoal3Collisions() != null){
+//            level.getGoal3Collisions().draw(batch);
+//        }
 
         if (level.getWallsNoCover() != null) {
             for (BackgroundTile tile : level.getWallsNoCover()) {
@@ -1133,8 +1227,28 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+
+        if (failed || cageDropping) {
+            float cageWidth = cageBottomTex.getWidth();
+            float cageHeight = cageBottomTex.getHeight();
+            float cageX = camera.position.x - cageBottomTex.getWidth() / 2f;
+
+            // Draw bottom cage part below player
+            batch.draw(cageBottomTex, cageX, cageY, cageWidth, cageHeight);
+        }
+
         batch.flush();
         player.draw(batch);
+
+        if (failed || cageDropping) {
+            float cageWidth = cageTopTex.getWidth();
+            float cageHeight = cageTopTex.getHeight();
+            float cageX = camera.position.x - cageTopTex.getWidth() / 2f;
+
+            // Draw top cage part dropping from above
+            batch.draw(cageTopTex, cageX, cageY, cageWidth, cageHeight);
+        }
+
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
@@ -1152,21 +1266,17 @@ public class GameplayController implements Screen {
         }
 
         // Draw goal tiles
-        if (level.getGoalTiles() != null) {
-            for (BackgroundTile tile : level.getGoalTiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal2Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal2Tiles()) {
-                tile.draw(batch);
-            }
-        }
-        if (level.getGoal3Tiles() != null) {
-            for (BackgroundTile tile : level.getGoal3Tiles()) {
-                tile.draw(batch);
-            }
-        }
+
+//        if (level.getGoal2Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal2Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
+//        if (level.getGoal3Tiles() != null) {
+//            for (BackgroundTile tile : level.getGoal3Tiles()) {
+//                tile.draw(batch);
+//            }
+//        }
         if (level.getWallsTop() != null) {
             for (BackgroundTile tile : level.getWallsTop()) {
                 tile.draw(batch);
@@ -1178,6 +1288,12 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+        if (level.getLights() != null) {
+            for (BackgroundTile tile : level.getLights()) {
+                tile.draw(batch);
+            }
+        }
+
 
 //        batch.flush();
 //        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -1247,15 +1363,15 @@ public class GameplayController implements Screen {
         }
 
         // Draw the paint container (UI) after objects
-        Texture barTex = directory.getEntry("paintBar", Texture.class);
-        Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
+        Texture paintBodyTex = directory.getEntry("paint-body", Texture.class);
+        Texture paintTopTex = directory.getEntry("paint-top", Texture.class);
+        Texture paintOverlayTex = directory.getEntry("paint-overlay", Texture.class);
 //        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 //        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        drawPaintContainer(barTex, barOverlayTex);
+        drawPaintContainer(paintBodyTex, paintTopTex, paintOverlayTex);
 
         Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
         Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
-        Texture pauseTexture = directory.getEntry("pause-screen", Texture.class);
         Texture restartTex = directory.getEntry("restart", Texture.class);
         Texture menuTex = directory.getEntry("menu", Texture.class);
         Texture nextlabTex = directory.getEntry("next-lab", Texture.class);
@@ -1266,14 +1382,17 @@ public class GameplayController implements Screen {
         Texture pauseSheet = directory.getEntry("pause-screen", Texture.class);
         pauseSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 10, 3f);
-        animTime += dt;
+        animTime += dt/2;
         TextureRegion pauseFrame = pauseAnim.getKeyFrame(animTime, false);
 
         if (gameState == GameState.WON) {
             drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
         } else if (gameState == GameState.LOST) {
             // only pop up the lose UI once we've zoomed all the way in
-            if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
+            if (cageDropped) {
+                cageTime += dt/8;
+            }
+            if (Math.abs(cameraZoom - targetZoom) < 0.01f && cageTime >= cageDone) {
                 drawLoseScreen(youLoseTexture, restartTex, menuTex);
             }
         } else if (gameState == GameState.PAUSED) {
@@ -1317,16 +1436,10 @@ public class GameplayController implements Screen {
             pct = 100;
         }
 
-// update the TextLayout
-        goalMessage.setText(String.format("Goal Painted: %.0f%%", pct));
-        goalMessage.setColor(Color.YELLOW);
-        goalMessage.setAlignment(TextAlign.middleCenter);
-        goalMessage.setFont(displayFont);
+        Texture goalIncompleteIcon = directory.getEntry("goal_unpainted", Texture.class);
+        Texture goalCompleteIcon = directory.getEntry("goal_painted", Texture.class);
+        drawGoalUI(goalIncompleteIcon, goalCompleteIcon);
 
-// draw it at the top center, 20px down from the top
-        batch.drawText(goalMessage, width / 2, height - 20);
-
-        batch.setColor(Color.WHITE);
         batch.end();
     }
 
@@ -1503,6 +1616,8 @@ public class GameplayController implements Screen {
             countdown = EXIT_COUNT;
             // immediately start zooming in on the chameleon
             targetZoom = ZOOM_FOCUS;
+            cageDropping = true;
+            cageY = height;
         }
         failed = value;
         gameState = GameState.LOST;

@@ -119,7 +119,9 @@ public class AIController {
         this.goals = new ArrayList<>();
         this.goals.addAll(physics.getGoalList());
         this.goalCollisions = new ArrayList<>();
-        goalCollisions.addAll(level.getGoalCollisions());
+        goalCollisions.add(level.getGoalCollisions());
+        goalCollisions.add(level.getGoal2Collisions());
+        goalCollisions.add(level.getGoal3Collisions());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
@@ -237,11 +239,7 @@ public class AIController {
                 return true;
             }
         }
-        for(GoalCollision goal : goalCollisions) {
-            if (goal.contains(position)) {
-                return true;
-            }
-        }
+
 
         return false;
     }
@@ -361,7 +359,6 @@ public class AIController {
         private final NavGraph graph;
         private final IndexedAStarPathFinder<NavNode> pathFinder;
         private final EuclideanHeuristic heuristic;
-        private Vector2 lastEnd;
         private NavNode lastStartNode;
         private NavNode lastEndNode;
 
@@ -369,13 +366,11 @@ public class AIController {
             this.graph = graph;
             this.pathFinder = new IndexedAStarPathFinder<>(graph);
             this.heuristic = new EuclideanHeuristic();
-            lastEnd = null;
             lastStartNode = null;
             lastEndNode = null;
         }
 
         public Array<Vector2> findPath(Vector2 start, Vector2 end) {
-            lastEnd = end;
             lastStartNode = graph.getNearestWalkableNode(start);
             lastEndNode = graph.getNearestWalkableNode(end);
 
@@ -463,6 +458,7 @@ public class AIController {
         float vmove = direction.y;
 
         // Apply movement similar to the player
+//        System.out.println(hmove * speed + ", " + vmove * speed);
         enemy.setMovement(hmove * speed);
         enemy.setVerticalMovement(vmove * speed);
     }
@@ -657,7 +653,7 @@ public class AIController {
     NavNode targetNode;
     private void patrolState(float delta, Vector2 enemyPos) {
         int frame = MathUtils.clamp(
-                (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
+            (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
         );
         if (detectionTimer == 0) {
             frame = -1;
@@ -862,14 +858,14 @@ public class AIController {
 //        for (NavNode node : graph.nodes) {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
 //        }
-//
-////         2. Draw the A* path in yellow
-        if (lastPath != null) {
-            shapeRenderer.setColor(Color.YELLOW);
-            for (Vector2 pathPoint : lastPath) {
-                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
-            }
-        }
+
+        // 2. Draw the A* path in yellow
+//        if (lastPath != null) {
+//            shapeRenderer.setColor(Color.YELLOW);
+//            for (Vector2 pathPoint : lastPath) {
+//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+//            }
+//        }
 //
 //        // 3. Draw the last visible target point on top
 //        if (lastVisible != null) {

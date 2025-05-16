@@ -29,7 +29,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -83,6 +85,21 @@ public class LoadingMode implements Screen, InputProcessor {
     /** Whether or not this player mode is still active */
     private boolean active;
 
+    private Rectangle playBounds;
+    private Rectangle quitBounds;
+    private boolean play_hovered;
+    private boolean quit_hovered;
+
+    private boolean loading;
+    private GameplayController[] controllers;
+    /** LevelSelector for backend logic */
+    private LevelSelector levelSelector;
+    private int controllersInitialized = 0;
+    private static final int TOTAL_CONTROLLERS = 18;
+    private Texture[] loadingImages;
+
+    private ShapeRenderer debugRenderer = new ShapeRenderer();
+
     /**
      * Returns the budget for the asset loader.
      *
@@ -107,7 +124,7 @@ public class LoadingMode implements Screen, InputProcessor {
      * animation frame. This allows you to do something other than load assets.
      * An animation frame is ~16 milliseconds. So if the budget is 10, you have
      * 6 milliseconds to do something else. This is how game companies animate
-     * their loading screens.
+     * their loadingscreens.
      *
      * @param millis the budget in milliseconds
      */
@@ -123,6 +140,11 @@ public class LoadingMode implements Screen, InputProcessor {
     public boolean isReady() {
         return pressState == 2;
     }
+
+    /**
+     * Returns the initialized controllers
+     * */
+    public GameplayController[] getControllers() {return controllers;}
 
     /**
      * Returns the asset directory produced by this loading screen
@@ -171,9 +193,18 @@ public class LoadingMode implements Screen, InputProcessor {
         constants = internal.getEntry( "constants", JsonValue.class );
         resize(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
+        loadingImages = new Texture[13];
+        for (int i = 0; i < 13; i++) {
+            loadingImages[i] = internal.getEntry("load" + (i + 1), Texture.class);
+            loadingImages[i].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        }
+
         // No progress so far.
         progress = 0;
         pressState = 0;
+        play_hovered = false;
+        quit_hovered = false;
+        loading = true;
 
         affine = new Affine2();
         Gdx.input.setInputProcessor( this );
@@ -181,6 +212,8 @@ public class LoadingMode implements Screen, InputProcessor {
         // Start loading the REAL assets
         assets = new AssetDirectory( file );
         assets.loadAssets();
+
+        controllers = new GameplayController[TOTAL_CONTROLLERS];
         active = true;
     }
 
@@ -218,6 +251,22 @@ public class LoadingMode implements Screen, InputProcessor {
             }
             filtersSet = true;   // ensure we only do this once
         }
+
+        // Incrementally initialize controllers
+        if (filtersSet && controllersInitialized < TOTAL_CONTROLLERS) {
+            levelSelector = new LevelSelector(assets);
+            levelSelector.setCurrentLevel(controllersInitialized + 1);
+            controllers[controllersInitialized] = new GameplayController(assets, levelSelector);
+            controllers[controllersInitialized].setScreenListener(listener);  // You'll need to pass the listener in constructor or setter
+            controllers[controllersInitialized].setSpriteBatch(batch);
+            controllers[controllersInitialized].reset();
+            controllersInitialized++;
+        }
+
+        // Mark as finished loading only when all done
+        if (controllersInitialized >= TOTAL_CONTROLLERS) {
+            loading = false;
+        }
     }
 
     /**
@@ -229,33 +278,91 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     private void draw() {
         // Cornell colors
-        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f  );
+//        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f  );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        // Height lock the logo
-        Texture texture = internal.getEntry( "splash", Texture.class );
-        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        batch.draw(texture,(width-height)/2, 0, height, height);
-
-        if (progress < 1.0f) {
-            drawProgress();
+        if (loading) {
+            // Draw one of the 13 loading images
+            int imageIndex = Math.min(controllersInitialized * 13 / TOTAL_CONTROLLERS, 12);
+            Texture loadingImage = loadingImages[imageIndex];
+            if (loadingImage != null) {
+                batch.draw(loadingImage, 0, 0, width, height);
+            }
+            batch.end();
         } else {
-            float cx = width/2;
-            float cy = (int)(constants.getFloat( "bar.height" )*height);
-            float s = constants.getFloat("button.scale")*scale;
-            Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-            texture = internal.getEntry("play",Texture.class);
-            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            // Draw the background
+            Texture bg = internal.getEntry( "background", Texture.class );
+            bg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            batch.draw(bg,0, 0, width, height);
 
-            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-                cx, cy, 0, s, s );
-
-            batch.setColor( tint );
-            batch.draw( texture, affine );
+            drawButtons();
         }
+
+    }
+
+    private void drawButtons() {
+        Texture play = internal.getEntry("play_button", Texture.class);
+        Texture play_hover = internal.getEntry("play_hover", Texture.class);
+        play.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        play_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture playbg = internal.getEntry("play_button_bg", Texture.class);
+        Texture playhbg = internal.getEntry("play_hover_bg", Texture.class);
+        playbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        playhbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        float s = constants.getFloat("button.scale") * scale;
+        float pw = play.getWidth() * s;
+        float ph = play.getHeight() * s;
+        float px = width / 2 - pw / 2;
+        float py = constants.getFloat("play.height") * height;
+
+        playBounds = new Rectangle(px, py - ph / 2, pw, ph); // y centered
+
+        SpriteBatch.computeTransform(affine, play.getWidth() / 2f, play.getHeight() / 2f,
+            px + pw / 2, py, 0, s, s);
+        batch.draw(play_hovered ? play_hover : play, affine);
+
+        SpriteBatch.computeTransform(affine, playbg.getWidth() / 2f, playbg.getHeight() / 2f,
+            px + pw / 2, py, 0, s, s);
+        batch.draw(play_hovered ? playhbg: playbg, affine);
+
+        Texture quit = internal.getEntry("quit_button", Texture.class);
+        Texture quit_hover = internal.getEntry("quit_hover", Texture.class);
+        quit.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        quit_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture quitbg = internal.getEntry("quit_button_bg", Texture.class);
+        Texture quithbg = internal.getEntry("quit_hover_bg", Texture.class);
+        playbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        playhbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        float qw = quit.getWidth() * s;
+        float qh = quit.getHeight() * s;
+        float qx = width / 2 - qw / 2;
+        float qy = constants.getFloat("quit.height") * height;
+
+        quitBounds = new Rectangle(qx, qy - qh / 2, qw, qh); // y centered
+
+        SpriteBatch.computeTransform(affine, quit.getWidth() / 2f, quit.getHeight() / 2f,
+            qx + qw / 2, qy, 0, s, s);
+        batch.draw(quit_hovered ? quit_hover : quit, affine);
+
+        SpriteBatch.computeTransform(affine, quitbg.getWidth() / 2f, quitbg.getHeight() / 2f,
+            qx + qw / 2, qy, 0, s, s);
+        batch.draw(quit_hovered ? quithbg: quitbg, affine);
+
         batch.end();
+
+        // DEBUG rectangles
+//        debugRenderer.setProjectionMatrix(camera.combined);
+//        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
+//        debugRenderer.setColor(Color.RED);
+//        debugRenderer.rect(playBounds.x, playBounds.y, playBounds.width, playBounds.height);
+//        debugRenderer.setColor(Color.BLUE);
+//        debugRenderer.rect(quitBounds.x, quitBounds.y, quitBounds.width, quitBounds.height);
+//        debugRenderer.end();
+
     }
 
     /**
@@ -414,19 +521,32 @@ public class LoadingMode implements Screen, InputProcessor {
             return true;
         }
 
-        // Flip to match graphics coordinates
-        screenY = height-screenY;
+//        // Flip to match graphics coordinates
+//        screenY = height-screenY;
+//
+//        // Play button is a circle.
+//        float cx = width/2;
+//        float cy = (int)(constants.getFloat( "bar.height" )*height);
+//        float s = constants.getFloat( "button.scale" )*scale;
+//        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
+//        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
+//        if (dist < radius*radius) {
+//            pressState = 1;
+//        }
+//        return false;
 
-        // Play button is a circle.
-        float cx = width/2;
-        float cy = (int)(constants.getFloat( "bar.height" )*height);
-        float s = constants.getFloat( "button.scale" )*scale;
-        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
-        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
-        if (dist < radius*radius) {
-            pressState = 1;
+
+        screenY = height - screenY;
+
+        if (playBounds != null && playBounds.contains(screenX, screenY)) {
+            pressState = 1; // Play pressed
+            return false;
+        } else if (quitBounds != null && quitBounds.contains(screenX, screenY)) {
+            pressState = 3; // Quit pressed (use 3 as new state)
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     /**
@@ -442,7 +562,13 @@ public class LoadingMode implements Screen, InputProcessor {
      */
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (pressState == 1) {
+            // Start game
             pressState = 2;
+            return false;
+        } else if (pressState == 3) {
+            // Quit game
+            dispose();
+            Gdx.app.exit(); // or any quit logic
             return false;
         }
         return true;
@@ -480,6 +606,14 @@ public class LoadingMode implements Screen, InputProcessor {
         return true;
     }
 
+    private void updateHover(int screenX, int screenY) {
+        screenY = height - screenY;
+
+        play_hovered = playBounds != null && playBounds.contains(screenX, screenY);
+        quit_hovered = quitBounds != null && quitBounds.contains(screenX, screenY);
+    }
+
+
     /**
      * Called when the mouse was moved without any buttons being pressed. (UNSUPPORTED)
      *
@@ -488,6 +622,7 @@ public class LoadingMode implements Screen, InputProcessor {
      * @return whether to hand the event to other listeners.
      */
     public boolean mouseMoved(int screenX, int screenY) {
+        updateHover(screenX, screenY);
         return true;
     }
 

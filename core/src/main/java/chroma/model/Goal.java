@@ -2,6 +2,7 @@ package chroma.model;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Blending;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
@@ -75,10 +76,12 @@ public class Goal extends ObstacleSprite {
             int texSize = 1;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a translucent pink color if we just got hit
-            Color pinkTranslucent = new Color(1.0f, 0.4f, 0.7f, 0.7f);
+            Color pinkTranslucent = new Color(1.0f, 0.1f, 0.7f, 0.5f);
             pixmap.setColor(pinkTranslucent);
+            pixmap.setBlending(Blending.None);
             pixmap.fill();
             sprayTextureFull = new Texture(pixmap,true);
+
             sprayTextureFull.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             sprayTextureFull.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
             pixmap.dispose();
@@ -87,7 +90,7 @@ public class Goal extends ObstacleSprite {
             int texSize = 256;
             Pixmap pixmap = new Pixmap(texSize, texSize, Pixmap.Format.RGBA8888);
             // Fill with a green if the goal region we are apart of is full
-            Color purpleTranslucent = new Color(1.0f, 1.0f, 0.0f, 0.4f);
+            Color purpleTranslucent = new Color(1.0f, 1.0f, 0.0f, 0.0f);
             pixmap.setColor(purpleTranslucent);
             pixmap.fill();
             sprayTextureComplete = new Texture(pixmap,true);

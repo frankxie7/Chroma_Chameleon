@@ -170,25 +170,15 @@ public class MenuMode implements Screen, InputProcessor {
      */
     private void draw() {
         // Background colors
-        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f );
+//        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
         // Draw background
         Texture background = internal.getEntry("background", Texture.class);
-
-        // Get the width and height of the texture
-        int bgWidth = background.getWidth();
-        int bgHeight = background.getHeight();
-        // Calculate scale to fill the screen as much as possible while keeping aspect ratio
-        float bgScale = Math.min((float) width / bgWidth, (float) height / bgHeight);
-
-        // Compute the position to center the image on the screen
-        float w = (width - bgWidth * bgScale) / 2f;
-        float h = (height - bgHeight * bgScale) / 2f;
-        // Draw the texture centered on the screen
-        batch.draw(background, w, h, bgWidth * bgScale,  bgHeight * bgScale) ;
+        background.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        batch.draw(background, 0, 0, width,  height) ;
 
         // Draw buttons
         int numCols = constants.getInt("numCols");
@@ -197,12 +187,6 @@ public class MenuMode implements Screen, InputProcessor {
         float buttonScale = constants.getFloat("button.scale") ;
         float boundScale = constants.getFloat("bound.scale") ;
 
-//        float panelX = width * 0.33f;
-//        float panelY = height * 0.06f;
-//        float panelWidth = width * 0.32f;
-//        float panelHeight = height * 0.55f;
-//        float hSpacing = (panelWidth - numCols * buttonSize) / (numCols + 1); // horizontal spacing
-//        float vSpacing = (panelHeight - numRows * buttonSize) / (numRows + 1); // vertical spacing
         Texture button = buttonTexs1[0];
         float buttonHeight = button.getHeight() * scale * buttonScale;
         float buttonWidth = button.getWidth() * scale * buttonScale;
@@ -227,9 +211,6 @@ public class MenuMode implements Screen, InputProcessor {
             int row = i / numCols;
             int col = i % numCols;
 
-//            float x = panelX + hSpacing + col * (buttonSize + hSpacing);
-//            float y = panelY + panelHeight - (vSpacing + (row + 1) * buttonSize + row * vSpacing);
-
             float x = startX + col * (buttonWidth + hSpacing);
             float y = panelTop - ((row + 1) * vSpacing + row * buttonHeight);
 
@@ -237,20 +218,20 @@ public class MenuMode implements Screen, InputProcessor {
 
             if (currPage == 0) {
                 Texture texture = i == currLevel - 1 ? buttonPressTexs1[currLevel-1]: buttonTexs1[i];
+                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 batch.draw(texture, x, y, buttonWidth, buttonHeight);
             } else {
                 Texture texture = i == currLevel - 10 ? buttonPressTexs2[currLevel-10]: buttonTexs2[i];
+                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 batch.draw(texture, x, y, buttonWidth, buttonHeight);
             }
         }
 
         // Draw two arrows
         Texture leftArrow = internal.getEntry("leftArrow", Texture.class);
-//        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Texture rightArrow = internal.getEntry("rightArrow", Texture.class);
-//        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Texture textureLeft = leftPressed ? leftArrow: leftArrow;
-        Texture textureRight = rightPressed ? rightArrow : rightArrow;
+        rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         float arrScale = constants.getFloat("arrow.scale");
         float arrWidth = leftArrow.getWidth() * scale * arrScale;
         float arrHeight = leftArrow.getHeight() * scale * arrScale;
@@ -259,8 +240,8 @@ public class MenuMode implements Screen, InputProcessor {
         float arrL = bounds[3].x + boundWidth - arrWidth - buttonWidth / 2f - hSpacing;
         float arrR = bounds[5].x + boundWidth + buttonWidth / 2f + hSpacing;
 
-        batch.draw(textureLeft, arrL, arrY, arrWidth, arrHeight);
-        batch.draw(textureRight, arrR, arrY, arrWidth, arrHeight);
+        batch.draw(leftArrow, arrL, arrY, arrWidth, arrHeight);
+        batch.draw(rightArrow, arrR, arrY, arrWidth, arrHeight);
         arrBounds[0] = new Bound(arrL, arrY, arrWidth, arrHeight);
         arrBounds[1] = new Bound(arrR, arrY, arrWidth, arrHeight);
         batch.end();
