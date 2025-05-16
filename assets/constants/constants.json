@@ -68,13 +68,13 @@
       "rotateAngle": [0]
     },
     "level_3_spray" : {
-              "names": ["enemy1","enemy2","enemy3"],
-              "types": ["CAMERA2", "CAMERA2","CAMERA1"],
-              "patrols": [false,false,false],
-              "patrol_paths": [[],[],[]],
-              "positions": [[9,23],[17,23],[13,12]],
-              "startRotation": [270,270,90],
-              "rotateAngle": [45,45,45]
+              "names": ["enemy1","enemy2","enemy3","enemy4"],
+              "types": ["CAMERA2", "CAMERA2","CAMERA1","CAMERA1"],
+              "patrols": [false,false,false,false],
+              "patrol_paths": [[],[],[],[]],
+              "positions": [[9,23.5],[17,23.5],[13,12],[21,12]],
+              "startRotation": [270,270,90,90],
+              "rotateAngle": [45,45,45,45]
             },
     "level_3_bomb": {
       "names": ["enemy1", "enemy2","enemy2","enemy2","enemy2"],
@@ -114,7 +114,7 @@
           "types": ["GUARD", "CAMERA1", "CAMERA2"],
           "patrols": [true, false,false],
           "patrol_paths": [[[9,25],[40,25]],[],[]],
-          "positions": [[40, 25], [19, 14],[20,14]],
+          "positions": [[40, 25], [19, 14],[20,14.5]],
           "startRotation": [90, 80, 270],
           "rotateAngle": [0, 40, 25]
         },
@@ -175,7 +175,16 @@
         "positions": [[7,30.0],[37,34],[32,7],[22,1]],
         "startRotation": [0,0,0,270],
         "rotateAngle": [0,0,0,50]
-      }
+      },
+    "level_grate" : {
+        "names": ["enemy1", "enemy2","enemy3"],
+        "types": ["CAMERA1", "CAMERA1", "GUARD"],
+        "patrols": [false,false,true],
+        "patrol_paths": [[],[],[[4,15],[33,15]]],
+        "positions": [[14, 3],[24,3],[33,16]],
+        "startRotation": [80, 80,180],
+        "rotateAngle": [40, 40,0]
+    }
   },
 
   "bomb": {
@@ -189,5 +198,12 @@
     "posY": 0.1,
     "textRatio": 110,
     "textOffset": 0.01
+  },
+  "goalUI": {
+    "iconWidth": 0.0375,
+    "aspectRatio": 0.84,
+    "posX": 0.01,
+    "posY": 0.9,
+    "paddingX": 0.005
   }
 }
