@@ -1,6 +1,6 @@
 {
   "world" : {
-    "bounds"  : [65,65],
+    "bounds"  : [80,80],
     "gravity" : 0,
     "volume": 0.8
   },
@@ -193,6 +193,15 @@
         "positions": [[14, 3],[24,3],[33,16]],
         "startRotation": [80, 80,180],
         "rotateAngle": [40, 40,0]
+    },
+    "level_14" : {
+        "names": ["enemy1","enemy2","enemy3","enemy4","enemy5","enemy6","enemy7","enemy8","enemy9","enemy10","enemy11"],
+        "types": ["CAMERA1","CAMERA1","CAMERA2","CAMERA1","CAMERA1","CAMERA1","CAMERA1","CAMERA1","GUARD","GUARD","GUARD"],
+        "patrols": [false,false,false,false,false,false,false,false,true,true,true],
+        "patrol_paths": [[],[],[],[],[],[],[],[],[[33,73],[70,73]],[[16,18],[31,18]],[[65,29],[65,47],[78,47],[78,29]]],
+        "positions": [[14, 60],[24,46],[49,25.5],[60,15],[25, 55],[25,27],[51,55],[51,27],[33,73],[16,18],[65,29]],
+        "startRotation": [0,180,270,90,315,45,225,135,180,0,0],
+        "rotateAngle": [40,40,40,40,40,40,40,40,0,0,0]
     }
   },
 
