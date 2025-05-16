@@ -1,6 +1,7 @@
 package chroma.model;
 
 import chroma.controller.InputController;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -558,6 +559,10 @@ public class Chameleon extends ObstacleSprite {
                 currentFrame.flip(true, false);
             }
         }
+//        Vector2 p = getPosition();
+//        float worldPx = p.x * 16f;
+//        float worldPy = p.y * 16f;
+//        Gdx.app.log("SprayDebug", "Player = (" + worldPx + ", " + worldPy + ")");
         batch.draw(currentFrame,
             px - drawWidth / 2,
             py - drawHeight / 2,

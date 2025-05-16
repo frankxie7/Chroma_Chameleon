@@ -187,6 +187,7 @@ public class Level {
                 goal.getObstacle().setName("goal");
                 goalCollisions = goal;
 
+//                bombableTiles.add(new Point(tx,ty));
             }
         }
         JsonValue goal2TileLayer = findLayer(constants, "goal2");
