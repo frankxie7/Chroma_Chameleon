@@ -48,6 +48,7 @@ public class GameplayController implements Screen {
 
     public enum GameState {
         PLAYING,
+        PAUSED,
         WON,
         LOST
     }
@@ -104,6 +105,7 @@ public class GameplayController implements Screen {
     private Bound retryButton;
     private Bound menuButton;
     private Bound nextButton;
+    private Bound resumeButton;
 
     //Single scale factor for world→screen
     private float units;
@@ -137,6 +139,7 @@ public class GameplayController implements Screen {
     private float bombFireDelay = 0.05f;
     private float bombFireTimer = 0f;
 
+    private float animTime;
 
     private static final float RANGE_MIN = 5f;
     private static final float RANGE_MAX = 20f;
@@ -172,7 +175,7 @@ public class GameplayController implements Screen {
         this.worldHeight = worldConf.get("bounds").getFloat(1);
         float gravityY = worldConf.getFloat("gravity", -10f);
 
-        System.out.println(levelSelector.getCurrentLevel());
+//        System.out.println(levelSelector.getCurrentLevel());
 
         // For converting input coordinates
         scale = new Vector2();
@@ -247,7 +250,7 @@ public class GameplayController implements Screen {
         // (But we will do the final init after calling resize)
         resize((int) this.width, (int) this.height);
 
-
+        animTime = 0;
     }
 
     public void setBaseResolution(int width, int height) {
@@ -381,17 +384,23 @@ public class GameplayController implements Screen {
         if (input.didReset()) {
             reset();
         }
-        if (input.didExit()) {
-            listener.exitScreen(this, EXIT_QUIT);
-            return false;
-        }
+//        if (input.didExit()) {
+//            listener.exitScreen(this, EXIT_QUIT);
+//            return false;
+//        }
         if (input.didMenu()) {
             listener.exitScreen(this, EXIT_MAP);
             return false;
         }
-//        if (input.didExit()) {
-//            return false;
-//        }
+        if (gameState == GameState.PAUSED) {
+            if (input.didPause()) {
+                gameState = GameState.PLAYING;
+            }
+            return true;
+        } else if (gameState == GameState.PLAYING && input.didPause()) {
+            gameState = GameState.PAUSED;
+            return false;
+        }
 
         // Handle the countdown for victory/failure
 //        if (countdown > 0) {
@@ -428,9 +437,11 @@ public class GameplayController implements Screen {
         }
 
         InputController input = InputController.getInstance();
-        boolean allowSpray = bombState == BombSkillState.IDLE || bombState == BombSkillState.COOLDOWN;
-        player.setShooting(allowSpray && input.didLeftClick());
-        player.updateOrientation();
+        if (gameState == GameState.PLAYING) {
+            boolean allowSpray = bombState == BombSkillState.IDLE || bombState == BombSkillState.COOLDOWN;
+            player.setShooting(allowSpray && input.didLeftClick());
+            player.updateOrientation();
+        }
 
         // Update AI enemies
         boolean anyChasing = false;
@@ -465,8 +476,10 @@ public class GameplayController implements Screen {
 
         globalChase = anyChasing;
 
-        // Update the state of aiming
-        player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST ));
+        if (gameState == GameState.PLAYING) {
+            // Update the state of aiming
+            player.setAiming(input.didAim() && player.hasEnoughPaint(BOMB_SUBSEQUENT_COST));
+        }
         for (Bomb b : level.getBombs()) {
             b.update(dt);
             // If you want to check collisions or do "landing" logic, do it here:
@@ -897,16 +910,20 @@ public class GameplayController implements Screen {
     private void drawGoalUI(Texture incompleteIcon, Texture completeIcon) {
         batch.setProjectionMatrix(uiCamera.combined);
 
-        float iconWidthRatio = 0.05f;
-        float iconHeightRatio = 0.09f;
-        float paddingRatio = 0.01f;
+        JsonValue goalUI = constants.get("goalUI");
+
+        float iconWidthRatio = goalUI.getFloat("iconWidth");
+        float aspectRatio = goalUI.getFloat("aspectRatio");
+        float paddingRatio = goalUI.getFloat("paddingX");
+        float posXRatio = goalUI.getFloat("posX");
+        float posYRatio = goalUI.getFloat("posY");
 
         float iconWidth = width * iconWidthRatio;
-        float iconHeight = height * iconHeightRatio;
+        float iconHeight = iconWidth / aspectRatio;
         float padding = width * paddingRatio;
 
-        float startX = padding;
-        float startY = height - iconHeight - padding;
+        float startX = width * posXRatio;
+        float startY = height * posYRatio;
 
         int goalCount = getGoalCount();
 
@@ -970,15 +987,11 @@ public class GameplayController implements Screen {
         batch.draw(nexTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
         batch.draw(resTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
 
-
-
-
 // Update rectangles to match the drawn texture positions
         menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
         nextButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
         retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
 
-//
 //        drawButton(batch, retryButton);
 //        drawButton(batch, menuButton);
 //        drawButton(batch, nextButton);
@@ -1013,20 +1026,45 @@ public class GameplayController implements Screen {
         menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
         retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.3f / 2, buttonDrawWidth, buttonDrawHeight);
 
-
 //        drawButton(batch, retryButton);
 //        drawButton(batch, menuButton);
     }
 
-    private void drawButton(SpriteBatch batch, Bound rect) {
-        // Optional: Draw button background (replace with your own texture if available)
-        shapeRenderer.setProjectionMatrix(uiCamera.combined);
-        batch.end();
-        shapeRenderer.begin(ShapeType.Line);
-        shapeRenderer.setColor(Color.YELLOW);
-        shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
-        shapeRenderer.end();
-        batch.begin();
+    /**
+     * Draws the Pause screen UI.
+     */
+    private void drawPauseScreen(TextureRegion pauseTex, Texture restartTex, Texture menTex, Texture resumeTex) {
+        batch.setColor(Color.WHITE); // Just in case you changed it elsewhere
+//        batch.setProjectionMatrix(uiCamera.combined);
+        float pauseWid = pauseTex.getRegionWidth();
+        float pauseTexHeight = pauseTex.getRegionHeight();
+        float pauseRatio = pauseTexHeight / pauseWid;
+        float pauseDrawWidth = width * 2/3;
+        float pauseDrawHeight = pauseDrawWidth * pauseRatio;
+        batch.draw(pauseTex, width/2 - pauseDrawWidth/2, height/2 - pauseDrawHeight /2, pauseDrawWidth, pauseDrawHeight);
+//        batch.draw(winTex, 0,0,width,height);
+
+        // Optional: text overlay if needed
+        // batch.drawText(goodMessage, width / 2, height / 2);
+
+        float buttonWidth = restartTex.getWidth();
+        float buttonHeight = restartTex.getHeight();
+        float buttonRatio = buttonHeight / buttonWidth;
+        float buttonDrawWidth = width / 6;
+        float buttonDrawHeight = buttonDrawWidth * buttonRatio;
+
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
+        batch.draw(restartTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
+        batch.draw(resumeTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
+
+// Update rectangles to match the drawn texture positions
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
+        resumeButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
+
+//        drawButton(batch, retryButton);
+//        drawButton(batch, menuButton);
+//        drawButton(batch, nextButton);
     }
 
     /**
@@ -1090,7 +1128,6 @@ public class GameplayController implements Screen {
             level.getGoalDoor().draw(batch);
         }
 
-
         batch.setColor(Color.WHITE);
         batch.setTexture(null);
 
@@ -1133,7 +1170,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 2) {
+        if (levelSelector.getCurrentLevel() == 3) {
             Texture hintTex = directory.getEntry("tutorialhints_goal", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
@@ -1144,7 +1181,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 3) {
+        if (levelSelector.getCurrentLevel() == 2) {
             Texture hintTex = directory.getEntry("tutorialhints_spray", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
@@ -1206,6 +1243,11 @@ public class GameplayController implements Screen {
         for (ObstacleSprite sprite : physics.objects) {
             if (sprite.getName() != null && sprite.getName().equals("goal")) {
                 sprite.draw(batch);
+            }
+        }
+        if (level.getLights() != null) {
+            for (BackgroundTile tile : level.getLights()) {
+                tile.draw(batch);
             }
         }
 
@@ -1286,11 +1328,19 @@ public class GameplayController implements Screen {
 
         Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
         Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
+        Texture pauseTexture = directory.getEntry("pause-screen", Texture.class);
         Texture restartTex = directory.getEntry("restart", Texture.class);
         Texture menuTex = directory.getEntry("menu", Texture.class);
         Texture nextlabTex = directory.getEntry("next-lab", Texture.class);
+        Texture resumeTex = directory.getEntry("resume", Texture.class);
 //        youWinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 //        youLoseTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        Texture pauseSheet = directory.getEntry("pause-screen", Texture.class);
+        pauseSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 10, 3f);
+        animTime += dt;
+        TextureRegion pauseFrame = pauseAnim.getKeyFrame(animTime, false);
 
         if (gameState == GameState.WON) {
             drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
@@ -1299,8 +1349,9 @@ public class GameplayController implements Screen {
             if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
                 drawLoseScreen(youLoseTexture, restartTex, menuTex);
             }
+        } else if (gameState == GameState.PAUSED) {
+            drawPauseScreen(pauseFrame, restartTex, menuTex, resumeTex);
         }
-
 
 //        // UI messages
 //        if (complete && !failed) {
@@ -1412,15 +1463,17 @@ public class GameplayController implements Screen {
         if (gameState != GameState.PLAYING && Gdx.input.justTouched()) {
             Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             uiCamera.unproject(touch); // if you’re using a camera
-            if (retryButton.contains(touch.x, touch.y)) {
+            if (retryButton != null && retryButton.contains(touch.x, touch.y)) {
                 reset();
                 return;
-
-            } else if (menuButton.contains(touch.x, touch.y)) {
+            } else if (menuButton != null && menuButton.contains(touch.x, touch.y)) {
                 listener.exitScreen(this, EXIT_MAP);
                 return;
-            } else if (nextButton != null && nextButton.contains(touch.x, touch.y) && gameState == GameState.WON) {
+            } else if (gameState == GameState.WON && nextButton != null && nextButton.contains(touch.x, touch.y)) {
                 listener.exitScreen(this, EXIT_NEXT);
+                return;
+            } else if (gameState == GameState.PAUSED && resumeButton != null && resumeButton.contains(touch.x, touch.y)) {
+                gameState = GameState.PLAYING;
                 return;
             }
         }

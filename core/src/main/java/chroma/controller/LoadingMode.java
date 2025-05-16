@@ -290,6 +290,7 @@ public class LoadingMode implements Screen, InputProcessor {
             if (loadingImage != null) {
                 batch.draw(loadingImage, 0, 0, width, height);
             }
+            batch.end();
         } else {
             // Draw the background
             Texture bg = internal.getEntry( "background", Texture.class );
@@ -298,28 +299,7 @@ public class LoadingMode implements Screen, InputProcessor {
 
             drawButtons();
         }
-        batch.end();
 
-
-
-
-//        if (progress < 1.0f) {
-//            drawProgress();
-//        } else {
-//            float cx = width/2;
-//            float cy = (int)(constants.getFloat( "bar.height" )*height);
-//            float s = constants.getFloat("button.scale")*scale;
-//            Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-//            texture = internal.getEntry("play",Texture.class);
-//            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-//
-//            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-//                cx, cy, 0, s, s );
-//
-//            batch.setColor( tint );
-//            batch.draw( texture, affine );
-//        }
-//        batch.end();
     }
 
     private void drawButtons() {
@@ -327,6 +307,10 @@ public class LoadingMode implements Screen, InputProcessor {
         Texture play_hover = internal.getEntry("play_hover", Texture.class);
         play.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         play_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture playbg = internal.getEntry("play_button_bg", Texture.class);
+        Texture playhbg = internal.getEntry("play_hover_bg", Texture.class);
+        playbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        playhbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         float s = constants.getFloat("button.scale") * scale;
         float pw = play.getWidth() * s;
@@ -338,13 +322,20 @@ public class LoadingMode implements Screen, InputProcessor {
 
         SpriteBatch.computeTransform(affine, play.getWidth() / 2f, play.getHeight() / 2f,
             px + pw / 2, py, 0, s, s);
-
         batch.draw(play_hovered ? play_hover : play, affine);
+
+        SpriteBatch.computeTransform(affine, playbg.getWidth() / 2f, playbg.getHeight() / 2f,
+            px + pw / 2, py, 0, s, s);
+        batch.draw(play_hovered ? playhbg: playbg, affine);
 
         Texture quit = internal.getEntry("quit_button", Texture.class);
         Texture quit_hover = internal.getEntry("quit_hover", Texture.class);
         quit.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         quit_hover.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Texture quitbg = internal.getEntry("quit_button_bg", Texture.class);
+        Texture quithbg = internal.getEntry("quit_hover_bg", Texture.class);
+        playbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        playhbg.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         float qw = quit.getWidth() * s;
         float qh = quit.getHeight() * s;
@@ -355,10 +346,13 @@ public class LoadingMode implements Screen, InputProcessor {
 
         SpriteBatch.computeTransform(affine, quit.getWidth() / 2f, quit.getHeight() / 2f,
             qx + qw / 2, qy, 0, s, s);
-
         batch.draw(quit_hovered ? quit_hover : quit, affine);
 
-//        batch.end();
+        SpriteBatch.computeTransform(affine, quitbg.getWidth() / 2f, quitbg.getHeight() / 2f,
+            qx + qw / 2, qy, 0, s, s);
+        batch.draw(quit_hovered ? quithbg: quitbg, affine);
+
+        batch.end();
 
         // DEBUG rectangles
 //        debugRenderer.setProjectionMatrix(camera.combined);
