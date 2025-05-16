@@ -57,6 +57,7 @@ public class Level {
     private Map<Integer, TextureRegion> tileRegions;
 
     private static final Set<Integer> GRATE_GIDS = Set.of(
+        419,420,421,422,
         659, 660, 661, 662, 663, 664, 665, 666,
         669,
         697, 698, 699, 700,
@@ -66,8 +67,8 @@ public class Level {
         773, 774, 775, 776, 777, 778,
         779, 780,
         811, 812, 813, 814,
-        929, 930,
-        1117, 1118, 1119, 1120
+        817, 818, 927, 928, 929, 930,855, 856,1079, 1080, 1081, 1082,
+        849, 850, 851, 852, 853,854, 1117, 1118, 1119, 1120
     );
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
