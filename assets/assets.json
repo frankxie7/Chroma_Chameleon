@@ -78,7 +78,8 @@
     "alex_level8" : "constants/alexlevel8.json",
     "level_9" : "constants/level_9.json",
     "level_grate" : "constants/level_grate.json",
-    "laser_test" : "constants/laser_test.json"
+    "laser_test" : "constants/laser_test.json",
+    "level_13" : "constants/level_13.json"
   },
   "sounds" : {
     "bomb" : "audio/Bomb_16bit.wav",
