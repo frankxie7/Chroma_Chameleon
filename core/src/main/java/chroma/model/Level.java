@@ -284,7 +284,6 @@ public class Level {
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;
-                System.out.println("here");// no matching region
                 int tileValue = data.getInt(i);
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
