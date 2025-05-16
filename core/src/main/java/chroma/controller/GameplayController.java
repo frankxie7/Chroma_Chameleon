@@ -1203,6 +1203,11 @@ public class GameplayController implements Screen {
                 sprite.draw(batch);
             }
         }
+        if (level.getLights() != null) {
+            for (BackgroundTile tile : level.getLights()) {
+                tile.draw(batch);
+            }
+        }
 
 
 //        batch.flush();
