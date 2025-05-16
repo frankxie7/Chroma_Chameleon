@@ -1166,7 +1166,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 2) {
+        if (levelSelector.getCurrentLevel() == 3) {
             Texture hintTex = directory.getEntry("tutorialhints_goal", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
@@ -1177,7 +1177,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 3) {
+        if (levelSelector.getCurrentLevel() == 2) {
             Texture hintTex = directory.getEntry("tutorialhints_spray", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
