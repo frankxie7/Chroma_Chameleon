@@ -397,7 +397,7 @@ public class Level {
                 ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
 
-                TextureRegion[] frames = Level.createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
+                TextureRegion[] frames = createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
 
                 Animation<TextureRegion> closedAnim = new Animation<>(1f, frames[0]);
                 closedAnim.setPlayMode(Animation.PlayMode.LOOP);

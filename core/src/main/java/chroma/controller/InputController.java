@@ -61,9 +61,12 @@ public class InputController {
     /** Whether the button to step back worlds was pressed. */
     private boolean prevPressed;
     private boolean prevPrevious;
-    /** Whether the button to step back worlds was pressed. */
+    /** Whether the button to main menu was pressed. */
     private boolean menuPressed;
     private boolean menuPrevious;
+    /** Whether the button to pause was pressed. */
+    private boolean pausePressed;
+    private boolean pausePrevious;
     /** Whether the primary action button was pressed. */
     private boolean primePressed;
     private boolean primePrevious;
@@ -207,12 +210,21 @@ public class InputController {
     }
 
     /**
-     * Returns true if the player wants to go to the previous level.
+     * Returns true if the player wants to go to the main menu.
      *
-     * @return true if the player wants to go to the previous level.
+     * @return true if the player wants to go to the main menu.
      */
     public boolean didMenu() {
         return menuPressed && !menuPrevious;
+    }
+
+    /**
+     * Returns true if the player wants to pause the level.
+     *
+     * @return true if the player wants to pause the level.
+     */
+    public boolean didPause() {
+        return pausePressed && !pausePrevious;
     }
 
     /**
@@ -304,6 +316,7 @@ public class InputController {
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
         menuPrevious = menuPressed;
+        pausePrevious = pausePressed;
         skillPrevious = skillPressed;
         leftPrevious  = leftPressed;
         rightPrevious = rightPressed;
@@ -371,9 +384,10 @@ public class InputController {
         debugPressed = (secondary && debugPressed) || (Gdx.input.isKeyPressed(Input.Keys.F));
         primePressed = (secondary && primePressed) || (Gdx.input.isKeyPressed(Input.Keys.UP));
         secondPressed = (secondary && secondPressed) || (Gdx.input.isKeyPressed(Input.Keys.SPACE));
-        prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
+//        prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         menuPressed = (secondary && menuPressed) || (Gdx.input.isKeyPressed(Input.Keys.M));
+        pausePressed = (secondary && pausePressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
         shiftPressed = (secondary && shiftPressed) || (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT));
         skillPressed = (secondary && skillPressed) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT);

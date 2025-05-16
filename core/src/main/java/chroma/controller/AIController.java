@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Fixture;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
+import com.badlogic.gdx.utils.ObjectMap;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 import java.util.ArrayList;
@@ -85,7 +87,17 @@ public class AIController {
 
     private boolean playerDetected = false;
 
-    private NavGraph graph = new NavGraph();
+    private NavGraph graph;
+    private PathFinder pathFinder;
+    private boolean[][] walkableGrid;
+    private NavNode[][] nodeGrid;
+    private int gridWidth;
+    private int gridHeight;
+    private GraphPath<NavNode> nodePath;
+    private Array<Vector2> path;
+    private Vector2 previousEnd;
+    private float pathRecalcTimer = 0;
+    private final float PATH_RECALC_INTERVAL = 0.2f;
 
     private float scale;
 
@@ -126,7 +138,12 @@ public class AIController {
         blueRedDuration = enemy.getBlueRedAnimation().getAnimationDuration();
 
         // Build navigation graph
+        graph = new NavGraph();
         buildGraph(worldWidth, worldHeight);
+        pathFinder = new PathFinder(graph);  // Now create the pathfinder
+        nodePath = new DefaultGraphPath<>();
+        path = new Array<>();
+        previousEnd = new Vector2();
     }
 
     private void pickNewWanderTarget() {
@@ -137,6 +154,63 @@ public class AIController {
         float x = MathUtils.random(minX, maxX);
         float y = MathUtils.random(minY, maxY);
         target = new Vector2(x, y);
+    }
+
+    private void buildGraph(float worldWidth, float worldHeight) {
+        gridWidth = (int) worldWidth + 1;
+        gridHeight = (int) worldHeight + 1;
+
+        walkableGrid = new boolean[gridWidth][gridHeight];
+        nodeGrid = new NavNode[gridWidth][gridHeight];
+
+        // First pass: determine walkability and create nodes
+        for (int x = 0; x < gridWidth; x++) {
+            for (int y = 0; y < gridHeight; y++) {
+                Vector2 pos = new Vector2(x, y);
+                if (!isBlocked(pos)) {
+                    walkableGrid[x][y] = true;
+                    NavNode node = new NavNode(x, y);
+                    nodeGrid[x][y] = node;
+                    graph.addNode(node);
+                }
+            }
+        }
+
+        // Second pass: connect adjacent nodes
+        for (int x = 0; x < gridWidth; x++) {
+            for (int y = 0; y < gridHeight; y++) {
+                NavNode node = nodeGrid[x][y];
+                if (node != null) {
+                    // Connect 8 directions (optional: limit to 4 if preferred)
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx;
+                            int ny = y + dy;
+
+                            if (inBounds(nx, ny)) {
+                                NavNode neighbor = nodeGrid[nx][ny];
+                                if (neighbor != null && !isLineBlocked(node.position, neighbor.position)) {
+                                    node.addConnection(new NavConnection(node, neighbor));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean inBounds(int x, int y) {
+        return x >= 0 && y >= 0 && x < gridWidth && y < gridHeight;
+    }
+
+    public boolean isWalkable(int x, int y) {
+        return inBounds(x, y) && walkableGrid[x][y];
+    }
+
+    public NavNode getNodeAt(int x, int y) {
+        return inBounds(x, y) ? nodeGrid[x][y] : null;
     }
 
     // Checks if a straight line from start to end is blocked by any wall.
@@ -163,11 +237,11 @@ public class AIController {
                 return true;
             }
         }
-        for(GoalCollision goal : goalCollisions){
-            if (goal.contains(position))
+        for(GoalCollision goal : goalCollisions) {
+            if (goal.contains(position)) {
                 return true;
             }
-
+        }
 
         return false;
     }
@@ -217,11 +291,13 @@ public class AIController {
     }
 
     public class NavGraph implements IndexedGraph<NavNode> {
-        private Array<NavNode> nodes = new Array<>();
+        private final Array<NavNode> nodes = new Array<>();
+        private final ObjectMap<GridPoint2, Array<NavNode>> spatialMap = new ObjectMap<>();
+        private final float cellSize = scale; // or whatever spacing fits your level
 
         @Override
         public int getIndex(NavNode node) {
-            return nodes.indexOf(node, true); // Returns a unique index
+            return nodes.indexOf(node, true);
         }
 
         @Override
@@ -236,71 +312,83 @@ public class AIController {
 
         public void addNode(NavNode node) {
             nodes.add(node);
-        }
+            GridPoint2 cell = new GridPoint2((int)(node.position.x), (int)(node.position.y));
 
-        public Vector2 getNearestWalkableNode(Vector2 point) {
-            NavNode closest = null;
+            Array<NavNode> cellNodes = spatialMap.get(cell);
+            if (cellNodes == null) {
+                cellNodes = new Array<>();
+                spatialMap.put(cell, cellNodes);
+            }
+            cellNodes.add(node);
+        }
+//
+//        private GridPoint2 toCell(Vector2 pos) {
+//            return new GridPoint2((int)(pos.x / cellSize), (int)(pos.y / cellSize));
+//        }
+
+        public NavNode getNearestWalkableNode(Vector2 point) {
+            NavNode closest = new NavNode(point.x, point.y);
             float minDist = Float.MAX_VALUE;
-            for (NavNode node : graph.nodes) {
-                float dist = node.position.dst2(point); // dst2 is faster than dst
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = node;
+            // Check nearby cells (3x3)
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    GridPoint2 neighbor = new GridPoint2((int) (point.x + dx), (int) (point.y + dy));
+                    Array<NavNode> candidates = spatialMap.get(neighbor);
+                    if (candidates == null) continue;
+
+                    for (NavNode node : candidates) {
+                        float dist = node.position.dst2(point);
+                        if (dist < minDist) {
+//                            System.out.println(dist);
+                            minDist = dist;
+                            closest = node;
+                        }
+                    }
                 }
             }
-            return closest != null ? closest.position : point; // Default to original if no match
+            return closest; // Default to original if no match
         }
     }
 
     public class EuclideanHeuristic implements Heuristic<NavNode> {
         @Override
         public float estimate(NavNode node, NavNode endNode) {
-            return node.position.dst(endNode.position);
-        }
-    }
-
-    private void buildGraph(float worldWidth, float worldHeight) {
-        // Create nodes that are not inside obstacles
-        for (float x = 0; x < worldWidth + 1; x++) {
-            for (float y = 0; y < worldHeight + 1; y++) {
-                Vector2 pos = new Vector2(x, y);
-                if (!isBlocked(pos)) {
-                    NavNode node = new NavNode(x, y);
-                    graph.addNode(node);
-                }
-            }
-        }
-
-        Array<NavNode> nodeCopy = new Array<>(graph.nodes);
-
-        // Connect adjacent nodes if no wall is blocking them
-        for (NavNode node : graph.nodes) {
-            for (NavNode other : nodeCopy) {
-                if (!node.equals(other) && node.position.dst2(other.position) < 2f) {
-                    if (!isLineBlocked(node.position, other.position)) {
-                        node.addConnection(new NavConnection(node, other));
-                    }
-                }
-            }
+            return node.position.dst2(endNode.position);
         }
     }
 
     public class PathFinder {
+        private final NavGraph graph;
         private final IndexedAStarPathFinder<NavNode> pathFinder;
-        private final EuclideanHeuristic heuristic = new EuclideanHeuristic();
+        private final EuclideanHeuristic heuristic;
+        private Vector2 lastEnd;
+        private NavNode lastStartNode;
+        private NavNode lastEndNode;
 
         public PathFinder(NavGraph graph) {
+            this.graph = graph;
             this.pathFinder = new IndexedAStarPathFinder<>(graph);
+            this.heuristic = new EuclideanHeuristic();
+            lastEnd = null;
+            lastStartNode = null;
+            lastEndNode = null;
         }
 
         public Array<Vector2> findPath(Vector2 start, Vector2 end) {
-            NavNode startNode = findClosestNode(start);
-            NavNode endNode = findClosestNode(end);
+            lastEnd = end;
+            lastStartNode = graph.getNearestWalkableNode(start);
+            lastEndNode = graph.getNearestWalkableNode(end);
 
-            GraphPath<NavNode> nodePath = new DefaultGraphPath<>();
-            boolean success = pathFinder.searchNodePath(startNode, endNode, heuristic, nodePath);
+            if (lastStartNode == null || lastEndNode == null) {
+                return path;
+            }
 
-            Array<Vector2> path = new Array<>();
+            nodePath.clear();
+
+            boolean success = pathFinder.searchNodePath(lastStartNode, lastEndNode, heuristic, nodePath);
+
+            path.clear();
+
             if (success) {
                 for (NavNode node : nodePath) {
                     path.add(node.position);
@@ -308,63 +396,56 @@ public class AIController {
             }
             return path;
         }
-
-        public NavNode findClosestNode(Vector2 position) {
-            NavNode closest = null;
-            float minDist = Float.MAX_VALUE;
-
-            for (NavNode node : graph.nodes) {
-                float dist = node.position.dst(position);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = node;
-                }
-            }
-            return closest;
-        }
     }
 
     private Vector2 getNextPathPoint(Vector2 start, Vector2 end) {
-        PathFinder pathFinder = new PathFinder(graph);
-        Array<Vector2> path = pathFinder.findPath(start, end);
+        if (previousEnd == null || !previousEnd.equals(end)) {
+            path = pathFinder.findPath(start, end);
+        }
 
-        if (path.size > 0) {
+        if (path.size > 1) {
             lastPath = path; // Store for debugging
             lastGoal = end;
 
-            lastVisible = getFarthestVisiblePoint(start, path);
+//            lastVisible = getFarthestVisiblePoint(start, path);
 
-            return getFarthestVisiblePoint(start, path);
+            return path.get(1);
         }
         return null;
     }
 
-    private Vector2 getFarthestVisiblePoint(Vector2 start, Array<Vector2> path) {
-        Vector2 lastVisible = start;
-        float bodyRadius = enemy.getHeight() / 2;
+//    private Vector2 getFarthestVisiblePoint(Vector2 start, Array<Vector2> path) {
+//        Vector2 lastVisible = start;
+//        float bodyRadius = enemy.getHeight() / 2;
+//
+//        Vector2 currentStart = start.cpy();
+//        for (Vector2 point : path) {
+//            if (isPathClearForBody(currentStart, point, bodyRadius)) {
+//                lastVisible = point;
+//                currentStart = point.cpy();
+//            } else {
+//                break;  // First blocked point — stop here.
+//            }
+//        }
+//        return lastVisible.equals(start) ? null : lastVisible;
+//    }
 
-        for (Vector2 point : path) {
-            // Check if a circle with radius `bodyRadius` can fit along the path
-            if (isPathClearForBody(start, point, bodyRadius)) {
-                lastVisible = point;
-            } else {
-                break;  // First blocked point — stop here.
-            }
-        }
-        return lastVisible.equals(start) ? null : lastVisible;
-    }
-
-    private boolean isPathClearForBody(Vector2 start, Vector2 end, float radius) {
-        Vector2 direction = new Vector2(end).sub(start).nor();
-        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
-
-        Vector2 offset = new Vector2(perpendicular).scl(radius - 0.05f);
-
-        // Perform 3 raycasts: center, left offset, right offset
-        return !isLineBlocked(start, end) &&
-                !isLineBlocked(start.cpy().add(offset), end.cpy().add(offset)) &&
-                !isLineBlocked(start.cpy().sub(offset), end.cpy().sub(offset));
-    }
+//    private boolean isPathClearForBody(Vector2 start, Vector2 end, float radius) {
+//        Vector2 direction = new Vector2(end).sub(start).nor();
+//        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+//        Vector2 offset = perpendicular.scl(radius * scale);
+//
+//        // Perform 3 raycasts: center, left offset, right offset
+//        boolean centerClear = !isLineBlocked(start, end);
+//        boolean leftClear = !isLineBlocked(start.cpy().add(offset), end.cpy().add(offset));
+//        boolean rightClear = !isLineBlocked(start.cpy().sub(offset), end.cpy().sub(offset));
+//
+//        boolean pathClear = centerClear && leftClear && rightClear;
+//
+////        System.out.println(pathClear + ": " + start + " to " + end);
+//
+//        return pathClear;
+//    }
 
     private void moveTowards(Vector2 target, float speed) {
         Vector2 enemyPos = enemy.getPosition();
@@ -372,6 +453,9 @@ public class AIController {
 
         if (direction.len() > 0.1f) { // Prevent division by zero
             direction.nor();
+        } else {
+            // Already close enough or no direction to move
+            direction.setZero();
         }
 
         // Set movement variables like the player
@@ -379,7 +463,6 @@ public class AIController {
         float vmove = direction.y;
 
         // Apply movement similar to the player
-//        System.out.println(hmove * speed + ", " + vmove * speed);
         enemy.setMovement(hmove * speed);
         enemy.setVerticalMovement(vmove * speed);
     }
@@ -398,22 +481,11 @@ public class AIController {
         }
 
         playerDetected = false;
-        boolean isCamera = type == Type.CAMERA1 || type == Type.CAMERA2;
-//        boolean isSweeper = type == Type.SWEEPER;
+//        boolean isCamera = type == Type.CAMERA1 || type == Type.CAMERA2;
         float distanceToPlayer = enemyPos.dst(playerPos);
-        boolean guardInRange = distanceToPlayer <= detectionRange;
-//
-//        // Sweeper does not chase or alert, only patrols and cleans paint
-//        if (isSweeper) {
-//            state = State.PATROL;
-//            cleanNearbyPaint(delta);
-//            patrolState(delta, enemyPos);
-//            enemy.applyForce();
-//            enemy.update(delta);
-//            return;
-//        }
+        boolean enemyInRange = distanceToPlayer <= detectionRange;
 
-        if (!player.isHidden() && (isCamera || guardInRange)) {
+        if (!player.isHidden() && enemyInRange) {
             float angleLooking = enemy.getRotation();
             float halfFOV = (float) Math.toRadians(fov / 2);
             int numRays = 10;
@@ -544,21 +616,23 @@ public class AIController {
         enemy.setBlueRedTime(blueRedTime);
     }
 
+    private Vector2 waypoint;
+
     private void chaseState(float delta, Vector2 enemyPos, Vector2 playerPos) {
         alertTimer = 0;
         enemy.setBlue(false);
         enemy.setAlertAnimationFrame(12);
         enemy.setMaxSpeed(chaseMaxSpeed);
         target = playerPos;
-        if (!isLineBlocked(enemyPos, target)) {
-            moveTowards(target, chaseSpeed);
+        pathRecalcTimer += delta;
+        if (pathRecalcTimer >= PATH_RECALC_INTERVAL) {
+            pathRecalcTimer = 0;
+            waypoint = getNextPathPoint(enemyPos, target);
+        }
+        if (waypoint != null) {
+            moveTowards(waypoint, chaseSpeed);
         } else {
-            Vector2 waypoint = getNextPathPoint(enemyPos, target);
-            if (waypoint != null) {
-                moveTowards(waypoint, chaseSpeed);
-            } else {
-                state = State.ALERT;
-            }
+            state = State.ALERT;
         }
     }
     private void alertState(float delta, Vector2 enemyPos) {
@@ -567,17 +641,20 @@ public class AIController {
         enemy.setAlertAnimationFrame(11);
         enemy.setMaxSpeed(alertMaxSpeed);
         target = player.getLastSeen();
-        if (!isLineBlocked(enemyPos, target)) {
-            moveTowards(target, chaseSpeed);
+        pathRecalcTimer += delta;
+        if (pathRecalcTimer >= PATH_RECALC_INTERVAL) {
+            pathRecalcTimer = 0;
+            waypoint = getNextPathPoint(enemyPos, target);
+        }
+        if (waypoint != null) {
+            moveTowards(waypoint, chaseSpeed);
         } else {
-            Vector2 waypoint = getNextPathPoint(enemyPos, target);
-            if (waypoint != null) {
-                moveTowards(waypoint, chaseSpeed);
-            } else {
-                state = patrol ? State.PATROL : State.WANDER;
-            }
+            state = patrol ? State.PATROL : State.WANDER;
         }
     }
+    private float lastPatrolX = 0;
+    private float lastPatrolY = 0;
+    NavNode targetNode;
     private void patrolState(float delta, Vector2 enemyPos) {
         int frame = MathUtils.clamp(
                 (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
@@ -591,14 +668,32 @@ public class AIController {
         if (detectionTimer > 0) {
             enemy.setMaxSpeed(suspiciousMaxSpeed);
         }
-        target = graph.getNearestWalkableNode(new Vector2(patrolPath.get(patrolIndex)[0], patrolPath.get(patrolIndex)[1]));
-        if (!isLineBlocked(enemyPos, target)) {
-            moveTowards(target, wanderSpeed);
+        // Get patrol target
+        float patrolX = patrolPath.get(patrolIndex)[0];
+        float patrolY = patrolPath.get(patrolIndex)[1];
+        if (patrolX != lastPatrolX || patrolY != lastPatrolY) {
+            lastPatrolX = patrolX;
+            lastPatrolY = patrolY;
+            targetNode = graph.getNearestWalkableNode(new Vector2(patrolX, patrolY));
+        }
+
+//        if (targetNode == null) {
+//            enemy.setMovement(0);
+//            enemy.setVerticalMovement(0);
+//            return;
+//        }
+        target = targetNode.position;
+        pathRecalcTimer += delta;
+        if (pathRecalcTimer >= PATH_RECALC_INTERVAL) {
+            pathRecalcTimer = 0;
+            waypoint = getNextPathPoint(enemyPos, target);
+        }
+        if (waypoint != null) {
+            moveTowards(waypoint, wanderSpeed);
         } else {
-            Vector2 waypoint = getNextPathPoint(enemyPos, target);
-            if (waypoint != null) {
-                moveTowards(waypoint, wanderSpeed);
-            }
+            // Optionally stop or wait if no path found
+            enemy.setMovement(0);
+            enemy.setVerticalMovement(0);
         }
         // Check if the enemy has reached the waypoint
         if (enemyPos.dst2(target) < 0.5f) {
@@ -607,13 +702,27 @@ public class AIController {
     }
     private void wanderState(float delta, Vector2 enemyPos) {
         wanderTimer += delta;
+        int frame = MathUtils.clamp(
+            (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
+        );
+        if (detectionTimer == 0) {
+            frame = -1;
+        }
         enemy.setBlue(true);
+        enemy.setAlertAnimationFrame(frame);
         enemy.setMaxSpeed(wanderMaxSpeed);
+        if (detectionTimer > 0) {
+            enemy.setMaxSpeed(suspiciousMaxSpeed);
+        }
         if (wanderTimer >= timeToChangeTarget) { // || enemyPos.dst(target) < 10f
             wanderTimer = 0f;
             pickNewWanderTarget();
         }
-        Vector2 waypoint = getNextPathPoint(enemyPos, target);
+        pathRecalcTimer += delta;
+        if (pathRecalcTimer >= PATH_RECALC_INTERVAL) {
+            pathRecalcTimer = 0;
+            waypoint = getNextPathPoint(enemyPos, target);
+        }
         if (waypoint != null) {
             moveTowards(waypoint, wanderSpeed);
         } else {
@@ -733,26 +842,6 @@ public class AIController {
         }
     }
 
-//    private float cleaningTimer = 0f;
-//    private static final float CLEANING_INTERVAL = 1f;
-//    private void cleanNearbyPaint(float delta) {
-//        cleaningTimer += delta;
-//        if (cleaningTimer >= CLEANING_INTERVAL) {
-//            for (ObstacleSprite obj : physics.objects) {
-//                if (obj instanceof Spray) {
-//                    Spray spray = (Spray) obj;
-//                    Vector2 sprayPos = spray.getPosition();
-////                    System.out.println("Spray: " + sprayPos);
-////                    System.out.println("Dist: " + enemy.getPosition().dst(sprayPos));
-//                    if (sprayPos != null && enemy.getPosition().dst(sprayPos) <= enemy.getBaseDetectionRange()) {
-//                        cleaningTimer = 0f;
-//                        spray.setExpired();; // however you handle removing objects
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
     private Array<Vector2> lastPath;
     private Vector2 lastVisible;
@@ -762,25 +851,25 @@ public class AIController {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Draw the goal in green
-        if (lastGoal != null) {
-            shapeRenderer.setColor(Color.GREEN);
-            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
-        }
+//        // Draw the goal in green
+//        if (lastGoal != null) {
+//            shapeRenderer.setColor(Color.GREEN);
+//            shapeRenderer.rect(target.x * scale - 5f, target.y * scale - 5f, 20f, 20f);
+//        }
 //
 //        // 1. Draw all NavNodes first (background layer)
 //        shapeRenderer.setColor(Color.GRAY);
 //        for (NavNode node : graph.nodes) {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
 //        }
-
-        // 2. Draw the A* path in yellow
-//        if (lastPath != null) {
-//            shapeRenderer.setColor(Color.YELLOW);
-//            for (Vector2 pathPoint : lastPath) {
-//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
-//            }
-//        }
+//
+////         2. Draw the A* path in yellow
+        if (lastPath != null) {
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Vector2 pathPoint : lastPath) {
+                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+            }
+        }
 //
 //        // 3. Draw the last visible target point on top
 //        if (lastVisible != null) {
@@ -789,7 +878,44 @@ public class AIController {
 //        }
         shapeRenderer.end();
 
+        // 2. Line shapes block
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+//        if (enemy.getType() == Type.GUARD) {
+//            Vector2 nextPoint = getNextPathPoint(enemy.getPosition(), target);
+//            if (nextPoint != null) {
+//                float radius = enemy.getHeight() / 2;
+//                drawPathVisibilityDebug(new Vector2(enemy.getPosition().x * scale, enemy.getPosition().y * scale), new Vector2(nextPoint.x * scale, nextPoint.y * scale), radius);
+//            }
+//        }
+//        shapeRenderer.end();
+
+//        if (lastPath != null) drawPath(lastPath);
+
         drawEnemyVision(camera);
+    }
+
+    public void drawPathVisibilityDebug(Vector2 start, Vector2 end, float radius) {
+        Vector2 direction = new Vector2(end).sub(start).nor();
+        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+        Vector2 offset = new Vector2(perpendicular).scl(radius*scale);
+
+        Vector2 leftStart = start.cpy().add(offset);
+        Vector2 rightStart = start.cpy().sub(offset);
+        Vector2 leftEnd = end.cpy().add(offset);
+        Vector2 rightEnd = end.cpy().sub(offset);
+
+        // Center ray (white)
+        shapeRenderer.setColor(Color.WHITE);
+        shapeRenderer.line(start, end);
+
+        // Left offset ray (red)
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.line(leftStart, leftEnd);
+
+        // Right offset ray (blue)
+        shapeRenderer.setColor(Color.BLUE);
+        shapeRenderer.line(rightStart, rightEnd);
     }
     public void drawEnemyVision(OrthographicCamera camera) {
         shapeRenderer.setProjectionMatrix(camera.combined);
