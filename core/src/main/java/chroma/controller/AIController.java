@@ -9,6 +9,7 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
@@ -21,6 +22,7 @@ import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.utils.ObjectMap;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 import java.util.ArrayList;
@@ -107,7 +109,10 @@ public class AIController {
     private float blueRedTime = 0f;
     private float blueRedDuration;
 
-    public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level) {
+    // Camera Lights
+    private Texture lightTexture;
+
+    public AIController(Enemy enemy, GameplayController gameplayController, PhysicsController physicsController, Level level, Texture lightTexture) {
         this.gameplay = gameplayController;
         this.physics = physicsController;
         this.enemy = enemy;
@@ -138,6 +143,8 @@ public class AIController {
         this.scale = gameplay.getUnits();
 
         blueRedDuration = enemy.getBlueRedAnimation().getAnimationDuration();
+
+        this.lightTexture = lightTexture;
 
         // Build navigation graph
         graph = new NavGraph();
@@ -536,8 +543,9 @@ public class AIController {
         } else if (alertTimer >= alertLength) {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
-
-//        System.out.println("State: " + state + ", alert: " + alertTimer + ", detection: " + detectionTimer);
+        if (type == Type.GUARD) {
+//            System.out.println("State: " + state + ", alert: " + alertTimer + ", detection: " + detectionTimer);
+        }
 
         // State switching logic after detection is updated
         if (state == State.CHASE) {
@@ -555,6 +563,7 @@ public class AIController {
         } else if (state == State.ALERT) {
             alertState(delta, enemyPos);
             if (alertTimer >= alertLength) {
+//                System.out.println(enemy.getName() + " swap to patrol correct");
                 state = patrol ? State.PATROL : State.WANDER;
 //                blueRedPlayingBackward = true;
 //                blueRedPlayingForward = false;
@@ -564,6 +573,7 @@ public class AIController {
                 state = State.CHASE;
                 enemy.getSpottedSound().play();
             }
+//            System.out.println(enemy.getName() + " state now: " + state);
         } else if (state == State.PATROL) {
             patrolState(delta, enemyPos);
             if (detectionTimer > detectionThreshold) {
@@ -587,7 +597,7 @@ public class AIController {
                 enemy.getSpottedSound().play();
             } else if (gameplay.isGlobalChase()) {
                 state = State.ALERT;
-                alertTimer = 0;
+                alertTimer = 0f;
                 detectionTimer = detectionThreshold;
             }
         }
@@ -641,16 +651,19 @@ public class AIController {
         if (pathRecalcTimer >= PATH_RECALC_INTERVAL) {
             pathRecalcTimer = 0;
             waypoint = getNextPathPoint(enemyPos, target);
+//            if (waypoint == null) {
+//                System.out.println("waypoint null!");
+//            }
         }
         if (waypoint != null) {
             moveTowards(waypoint, chaseSpeed);
-        } else {
-            state = patrol ? State.PATROL : State.WANDER;
         }
     }
+
     private float lastPatrolX = 0;
     private float lastPatrolY = 0;
     NavNode targetNode;
+
     private void patrolState(float delta, Vector2 enemyPos) {
         int frame = MathUtils.clamp(
             (int)((detectionTimer / detectionThreshold) * 11f), 0, 11
@@ -843,7 +856,7 @@ public class AIController {
     private Vector2 lastVisible;
     private Vector2 lastGoal;
 
-    public void debugRender(OrthographicCamera camera) {
+    public void debugRender(OrthographicCamera camera, SpriteBatch batch) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
@@ -888,7 +901,7 @@ public class AIController {
 
 //        if (lastPath != null) drawPath(lastPath);
 
-        drawEnemyVision(camera);
+        drawEnemyVision(camera, batch);
     }
 
     public void drawPathVisibilityDebug(Vector2 start, Vector2 end, float radius) {
@@ -913,7 +926,7 @@ public class AIController {
         shapeRenderer.setColor(Color.BLUE);
         shapeRenderer.line(rightStart, rightEnd);
     }
-    public void drawEnemyVision(OrthographicCamera camera) {
+    public void drawEnemyVision(OrthographicCamera camera, SpriteBatch batch) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -976,8 +989,36 @@ public class AIController {
             }
         }
 
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
+        // After all hitPoints are calculated and triangles drawn
+        shapeRenderer.end();  // End ShapeRenderer before using SpriteBatch
+        Gdx.gl.glDisable(GL20.GL_BLEND); // You may keep blending enabled if the texture is transparent
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        // Draw the texture centered at triangle midpoints
+        for (int i = 0; i < hitPoints.size - 1; i++) {
+            Vector2 p1 = hitPoints.get(i);
+            Vector2 p2 = hitPoints.get(i + 1);
+
+            if (p1.dst(p2) < detectionRange * scale * 1.1f) {
+                // Midpoint between p1 and p2 and the enemy origin
+                float midX = (enemyScreenPos.x + p1.x + p2.x) / 3f;
+                float midY = (enemyScreenPos.y + p1.y + p2.y) / 3f;
+
+                float drawSize = 64f; // adjust based on how large you want the light to appear
+
+                batch.setColor(1f, 1f, 1f, 0.1f); // Optional: apply alpha to texture
+                batch.draw(
+                    lightTexture,
+                    midX - drawSize / 2f,
+                    midY - drawSize / 2f,
+                    drawSize,
+                    drawSize
+                );
+            }
+        }
+        batch.end();
     }
 
     public Enemy getEnemy() { return enemy; }

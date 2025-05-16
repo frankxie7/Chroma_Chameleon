@@ -57,12 +57,17 @@ public class Level {
     private Map<Integer, TextureRegion> tileRegions;
 
     private static final Set<Integer> GRATE_GIDS = Set.of(
-        659, 660, 661, 662, 663, 664,
-        697, 698, 699, 700, 701, 702,
+        659, 660, 661, 662, 663, 664, 665, 666,
+        669,
+        697, 698, 699, 700,
+        703, 704,
         735, 736, 737, 738, 739, 740,
+        741, 742,
         773, 774, 775, 776, 777, 778,
-        811, 812, 813, 814, 815, 816,
-        849, 850, 851, 852, 853, 854
+        779, 780,
+        811, 812, 813, 814,
+        929, 930,
+        1117, 1118, 1119, 1120
     );
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
@@ -176,6 +181,8 @@ public class Level {
                 GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
                 goal.getObstacle().setName("goal");
                 goalCollisions = goal;
+
+//                bombableTiles.add(new Point(tx,ty));
             }
         }
         JsonValue goal2TileLayer = findLayer(constants, "goal2");
@@ -268,11 +275,10 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;
-                System.out.println("here");// no matching region
                 int tileValue = data.getInt(i);
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
@@ -300,7 +306,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region

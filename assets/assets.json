@@ -13,20 +13,26 @@
     "bomb-splatter": "platform/bomb_splatter.png",
     "platform-white": "platform/white_texture.png",
     "aiming-range": "platform/circle.png",
+
     "paint-body": "platform/paintbody.png",
     "paint-top": "platform/painttop.png",
     "paint-overlay": "platform/paintoverlay.png",
+
     "cage-top": "platform/cage-top.png",
     "cage-bottom": "platform/cage-bottom.png",
+
     "goal_unpainted": "platform/indicator1.png",
     "goal_painted": "platform/indicator2.png",
+
     "win-screen": "platform/ui_you_wint2.png",
     "lose-screen": "platform/ui_game_ovet2.png",
     "pause-screen": "platform/ui_pause_animation.png",
+
     "restart" : "platform/Restart.png",
     "next-lab" : "platform/Nextlevel.png",
     "menu": "platform/menu.png",
     "resume": "platform/resume.png",
+
     "chameleonSheet": "platform/walk.png",
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
@@ -35,13 +41,12 @@
     "chameleonBombWindup"  : "platform/windup.png",
     "chameleonBombShoot"   : "platform/shoot.png",
     "chameleonBombWinddown": "platform/winddown.png",
-
     "chameleonPinkIdle"    : "platform/pinkidle.png",
     "chameleonPinkWalk"    : "platform/pinkwalk.png",
     "chameleonPinkUpWalk"  : "platform/pinkupwalk.png",
     "chameleonPinkDownWalk": "platform/pinkdownwalk.png",
-
     "ventFall": "platform/vent_fall.png",
+
     "enemyAlertSheet": "platform/enemy-alert.png",
     "enemyBlueRedSheet": "platform/blue-to-red.png",
     "enemySideSheetBlue": "platform/enemy-side-blue.png",
@@ -50,6 +55,8 @@
     "enemySideSheetRed": "platform/enemy-side-red.png",
     "enemyFrontSheetRed": "platform/enemy-front-red.png",
     "enemyBackSheetRed": "platform/enemy-back-red.png",
+    "enemyCameraLight": "platform/enemy-camera-light.png",
+
     "tileset-export": "platform/tileset-export.png",
     "tileset":   "shared/tileset.png",
     "vent":   "platform/vent.png",
@@ -59,7 +66,9 @@
     "tutorialhints_spray": "platform/tutorialhints_spray.png",
     "tutorialhints_walk": "platform/tutorialhints_walk.png",
     "tutorialhints_bomb": "platform/tutorialhints_bomb.png",
-    "tutorialhints_goal": "platform/tutorialhints_goal.png"
+    "tutorialhints_goal": "platform/tutorialhints_goal.png",
+    "spray_fade": "platform/spray_animation_sheet_extended.png",
+    "bomb_fade": "platform/bomb_splatter_sheet_updated.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
@@ -76,9 +85,12 @@
     "level_8" : "constants/level_8.json",
     "alex_level": "constants/alexlevel.json",
     "alex_level6" : "constants/alexlevel6.json",
+    "alex_level8" : "constants/alexlevel8.json",
     "level_9" : "constants/level_9.json",
     "level_grate" : "constants/level_grate.json",
-    "laser_test" : "constants/laser_test.json"
+    "laser_test" : "constants/laser_test.json",
+    "level_13" : "constants/level_13.json",
+    "level_14": "constants/level_14.json"
   },
   "sounds" : {
     "bomb" : "audio/Bomb_16bit.wav",

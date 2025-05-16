@@ -3,6 +3,8 @@ package chroma.model;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -27,11 +29,11 @@ public class Bomb extends ObstacleSprite {
     private Texture splatterTex;
     private Sound splatterSound;
     // Bomb.java  – add near the other constants
-    private static final float FADE_DURATION = 5f;   // seconds to fade out
+    private static final float FADE_DURATION = 7f;   // seconds to fade out
     private float fadeClock  = 15f;     // counts from 0 → FADE_DURATION
     private float alpha      = 1f;
     private boolean fading   = false;  // start after we “pop”
-
+    private final Animation<TextureRegion> fadeAnim;
     /**
      * Horizontal velocity in physics units (straight line)
      */
@@ -63,7 +65,8 @@ public class Bomb extends ObstacleSprite {
                 Vector2 velocity,
                 Vector2 targetPos,Texture flyTex,
                 Texture splatterTex,
-                Sound splatterSound) {
+                Sound splatterSound, Animation<TextureRegion>fadeAnim) {
+        this.fadeAnim = fadeAnim;
         this.startPos = new Vector2(startPos);
         size = settings.getFloat("size");
         float radius = size * units / 2.0f;
@@ -128,18 +131,25 @@ public class Bomb extends ObstacleSprite {
     @Override
     public void update(float dt) {
         timeAlive += dt;
-        if (!fading && timeAlive >= LIFETIME - FADE_DURATION) {
-            beginFade();                       // will set fading = true, fadeClock = 0
-        }
-        if (fading) {
-            fadeClock += dt;
-            float t = Math.min(fadeClock / FADE_DURATION, 1f); // 0 → 1
-            alpha = 1f - t;            // linear fade-out
+        // 2) compute when to start fading
+        float fadeStart = LIFETIME - FADE_DURATION;
+        TextureRegion frame;
 
-            if (fadeClock >= FADE_DURATION) {
-                alpha = 0f;
-            }
+        if (timeAlive < fadeStart) {
+            // still “alive” → hold on first frame, full opacity
+            frame = fadeAnim.getKeyFrame(0f, false);
+            alpha = 1f;
+        } else if (timeAlive < LIFETIME) {
+            // in fade window → advance animation & lerp alpha→0
+            float animTime = timeAlive - fadeStart;
+            frame = fadeAnim.getKeyFrame(animTime, false);
+            alpha = Math.max(0f, 1.2f - (animTime / FADE_DURATION));
+        } else {
+            // expired → last frame (or leave blank) at zero alpha
+            frame = fadeAnim.getKeyFrame(FADE_DURATION, false);
+            alpha = 0f;
         }
+        sprite.setRegion(frame);
         if (!flying) {
             return;
         }

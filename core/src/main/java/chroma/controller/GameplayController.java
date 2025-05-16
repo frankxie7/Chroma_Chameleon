@@ -8,6 +8,8 @@ package chroma.controller;
  * Rendering all game objects and UI messages.
  */
 
+import static chroma.model.Level.createAnimation;
+
 import chroma.model.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -371,11 +373,12 @@ public class GameplayController implements Screen {
 
         // Initialize AI
         aiControllers = new ArrayList<>();
+        Texture lightTexture = directory.getEntry("enemyCameraLight", Texture.class);
         for (Enemy enemy : level.getEnemies()) {
             if (enemy.getType() != Enemy.Type.CAMERA1 && enemy.getType() != Enemy.Type.CAMERA2) { // Only add physical enemies
                 physics.addObject(enemy);
             }
-            aiControllers.add(new AIController(enemy, this, physics, level));
+            aiControllers.add(new AIController(enemy, this, physics, level, lightTexture));
         }
 
         for (Laser laser : level.getLasers()) {
@@ -789,14 +792,16 @@ public class GameplayController implements Screen {
                 bombTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture bulletTex = directory.getEntry("platform-bullet", Texture.class);
                 bulletTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+//                Texture splatterTex = directory.getEntry("bomb-splatter", Texture.class);
+                Texture splatterTex = directory.getEntry("bomb_fade", Texture.class);
+                Animation<TextureRegion> fadeAnim   = createAnimation(splatterTex,  12, 0.6f);
                 splatterTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Sound splatterSound = directory.getEntry("bomb", Sound.class);
                 JsonValue bombData = constants.get("bomb");
                 Bomb bomb = new Bomb(units, bombData,
                     playerPos, vel, target,
                     bulletTex, splatterTex,
-                    splatterSound);
+                    splatterSound, fadeAnim);
                 bomb.setTexture(bombTex);
                 bomb.getObstacle().setName("bomb");
 
@@ -1076,14 +1081,14 @@ public class GameplayController implements Screen {
         float buttonDrawWidth = width / 6;
         float buttonDrawHeight = buttonDrawWidth * buttonRatio;
 
-        batch.draw(menTex, width/2 - width/14, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
-        batch.draw(restartTex, width/2 - width/14, height/2 - buttonDrawHeight * 6/2, width/6, width/6 * buttonRatio);
-        batch.draw(resumeTex, width/2 - width/14, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
+        batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
+        batch.draw(restartTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/2, width/6, width/6 * buttonRatio);
+        batch.draw(resumeTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
 
 // Update rectangles to match the drawn texture positions
-        menuButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight/2, buttonDrawWidth, buttonDrawHeight);
-        retryButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight * 6/2, buttonDrawWidth, buttonDrawHeight);
-        resumeButton = new Bound(width / 2 - width / 14, height / 2 - buttonDrawHeight * 3.5f/2, buttonDrawWidth, buttonDrawHeight);
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight/2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6/2, buttonDrawWidth, buttonDrawHeight);
+        resumeButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f/2, buttonDrawWidth, buttonDrawHeight);
 
 //        drawButton(batch, retryButton);
 //        drawButton(batch, menuButton);
@@ -1193,7 +1198,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 2) {
+        if (levelSelector.getCurrentLevel() == 3) {
             Texture hintTex = directory.getEntry("tutorialhints_goal", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
@@ -1204,7 +1209,7 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
-        if (levelSelector.getCurrentLevel() == 3) {
+        if (levelSelector.getCurrentLevel() == 2) {
             Texture hintTex = directory.getEntry("tutorialhints_spray", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
@@ -1252,7 +1257,7 @@ public class GameplayController implements Screen {
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
-                aiController.drawEnemyVision(camera);
+                aiController.drawEnemyVision(camera, batch);
             }
         }
         batch.begin();
@@ -1337,7 +1342,7 @@ public class GameplayController implements Screen {
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA2) {
-                aiController.drawEnemyVision(camera);
+                aiController.drawEnemyVision(camera, batch);
             }
         }
         batch.begin();
@@ -1356,7 +1361,7 @@ public class GameplayController implements Screen {
             batch.end();
             for (AIController aiController : aiControllers) {
 //                if (aiController.getEnemy().getType() != Enemy.Type.CAMERA) {
-                aiController.debugRender(camera); // Call debug grid rendering
+                aiController.debugRender(camera, batch); // Call debug grid rendering
 //                }
             }
             batch.begin();// Resume SpriteBatch rendering
@@ -1381,8 +1386,8 @@ public class GameplayController implements Screen {
 
         Texture pauseSheet = directory.getEntry("pause-screen", Texture.class);
         pauseSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 10, 3f);
-        animTime += dt/2;
+        Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 7, 3f);
+        animTime += dt;
         TextureRegion pauseFrame = pauseAnim.getKeyFrame(animTime, false);
 
         if (gameState == GameState.WON) {
