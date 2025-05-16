@@ -30,6 +30,7 @@ public class Level {
     private List<BackgroundTile> wallsNoCover;
     private List<BackgroundTile> wallsCover;
     private List<BackgroundTile> wallsTop;
+    private List<BackgroundTile> lights;
     private List<BackgroundTile> backgroundTiles;
     private List<BackgroundTile> goalTiles;
     private List<BackgroundTile> goal2Tiles;
@@ -40,12 +41,15 @@ public class Level {
     private List<Laser> lasers;
     private List<Collision> collision;
     private String[] levelfiles;
-    private List<GoalCollision> goalCollisions;
+    private GoalCollision goalCollisions;
+    private GoalCollision goal2Collisions;
+    private GoalCollision goal3Collisions;
+
 //    private int mapWidthInTiles;
 //    private int mapHeightInTiles;
 //    public static final int TILE_WIDTH = 16;
 //    public static final int TILE_HEIGHT = 16;
-//    Set<Point> bombableTiles = new HashSet<>();
+    Set<Point> bombableTiles = new HashSet<>();
 
     /**
      * gid →  corresponding tile
@@ -75,11 +79,12 @@ public class Level {
         goalTiles = new ArrayList<>();
         goal2Tiles = new ArrayList<>();
         goal3Tiles = new ArrayList<>();
+        lights = new ArrayList<>();
         bombs           = new ArrayList<>();
         sprays          = new ArrayList<>();
         enemies         = new ArrayList<>();
         collision = new ArrayList<>();
-        goalCollisions = new ArrayList<>();
+
         grates = new ArrayList<>();
 
 
@@ -130,114 +135,158 @@ public class Level {
                     tile.setPosition(tx, ty);
                     backgroundTiles.add(tile);
                 }
-//                bombableTiles.add(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
             }
         }
 
 
 
 
-        //background
-        JsonValue goalTileData = findLayer(constants, "goal1");
-        if (goalTileData != null && goalTileData.has("data")) {
+        //Goal1
+        JsonValue goalTileLayer = findLayer(constants, "goal1");
+        if (goalTileLayer != null && goalTileLayer.has("data")) {
+            JsonValue goalTileData = goalTileLayer.get("data");
+            int layerWidth  = goalTileLayer.getInt("width");
+            int layerHeight = goalTileLayer.getInt("height");
 
-            goalTiles = new ArrayList<>();
-//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
-//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-            int layerWidth = goalTileData.getInt("width");
-            int layerHeight = goalTileData.getInt("height");
-            JsonValue data = goalTileData.get("data");
-            for (int i = 0; i < data.size; i++) {
-                int gid = data.getInt(i);
+            List<Vector2> goalRegion = new ArrayList<>();
+            for (int i = 0; i < goalTileData.size; i++) {
+                int gid = goalTileData.getInt(i);
                 if (gid == 0) continue; // skip empty
 
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
-                if (region == null) continue;                         // no tile defined
-
-                // compute tile grid position
+                if (region == null) continue;
+                if (goalTileData.getInt(i) == 0) continue;
                 int tx = i % layerWidth;
-                int ty = i / layerWidth;
-                ty = layerHeight - 1 - ty;                            // flip Y origin
-
-                // create BackgroundTile with the region
+                int ty = layerHeight - 1 - (i / layerWidth);
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                float[] coords = createCoords(tx, ty);
+                bombableTiles.add(new Point(tx,ty));
+                goalRegion.add(new Vector2(tx, ty));
                 goalTiles.add(tile);
-                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
-                goalCollisions.add(goalthing);
+            }
 
-//                bombableTiles.add(new Point(tx, ty));
+            if (!goalRegion.isEmpty()) {
+                int minX = goalRegion.stream().mapToInt(v -> (int)v.x).min().getAsInt();
+                int minY = goalRegion.stream().mapToInt(v -> (int)v.y).min().getAsInt();
+
+                Vector2 goalCenter = new Vector2(minX + 2f, minY + 2.25f);
+
+                Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
+                fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+                Texture notFull = directory.getEntry("blackmachine",Texture.class);
+
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                goal.getObstacle().setName("goal");
+                goalCollisions = goal;
+
             }
         }
-        JsonValue goalTileData2 = findLayer(constants, "goal2");
-        if (goalTileData2 != null && goalTileData2.has("data")) {
+        JsonValue goal2TileLayer = findLayer(constants, "goal2");
+        if (goal2TileLayer != null && goal2TileLayer.has("data")) {
+            JsonValue goal2TileData = goal2TileLayer.get("data");
+            int layerWidth  = goal2TileLayer.getInt("width");
+            int layerHeight = goal2TileLayer.getInt("height");
 
-            goal2Tiles = new ArrayList<>();
-//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
-//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-            int layerWidth = goalTileData2.getInt("width");
-            int layerHeight = goalTileData2.getInt("height");
-            JsonValue data = goalTileData2.get("data");
-            for (int i = 0; i < data.size; i++) {
-                int gid = data.getInt(i);
+            List<Vector2> goalRegion = new ArrayList<>();
+            for (int i = 0; i < goal2TileData.size; i++) {
+                int gid = goal2TileData.getInt(i);
                 if (gid == 0) continue; // skip empty
-
-
-                // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
-                if (region == null) continue;                         // no tile defined
-
-                // compute tile grid position
+                if (region == null) continue;
+                if (goal2TileData.getInt(i) == 0) continue;
                 int tx = i % layerWidth;
-                int ty = i / layerWidth;
-                ty = layerHeight - 1 - ty;                            // flip Y origin
-
-                // create BackgroundTile with the region
+                int ty = layerHeight - 1 - (i / layerWidth);
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                float[] coords = createCoords(tx, ty);
+                goalRegion.add(new Vector2(tx, ty));
                 goal2Tiles.add(tile);
-                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
-                goalCollisions.add(goalthing);
-//                bombableTiles.add(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
+            }
+
+            if (!goalRegion.isEmpty()) {
+                int minX = goalRegion.stream().mapToInt(v -> (int)v.x).min().getAsInt();
+                int minY = goalRegion.stream().mapToInt(v -> (int)v.y).min().getAsInt();
+
+                Vector2 goalCenter = new Vector2(minX + 2f, minY + 2.25f);
+
+                Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
+                fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+                Texture notFull = directory.getEntry("blackmachine",Texture.class);
+
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                goal.getObstacle().setName("goal");
+                goal2Collisions = goal;
             }
         }
-        JsonValue goalTileData3 = findLayer(constants, "goal3");
-        if (goalTileData3 != null && goalTileData3.has("data")) {
-            goal3Tiles = new ArrayList<>();
-//            Texture backgroundTex = directory.getEntry("background-tile", Texture.class);
-//            backgroundTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        JsonValue goal3TileLayer = findLayer(constants, "goal3");
+        if (goal3TileLayer != null && goal3TileLayer.has("data")) {
+            JsonValue goal3TileData = goal3TileLayer.get("data");
+            int layerWidth  = goal3TileLayer.getInt("width");
+            int layerHeight = goal3TileLayer.getInt("height");
 
-            int layerWidth = goalTileData3.getInt("width");
-            int layerHeight = goalTileData3.getInt("height");
-            JsonValue data = goalTileData3.get("data");
-            for (int i = 0; i < data.size; i++) {
-                int gid = data.getInt(i);
+            List<Vector2> goalRegion = new ArrayList<>();
+            for (int i = 0; i < goal3TileData.size; i++) {
+                int gid = goal3TileData.getInt(i);
                 if (gid == 0) continue; // skip empty
-
-
-                // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
-                if (region == null) continue;                         // no tile defined
-
-                // compute tile grid position
+                if (region == null) continue;
+                if (goal3TileData.getInt(i) == 0) continue;
                 int tx = i % layerWidth;
-                int ty = i / layerWidth;
-                ty = layerHeight - 1 - ty;                            // flip Y origin
-
-                // create BackgroundTile with the region
+                int ty = layerHeight - 1 - (i / layerWidth);
                 BackgroundTile tile = new BackgroundTile(region, units);
                 tile.setPosition(tx, ty);
-                float[] coords = createCoords(tx, ty);
+                goalRegion.add(new Vector2(tx, ty));
                 goal3Tiles.add(tile);
-                GoalCollision goalthing = new GoalCollision(coords, units,new Vector2(tx,ty));
-                goalCollisions.add(goalthing);
-//                bombableTiles.add(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
+            }
+
+            if (!goalRegion.isEmpty()) {
+                int minX = goalRegion.stream().mapToInt(v -> (int)v.x).min().getAsInt();
+                int minY = goalRegion.stream().mapToInt(v -> (int)v.y).min().getAsInt();
+
+                Vector2 goalCenter = new Vector2(minX + 2f, minY + 2.25f);
+
+                Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
+                fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+                Texture notFull = directory.getEntry("blackmachine",Texture.class);
+
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                goal.getObstacle().setName("goal");
+                goal3Collisions = goal;
+            }
+        }
+        // Parse the "walls" tile layer and build a list of Terrain tiles
+        JsonValue lightsData = findLayer(constants, "lights");
+        if (lightsData != null && lightsData.has("data")) {
+
+            int layerWidth  = lightsData.getInt("width");
+            int layerHeight = lightsData.getInt("height");
+            JsonValue data  = lightsData.get("data");
+
+            for (int i = 0; i < data.size; i++) {
+                int gid = data.getInt(i);
+                if (gid == 0) continue;// skip empty tiles
+
+                // compute tile coordinates in grid
+                int tx = i % layerWidth;
+                int ty = i / layerWidth;
+                ty = layerHeight - 1 - ty;                        // flip Y origin
+                bombableTiles.remove(new Point(tx, ty));
+                // lookup the sub-texture for this gid
+                TextureRegion region = tileRegions.get(gid);
+                if (region == null) continue;
+                System.out.println("here");// no matching region
+                int tileValue = data.getInt(i);
+                // create a 1×1 tile-based Terrain at (tx,ty)
+                if (tileValue != 0) {
+                    BackgroundTile light = new BackgroundTile(region,units);
+                    light.setPosition(tx, ty);
+                    lights.add(light);
+//                    wall.setTexture(region.getTexture());
+                }
             }
         }
         // Parse the "walls" tile layer and build a list of Terrain tiles
@@ -257,7 +306,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-//                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.remove(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -288,7 +337,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-//                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.remove(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -320,7 +369,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;// flip Y origin
-//                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
@@ -352,7 +401,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-//                bombableTiles.add(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
 
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
@@ -382,7 +431,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = layerHeight - 1 - (i / layerWidth);
                 doorTiles.add(new Vector2(tx, ty));
-//                bombableTiles.add(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
             }
 
             if (!doorTiles.isEmpty()) {
@@ -395,7 +444,7 @@ public class Level {
                 ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture chameleonFallSheet = directory.getEntry("ventFall", Texture.class);
                 ventSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 12, 0.08f);
+                Animation<TextureRegion> chameleonFallAnim = createAnimation(chameleonFallSheet, 24, 0.08f);
 
                 TextureRegion[] frames = createAnimation(ventSheet, 22, 0.1f).getKeyFrames();
 
@@ -612,8 +661,18 @@ public class Level {
         return goalDoor;
     }
 
-    public List<GoalCollision> getGoalCollisions(){
+    public GoalCollision getGoalCollisions(){
         return goalCollisions;
+    }
+    public GoalCollision getGoal2Collisions(){
+        return goal2Collisions;
+    }
+    public GoalCollision getGoal3Collisions(){
+        return goal3Collisions;
+    }
+
+    public List<BackgroundTile> getLights() {
+        return lights;
     }
 
     public Chameleon getAvatar() {
@@ -769,12 +828,12 @@ public class Level {
         }
     }
 
-//    public boolean isTileBombable(int x, int y) {
-//        return bombableTiles.contains(new Point(x, y));
-//    }
-//
-//    public Set<Point> getBombableTiles() {
-//        return bombableTiles;
-//    }
+    public boolean isTileBombable(int x, int y) {
+        return bombableTiles.contains(new Point(x, y));
+    }
+
+    public Set<Point> getBombableTiles() {
+        return bombableTiles;
+    }
 
 }

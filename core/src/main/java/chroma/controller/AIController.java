@@ -119,7 +119,9 @@ public class AIController {
         this.goals = new ArrayList<>();
         this.goals.addAll(physics.getGoalList());
         this.goalCollisions = new ArrayList<>();
-        goalCollisions.addAll(level.getGoalCollisions());
+        goalCollisions.add(level.getGoalCollisions());
+        goalCollisions.add(level.getGoal2Collisions());
+        goalCollisions.add(level.getGoal3Collisions());
         goals.addAll(physics.getGoal2List());
         goals.addAll(physics.getGoal3List());
         this.fov = enemy.getFov();
@@ -237,11 +239,7 @@ public class AIController {
                 return true;
             }
         }
-        for(GoalCollision goal : goalCollisions) {
-            if (goal.contains(position)) {
-                return true;
-            }
-        }
+
 
         return false;
     }
@@ -463,6 +461,7 @@ public class AIController {
         float vmove = direction.y;
 
         // Apply movement similar to the player
+//        System.out.println(hmove * speed + ", " + vmove * speed);
         enemy.setMovement(hmove * speed);
         enemy.setVerticalMovement(vmove * speed);
     }
@@ -862,14 +861,14 @@ public class AIController {
 //        for (NavNode node : graph.nodes) {
 //            shapeRenderer.circle(node.position.x * scale, node.position.y * scale, 10f);
 //        }
-//
-////         2. Draw the A* path in yellow
-        if (lastPath != null) {
-            shapeRenderer.setColor(Color.YELLOW);
-            for (Vector2 pathPoint : lastPath) {
-                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
-            }
-        }
+
+        // 2. Draw the A* path in yellow
+//        if (lastPath != null) {
+//            shapeRenderer.setColor(Color.YELLOW);
+//            for (Vector2 pathPoint : lastPath) {
+//                shapeRenderer.rect(pathPoint.x * scale - 5f, pathPoint.y * scale - 10f, 10f, 10f);
+//            }
+//        }
 //
 //        // 3. Draw the last visible target point on top
 //        if (lastVisible != null) {
