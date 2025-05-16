@@ -57,7 +57,6 @@ public class Level {
     private Map<Integer, TextureRegion> tileRegions;
 
     private static final Set<Integer> GRATE_GIDS = Set.of(
-        419,420,421,422,
         659, 660, 661, 662, 663, 664, 665, 666,
         669,
         697, 698, 699, 700,
