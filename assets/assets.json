@@ -54,7 +54,9 @@
     "tutorialhints_spray": "platform/tutorialhints_spray.png",
     "tutorialhints_walk": "platform/tutorialhints_walk.png",
     "tutorialhints_bomb": "platform/tutorialhints_bomb.png",
-    "tutorialhints_goal": "platform/tutorialhints_goal.png"
+    "tutorialhints_goal": "platform/tutorialhints_goal.png",
+    "spray_fade": "platform/spray_animation_sheet_extended.png",
+    "bomb_fade": "platform/bomb_splatter_sheet_updated.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",

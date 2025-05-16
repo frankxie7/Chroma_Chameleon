@@ -1,6 +1,11 @@
 package chroma.controller;
 
+import static chroma.model.Level.createAnimation;
+
 import chroma.model.*;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonValue;
@@ -38,11 +43,15 @@ public class PhysicsController implements ContactListener {
     private int grateContactCount = 0;
 
     //Number of rays to shoot
-    private int numRays = 14;
-    //Length of the rays
+    private int numRays = 15;
     private float rayLength = 5f;
     //Endpoints of the rays
     private Vector2[] endpoints;
+    private static final int   MAX_SPRAY_VERTICES = 15;
+    private static final float DUPLICATE_EPS2     = 1e-6f;   // squared dist
+    private static final float COLLINEAR_EPS      = 1e-6f;   // cross-area threshold
+    private static final float MIN_POLY_AREA      = 1e-6f;   // world-units
+    private static final float ORIGIN_NUDGE       = 0.01f;   // world-units
     //Points
     private float[] points;
     //Goal Tile Points
@@ -151,10 +160,10 @@ public class PhysicsController implements ContactListener {
             }
             // start from the chameleon’s “nozzle”
             Vector2 position = obstacle.getPosition().cpy();
-            if (obstacle.isFacingRight()) position.x += 0.9f;
-            if (obstacle.isFaceUp())     position.y += 0.9f;
-            if (obstacle.isFaceLeft())   position.x -= 0.9f;
-            if (obstacle.isFaceDown())   position.y -= 0.9f;
+//            if (obstacle.isFacingRight()) position.x += 0.9f;
+//            if (obstacle.isFaceUp())     position.y += 0.9f;
+//            if (obstacle.isFaceLeft())   position.x -= 0.9f;
+//            if (obstacle.isFaceDown())   position.y -= 0.9f;
 
             // shoot out to the variable radius
             Vector2 endPoint = new Vector2(position).add(direction.scl(customRadius));
@@ -195,53 +204,105 @@ public class PhysicsController implements ContactListener {
         float factor = tailFactor + (centerFactor - tailFactor) * (float)Math.cos(normalized * Math.PI / 2);
         return rayLength * factor;
     }
-    /**
-     * Adds the Spray objects created by the raycasting code
-     * @param avatar the Chameleon
-     * @param units the scaled physics units
-     */
-    public void addPaint(Chameleon avatar, float units) {
-        for(int i = 0; i< endpoints.length - 1;i++)
-            if (avatar.getPosition() != null
-                && endpoints[i] != null) {
-                Vector2 v1 = avatar.getPosition().cpy();
-                if(avatar.isFacingRight()){
-                    v1.x = v1.x + 0.9f;
-                }
-                if(avatar.isFaceLeft()){
-                    v1.x = v1.x - 0.9f;
-                }
-                if(avatar.isFaceUp()){
-                    v1.y = v1.y + 0.9f;
-                }
-                if(avatar.isFaceDown()){
-                    v1.y = v1.y - 0.9f;
-                }
-                //Replace with for loop over endpoints array
-                //Replace points array with new data type
-                Vector2 v2 = endpoints[i];
-                Vector2 v3 = endpoints[i + 1];
-                float x1 = v1.x;
-                float y1 = v1.y;
-                float x2 = v2.x;
-                float y2 = v2.y;
-                float x3 = v3.x;
-                float y3 = v3.y;
-                points[0] = x1;
-                points[1] = y1;
-                points[2] = x2;
-                points[3] = y2;
-                points[4] = x3;
-                points[5] = y3;
-                try{
-                    Spray paintTriangle = new Spray(points, units);
-                    addObject(paintTriangle);
-                }
-                catch(IllegalArgumentException ignored){}
-            }
 
+    public void addPaint(Chameleon avatar, float units) {
+        // 0) Basic checks
+        if (avatar.getPosition() == null || endpoints == null || endpoints.length < 2) {
+            return;
         }
 
+        // 1) Nudge origin a tiny bit toward the first endpoint
+        Vector2 origin = avatar.getPosition().cpy();
+        Vector2 firstHit = endpoints[0];
+        if (firstHit != null) {
+            Vector2 dir = firstHit.cpy().sub(origin);
+            if (dir.len2() > 0) {
+                dir.nor().scl(ORIGIN_NUDGE);
+                origin.add(dir);
+            }
+        }
+
+        // 2) Build raw list: origin + all non-null endpoints
+        List<Vector2> raw = new ArrayList<>(endpoints.length + 1);
+        raw.add(origin);
+        for (Vector2 p : endpoints) {
+            if (p != null) {
+                raw.add(p);
+            }
+        }
+        if (raw.size() < 3) {
+            return;  // not enough for a polygon
+        }
+
+        // 3) Remove near-duplicates
+        List<Vector2> filtered = new ArrayList<>(raw.size());
+        Vector2 last = null;
+        for (Vector2 v : raw) {
+            if (last == null || v.dst2(last) > DUPLICATE_EPS2) {
+                filtered.add(v);
+                last = v;
+            }
+        }
+
+
+        // 4) Remove collinear points
+        List<Vector2> noCollinear = new ArrayList<>(filtered.size());
+        int n = filtered.size();
+        for (int i = 0; i < n; i++) {
+            Vector2 prev = filtered.get((i - 1 + n) % n);
+            Vector2 curr = filtered.get(i);
+            Vector2 next = filtered.get((i + 1) % n);
+
+            float cross = Math.abs(
+                (curr.x - prev.x) * (next.y - prev.y)
+                    - (curr.y - prev.y) * (next.x - prev.x)
+            );
+            if (cross > COLLINEAR_EPS) {
+                noCollinear.add(curr);
+            }
+        }
+        filtered = noCollinear;
+
+        // 5) Cap to Box2D’s 8-vertex limit
+        if (filtered.size() > MAX_SPRAY_VERTICES) {
+            filtered = filtered.subList(0, MAX_SPRAY_VERTICES);
+        }
+        if (filtered.size() < 3) {
+            return;
+        }
+
+        // 6) Compute area (shoelace) and bail if too small
+        float area = 0;
+        int m = filtered.size();
+        for (int i = 0; i < m; i++) {
+            Vector2 a = filtered.get(i);
+            Vector2 b = filtered.get((i + 1) % m);
+            area += a.x * b.y - b.x * a.y;
+        }
+        area = Math.abs(area) * 0.5f;
+        if (area < MIN_POLY_AREA) {
+            return;
+        }
+
+        // 7) Flatten and spawn
+        float[] polyVerts = new float[m * 2];
+        for (int i = 0; i < m; i++) {
+            Vector2 v = filtered.get(i);
+            polyVerts[2 * i    ] = v.x;
+            polyVerts[2 * i + 1] = v.y;
+        }
+        Vector2 hit    = endpoints[numRays/2];
+        float   angle  = hit.cpy().sub(origin).angleDeg();
+        try {
+            Texture sprayTex = directory.getEntry("spray_fade", Texture.class);
+            Animation<TextureRegion> fadeAnim   = createAnimation(sprayTex,  14, 0.29f);
+            sprayTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            Spray paintFan = new Spray(polyVerts, units,sprayTex,angle,fadeAnim);
+            addObject(paintFan);
+        } catch (Exception ignored) {
+            // swallowing Box2D-asserts, triangulator AIOOBE, etc.
+        }
+    }
 
 
 
