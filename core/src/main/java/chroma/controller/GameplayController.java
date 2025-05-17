@@ -956,7 +956,7 @@ public class GameplayController implements Screen {
             width * widthRatio * 0.6f, height * currentBarHeight * 0.9f);
 
         batch.draw(paintTopTex, width * posXTop * 1.01f, height * currentTopY,
-            width * widthTop * 0.6f, height * heightTop * 0.9f);
+            width * widthTop * 0.7f, height * heightTop * 0.9f);
 
         batch.setColor(Color.WHITE);
 
