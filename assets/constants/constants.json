@@ -226,7 +226,7 @@
       "types": ["GUARD", "GUARD", "CAMERA2", "CAMERA2", "GUARD"],
       "patrols": [true, true, false, false, true],
       "patrol_paths": [[[12,18], [2,18]],[[25,25], [8,25]], [], [], [[15,36],[3,36]]],
-      "positions": [[5,18], [10,25], [17,20], [15,47], [3,36]],
+      "positions": [[5,18], [10,25], [17,20.5], [15,47], [3,36]],
       "startRotation": [180, 180, 270, 270, 180],
       "rotateAngle": [0, 0, 40, 0, 0]
     },
@@ -235,7 +235,7 @@
       "types": ["GUARD", "GUARD", "GUARD", "CAMERA2", "CAMERA1", "CAMERA1"],
       "patrols": [true, true, true, false, false, false],
       "patrol_paths": [[[25,12], [25,38]],[[23,38], [23,12]], [[55,30], [55,38]], [], [], []],
-      "positions": [[25,38], [23,12], [55,38], [24,48], [59,18], [24,4]],
+      "positions": [[25,38], [23,12], [55,38], [24,48.5], [59,18], [24,4]],
       "startRotation": [180, 180, 270, 270, 180, 90],
       "rotateAngle": [0, 0, 0, 45, 45, 45]
     }
@@ -249,7 +249,7 @@
     "top-height": 0.0225,
     "top-posX": 0.94,
     "top-posY": 0.9,
-    "bar-width": 0.0375,
+    "bar-width": 0.045,
     "bar-height": 0.3225,
     "bar-posX": 0.94,
     "bar-posY": 0.1,
