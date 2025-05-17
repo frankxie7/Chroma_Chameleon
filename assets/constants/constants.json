@@ -237,10 +237,14 @@
     "aimRange": 8
   },
   "paintBar": {
-    "width": 0.02,
-    "height": 0.18,
-    "posX": 0.94,
-    "posY": 0.1,
+    "top-width": 0.05,
+    "top-height": 0.03,
+    "top-posX": 0.94,
+    "top-posY": 0.9,
+    "bar-width": 0.05,
+    "bar-height": 0.43,
+    "bar-posX": 0.94,
+    "bar-posY": 0.1,
     "textRatio": 110,
     "textOffset": 0.01
   },

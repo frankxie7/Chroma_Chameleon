@@ -100,8 +100,6 @@ public class Level {
 
         grates = new ArrayList<>();
 
-
-
         // levels.json
         // level files
         JsonValue constants = selector.loadCurrentLevel();
@@ -151,9 +149,6 @@ public class Level {
                 bombableTiles.add(new Point(tx, ty));
             }
         }
-
-
-
 
         //Goal1
         JsonValue goalTileLayer = findLayer(constants, "goal1");
@@ -428,8 +423,6 @@ public class Level {
                 }
             }
         }
-
-
 
         // ---------- Door ----------
         JsonValue doorLayer = findLayer(constants, "door");

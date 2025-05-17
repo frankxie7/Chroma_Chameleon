@@ -107,6 +107,16 @@ public class GameplayController implements Screen {
     private Bound nextButton;
     private Bound resumeButton;
 
+    // Cage for LOSE animation
+    private Texture cageTopTex;
+    private Texture cageBottomTex;
+    private float cageY = 0;
+    private float cageDropSpeed = 600f; // pixels per second (adjust as needed)
+    private boolean cageDropping;
+    private boolean cageDropped;
+    private float cageTime;
+    private float cageDone = 2;
+
     //Single scale factor for world→screen
     private float units;
     // For input conversion (screen→world).
@@ -125,7 +135,7 @@ public class GameplayController implements Screen {
 
     private BombSkillState bombState = BombSkillState.IDLE;
 
-    Sound enemiesAlertSound;
+    private Sound enemiesAlertSound;
 
     private final Array<Vector2> planned = new Array<>();
     private Vector2 lastPlanned = new Vector2();
@@ -251,6 +261,12 @@ public class GameplayController implements Screen {
         resize((int) this.width, (int) this.height);
 
         animTime = 0;
+
+        cageBottomTex = directory.getEntry("cage-bottom", Texture.class);
+        cageTopTex = directory.getEntry("cage-top", Texture.class);
+        cageTime = 0;
+        cageDropping = false;
+        cageDropped = false;
     }
 
     public void setBaseResolution(int width, int height) {
@@ -264,6 +280,9 @@ public class GameplayController implements Screen {
     public void reset() {
         // Reset game state so overlays disappear
         gameState = GameState.PLAYING;
+        cageTime = 0;
+        cageDropping = false;
+        cageDropped = false;
 
         // Dispose previous physics world if necessary
         if (physics != null) {
@@ -354,11 +373,12 @@ public class GameplayController implements Screen {
 
         // Initialize AI
         aiControllers = new ArrayList<>();
+        Texture lightTexture = directory.getEntry("enemyCameraLight", Texture.class);
         for (Enemy enemy : level.getEnemies()) {
             if (enemy.getType() != Enemy.Type.CAMERA1 && enemy.getType() != Enemy.Type.CAMERA2) { // Only add physical enemies
                 physics.addObject(enemy);
             }
-            aiControllers.add(new AIController(enemy, this, physics, level));
+            aiControllers.add(new AIController(enemy, this, physics, level, lightTexture));
         }
 
         for (Laser laser : level.getLasers()) {
@@ -805,6 +825,15 @@ public class GameplayController implements Screen {
      */
     private void postUpdate(float dt) {
         if (gameState == GameState.WON || gameState == GameState.LOST) {
+            if (cageDropping) {
+                float targetY = camera.position.y - cageBottomTex.getHeight() / 3f;
+                cageY -= cageDropSpeed * dt;
+                if (cageY <= targetY) {
+                    cageY = targetY;
+                    cageDropping = false;
+                    cageDropped = true;
+                }
+            }
             return; // Skip updates
         }
 
@@ -819,6 +848,7 @@ public class GameplayController implements Screen {
             setFailure(true);
             physics.resetLaserFlag();
         }
+
         // ——— Win + chameleon fall all in controller ———
             if (!failed && physics.didWin()) {
                     Door door = level.getGoalDoor();
@@ -861,24 +891,23 @@ public class GameplayController implements Screen {
     /**
      * Draw the paint container UI with a solid color fill.
      */
-    private void drawPaintContainer(Texture bar, Texture barOverlay) {
+    private void drawPaintContainer(Texture paintBodyTex, Texture paintTopTex, Texture paintOverlayTex) {
         if (player == null) {
             return;
         }
 
         batch.setProjectionMatrix(uiCamera.combined);
 
-        float heightRatio = constants.get("paintBar").getFloat("height");
-        float widthRatio = constants.get("paintBar").getFloat("width");
-        float posXRatio = constants.get("paintBar").getFloat("posX");
-        float posYRatio = constants.get("paintBar").getFloat("posY");
-        float textRatio = constants.get("paintBar").getFloat("textRatio");
-        float textOffset = constants.get("paintBar").getFloat("textOffset");
+        float heightRatio = constants.get("paintBar").getFloat("bar-height");
+        float widthRatio = constants.get("paintBar").getFloat("bar-width");
+        float posXRatio = constants.get("paintBar").getFloat("bar-posX");
+        float posYRatio = constants.get("paintBar").getFloat("bar-posY");
+        float heightTop = constants.get("paintBar").getFloat("top-height");
+        float widthTop = constants.get("paintBar").getFloat("top-width");
+        float posXTop = constants.get("paintBar").getFloat("top-posX");
         float paintPercent = player.getPaint() / player.getMaxPaint();
         float currentBarHeight = paintPercent * heightRatio;
-
-        batch.draw(barOverlay, width * posXRatio, height * posYRatio, width * widthRatio,
-            height * heightRatio);
+        float currentTopY = posYRatio + currentBarHeight * 0.9f;
 
         if (paintPercent > 0.5f) {
             batch.setColor(Color.WHITE);
@@ -888,15 +917,16 @@ public class GameplayController implements Screen {
             batch.setColor(Color.RED);
         }
 
-        batch.draw(bar, width * posXRatio, height * posYRatio, width * widthRatio,
-            height * currentBarHeight);
+        batch.draw(paintBodyTex, width * posXRatio * 1.01f, height * posYRatio * 1.1f,
+            width * widthRatio * 0.6f, height * currentBarHeight * 0.9f);
 
-        displayFont.getData().setScale(width * widthRatio / textRatio);
-        String paintText = String.format("%.0f%%", paintPercent * 100);
-        batch.drawText(paintText, displayFont, width * posXRatio,
-            height * (posYRatio - textOffset));
+        batch.draw(paintTopTex, width * posXTop * 1.01f, height * currentTopY,
+            width * widthTop * 0.6f, height * heightTop * 0.9f);
 
         batch.setColor(Color.WHITE);
+
+        batch.draw(paintOverlayTex, width * posXRatio, height * posYRatio,
+            width * widthRatio, height * heightRatio);
     }
 
     private int getGoalCount() {
@@ -1016,8 +1046,6 @@ public class GameplayController implements Screen {
         float losDrawHeight = losDrawWidth * losRatio;
         batch.draw(losTex, width/2 - losDrawWidth/2, height/2 - losDrawHeight /2, losDrawWidth, losDrawHeight);
 
-//        batch.draw(losTex, 0,0,width,height);
-
         float buttonWidth = resTex.getWidth();
         float buttonHeight = resTex.getHeight();
         float ratio = buttonHeight / buttonWidth;
@@ -1059,13 +1087,13 @@ public class GameplayController implements Screen {
         float buttonDrawHeight = buttonDrawWidth * buttonRatio;
 
         batch.draw(menTex, width/2 - width/12, height/2 - buttonDrawHeight/2, width/6, width/6 * buttonRatio);
-        batch.draw(restartTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/ 2, width/6, width/6 * buttonRatio);
+        batch.draw(restartTex, width/2 - width/12, height/2 - buttonDrawHeight * 6/2, width/6, width/6 * buttonRatio);
         batch.draw(resumeTex, width/2 - width/12, height/2 - buttonDrawHeight * 3.5f/2, width/6, width/6 * buttonRatio);
 
 // Update rectangles to match the drawn texture positions
-        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight / 2, buttonDrawWidth, buttonDrawHeight);
-        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6 / 2, buttonDrawWidth, buttonDrawHeight);
-        resumeButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f / 2, buttonDrawWidth, buttonDrawHeight);
+        menuButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight/2, buttonDrawWidth, buttonDrawHeight);
+        retryButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 6/2, buttonDrawWidth, buttonDrawHeight);
+        resumeButton = new Bound(width / 2 - width / 12, height / 2 - buttonDrawHeight * 3.5f/2, buttonDrawWidth, buttonDrawHeight);
 
 //        drawButton(batch, retryButton);
 //        drawButton(batch, menuButton);
@@ -1209,12 +1237,32 @@ public class GameplayController implements Screen {
                 hintTex.getWidth(),
                 hintTex.getHeight());
         }
+
+        if (failed || cageDropping) {
+            float cageWidth = cageBottomTex.getWidth();
+            float cageHeight = cageBottomTex.getHeight();
+            float cageX = camera.position.x - cageBottomTex.getWidth() / 2f;
+
+            // Draw bottom cage part below player
+            batch.draw(cageBottomTex, cageX, cageY, cageWidth, cageHeight);
+        }
+
         batch.flush();
         player.draw(batch);
+
+        if (failed || cageDropping) {
+            float cageWidth = cageTopTex.getWidth();
+            float cageHeight = cageTopTex.getHeight();
+            float cageX = camera.position.x - cageTopTex.getWidth() / 2f;
+
+            // Draw top cage part dropping from above
+            batch.draw(cageTopTex, cageX, cageY, cageWidth, cageHeight);
+        }
+
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA1) {
-                aiController.drawEnemyVision(camera);
+                aiController.drawEnemyVision(camera, batch);
             }
         }
         batch.begin();
@@ -1299,7 +1347,7 @@ public class GameplayController implements Screen {
         batch.end();
         for (AIController aiController : aiControllers) {
             if (aiController.getEnemy().getType() == Enemy.Type.CAMERA2) {
-                aiController.drawEnemyVision(camera);
+                aiController.drawEnemyVision(camera, batch);
             }
         }
         batch.begin();
@@ -1318,7 +1366,7 @@ public class GameplayController implements Screen {
             batch.end();
             for (AIController aiController : aiControllers) {
 //                if (aiController.getEnemy().getType() != Enemy.Type.CAMERA) {
-                aiController.debugRender(camera); // Call debug grid rendering
+                aiController.debugRender(camera, batch); // Call debug grid rendering
 //                }
             }
             batch.begin();// Resume SpriteBatch rendering
@@ -1328,15 +1376,15 @@ public class GameplayController implements Screen {
         Texture vig = directory.getEntry("vignette", Texture.class);
         drawVignette(vig);
 
-        Texture barTex = directory.getEntry("paintBar", Texture.class);
-        Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
+        Texture paintBodyTex = directory.getEntry("paint-body", Texture.class);
+        Texture paintTopTex = directory.getEntry("paint-top", Texture.class);
+        Texture paintOverlayTex = directory.getEntry("paint-overlay", Texture.class);
 //        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 //        barOverlayTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        drawPaintContainer(barTex, barOverlayTex);
+        drawPaintContainer(paintBodyTex, paintTopTex, paintOverlayTex);
 
         Texture youWinTexture = directory.getEntry("win-screen", Texture.class);
         Texture youLoseTexture =  directory.getEntry("lose-screen", Texture.class);
-        Texture pauseTexture = directory.getEntry("pause-screen", Texture.class);
         Texture restartTex = directory.getEntry("restart", Texture.class);
         Texture menuTex = directory.getEntry("menu", Texture.class);
         Texture nextlabTex = directory.getEntry("next-lab", Texture.class);
@@ -1346,7 +1394,7 @@ public class GameplayController implements Screen {
 
         Texture pauseSheet = directory.getEntry("pause-screen", Texture.class);
         pauseSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 10, 3f);
+        Animation<TextureRegion> pauseAnim = Level.createAnimation(pauseSheet, 7, 3f);
         animTime += dt;
         TextureRegion pauseFrame = pauseAnim.getKeyFrame(animTime, false);
 
@@ -1354,7 +1402,10 @@ public class GameplayController implements Screen {
             drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
         } else if (gameState == GameState.LOST) {
             // only pop up the lose UI once we've zoomed all the way in
-            if (Math.abs(cameraZoom - targetZoom) < 0.01f) {
+            if (cageDropped) {
+                cageTime += dt/8;
+            }
+            if (Math.abs(cameraZoom - targetZoom) < 0.01f && cageTime >= cageDone) {
                 drawLoseScreen(youLoseTexture, restartTex, menuTex);
             }
         } else if (gameState == GameState.PAUSED) {
@@ -1578,6 +1629,8 @@ public class GameplayController implements Screen {
             countdown = EXIT_COUNT;
             // immediately start zooming in on the chameleon
             targetZoom = ZOOM_FOCUS;
+            cageDropping = true;
+            cageY = height;
         }
         failed = value;
         gameState = GameState.LOST;

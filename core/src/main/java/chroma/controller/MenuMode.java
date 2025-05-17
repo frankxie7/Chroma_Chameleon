@@ -1,6 +1,7 @@
 package chroma.controller;
 
 import chroma.controller.LevelSelector;
+import chroma.model.Level;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
@@ -9,8 +10,10 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.Affine2;
@@ -77,6 +80,8 @@ public class MenuMode implements Screen, InputProcessor {
     private Sound menuSong;
     private Sound levelSelectedSound;
 
+    private float animTime;
+
     /** Internal class for creating a rectangle bound */
     private class Bound {
         public float x, y, width, height;
@@ -141,6 +146,8 @@ public class MenuMode implements Screen, InputProcessor {
             buttonPressTexs2[i].setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
 
+        animTime = 0;
+
         affine = new Affine2();
         Gdx.input.setInputProcessor(this);
 
@@ -168,17 +175,19 @@ public class MenuMode implements Screen, InputProcessor {
      * methods, instead of using the single render() method that LibGDX does.
      * We will talk about why we prefer this in lecture.
      */
-    private void draw() {
+    private void draw(float delta) {
         // Background colors
 //        ScreenUtils.clear( 0.051f, 0.173f, 0.212f, 1f );
 
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        // Draw background
-        Texture background = internal.getEntry("background", Texture.class);
-        background.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        batch.draw(background, 0, 0, width,  height) ;
+        Texture backgroundSheet = internal.getEntry("background", Texture.class);
+        backgroundSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Animation<TextureRegion> backgroundAnim = Level.createAnimation(backgroundSheet, 7, 0.075f);
+        animTime += delta;
+        TextureRegion backgroundFrame = backgroundAnim.getKeyFrame(animTime, false);
+        batch.draw(backgroundFrame, 0, 0, width,  height) ;
 
         // Draw buttons
         int numCols = constants.getInt("numCols");
@@ -275,7 +284,7 @@ public class MenuMode implements Screen, InputProcessor {
      */
     public void render(float delta) {
         if (active) {
-            draw();
+            draw(delta);
         }
 
         // We are are ready, notify our listener
