@@ -1,7 +1,7 @@
 {
     "textures": {
         "background": {
-            "file": "menu/UI/ui.png",
+            "file": "menu/UI/levelselect-Sheet.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
