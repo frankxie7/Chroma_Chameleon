@@ -398,20 +398,20 @@ public class GameplayController implements Screen {
         // Convert screen→world for mouse, etc.
         input.sync(bounds, scale);
 
-        if (input.didDebug()) {
-            debug = !debug;
-        }
-        if (input.didReset()) {
-            reset();
-        }
+//        if (input.didDebug()) {
+//            debug = !debug;
+//        }
+//        if (input.didReset()) {
+//            reset();
+//        }
 //        if (input.didExit()) {
 //            listener.exitScreen(this, EXIT_QUIT);
 //            return false;
 //        }
-        if (input.didMenu()) {
-            listener.exitScreen(this, EXIT_MAP);
-            return false;
-        }
+//        if (input.didMenu()) {
+//            listener.exitScreen(this, EXIT_MAP);
+//            return false;
+//        }
         if (gameState == GameState.PAUSED) {
             if (input.didPause()) {
                 gameState = GameState.PLAYING;
