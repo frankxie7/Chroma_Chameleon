@@ -25,8 +25,8 @@ public class LevelSelector {
         // Define the level JSON files.
         levelFiles = new String[] {
             "level_1","level_3_spray","level_2","level_3_bomb","level_3","alex_level6",
-            "alex_level", "alex_level8", "level_grate","level_5", "level_4", "level_11",
-            "level_12", "level_13", "level_14", "level_8", "level_6"
+            "alex_level", "alex_level8", "level_grate","level_5", "level_4", "level_12",
+            "level_11", "level_13", "level_14", "level_8", "level_6"
         };
         currentLevelIndex = 0;
     }
