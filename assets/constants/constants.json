@@ -237,16 +237,16 @@
     "aimRange": 8
   },
   "paintBar": {
-    "top-width": 0.05,
-    "top-height": 0.03,
+    "top-width": 0.0375,
+    "top-height": 0.0225,
     "top-posX": 0.94,
     "top-posY": 0.9,
-    "bar-width": 0.05,
-    "bar-height": 0.43,
+    "bar-width": 0.0375,
+    "bar-height": 0.3225,
     "bar-posX": 0.94,
     "bar-posY": 0.1,
-    "textRatio": 110,
-    "textOffset": 0.01
+    "textRatio": 82.5,
+    "textOffset": 0.0075
   },
   "goalUI": {
     "iconWidth": 0.0375,
