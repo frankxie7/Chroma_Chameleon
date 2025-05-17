@@ -295,9 +295,12 @@ public class PhysicsController implements ContactListener {
         float   angle  = hit.cpy().sub(origin).angleDeg();
         try {
             Texture sprayTex = directory.getEntry("spray_fade", Texture.class);
-            Animation<TextureRegion> fadeAnim   = createAnimation(sprayTex,  14, 0.29f);
+            Texture sprayLaunch = directory.getEntry("spray_launch", Texture.class);
             sprayTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            Spray paintFan = new Spray(polyVerts, units,sprayTex,angle,fadeAnim);
+            sprayLaunch.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            Animation<TextureRegion> fadeAnim   = createAnimation(sprayTex,  14, 0.29f);
+            Animation<TextureRegion> launchAnim   = createAnimation(sprayLaunch,  3, 0.07f);
+            Spray paintFan = new Spray(polyVerts, units,sprayTex,angle,fadeAnim,launchAnim);
             addObject(paintFan);
         } catch (Exception ignored) {
             // swallowing Box2D-asserts, triangulator AIOOBE, etc.

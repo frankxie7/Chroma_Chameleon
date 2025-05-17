@@ -36,15 +36,37 @@
     "chameleonSheet": "platform/walk.png",
     "chameleonUpWalk": "platform/up_walk.png",
     "chameleonDownWalk": "platform/down_walk.png",
-    "chameleonSkillSheet": "platform/windup.png",
     "chameleonIdleSheet": "platform/updatedidle.png",
     "chameleonBombWindup"  : "platform/windup.png",
     "chameleonBombShoot"   : "platform/shoot.png",
     "chameleonBombWinddown": "platform/winddown.png",
+
+    "chameleonSplat": "platform/greensplat.png",
+
     "chameleonPinkIdle"    : "platform/pinkidle.png",
     "chameleonPinkWalk"    : "platform/pinkwalk.png",
     "chameleonPinkUpWalk"  : "platform/pinkupwalk.png",
     "chameleonPinkDownWalk": "platform/pinkdownwalk.png",
+
+    "chameleonPinkBombShoot": "platform/pinkbombshoot.png",
+    "chameleonPinkSplat": "platform/pinksplat.png",
+    "chameleonPinkWindDown": "platform/pinkwinddown.png",
+    "chameleonPinkWindUp": "platform/pinkwindup.png",
+    "chameleonGreenUpWindUp":   "platform/upgreenwindup.png",
+    "chameleonGreenUpBombShoot":"platform/upgreenbomb.png",
+    "chameleonGreenUpWindDown": "platform/upgreenwinddown.png",
+
+    "chameleonGreenDownWindUp":   "platform/downgreenwindup.png",
+    "chameleonGreenDownBombShoot":"platform/downgreenbomb.png",
+    "chameleonGreenDownWindDown": "platform/downgreenwinddown.png",
+
+    "upPinkBombWindupSheet":    "platform/uppinkwindup.png",
+      "upPinkBombShootSheet":     "platform/uppinkbomb.png",
+      "upPinkBombWinddownSheet":  "platform/uppinkwinddown.png",
+      "downPinkBombWindupSheet":   "platform/downpinkwindup.png",
+      "downPinkBombShootSheet":    "platform/downpinkbomb.png",
+      "downPinkBombWinddownSheet": "platform/downpinkwinddown.png",
+
     "ventFall": "platform/vent_fall.png",
 
     "enemyAlertSheet": "platform/enemy-alert.png",
@@ -68,7 +90,10 @@
     "tutorialhints_bomb": "platform/tutorialhints_bomb.png",
     "tutorialhints_goal": "platform/tutorialhints_goal.png",
     "spray_fade": "platform/spray_animation_sheet_extended.png",
-    "bomb_fade": "platform/bomb_splatter_sheet_updated.png"
+    "spray_air": "platform/spray_air.png",
+    "spray_launch": "platform/spray_launch_sheet.png",
+    "bomb_fade": "platform/bomb_splatter_sheet_updated.png",
+    "vignette" : "platform/Vignette.png"
   },
   "jsons"  : {
     "platform-constants": "constants/constants.json",
@@ -89,8 +114,9 @@
     "level_9" : "constants/level_9.json",
     "level_grate" : "constants/level_grate.json",
     "laser_test" : "constants/laser_test.json",
-    "level_13" : "constants/level_13.json",
-    "level_14": "constants/level_14.json"
+    "level_12" : "constants/level_12.json",
+    "level_13" : "constants/level_frank.json",
+    "level_14" : "constants/level_14.json"
   },
   "sounds" : {
     "bomb" : "audio/Bomb_16bit.wav",

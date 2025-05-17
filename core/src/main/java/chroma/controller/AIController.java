@@ -99,7 +99,7 @@ public class AIController {
     private Array<Vector2> path;
     private Vector2 previousEnd;
     private float pathRecalcTimer = 0;
-    private final float PATH_RECALC_INTERVAL = 0.2f;
+    private final float PATH_RECALC_INTERVAL = 0.3f;
 
     private float scale;
 
@@ -332,26 +332,31 @@ public class AIController {
 //        }
 
         public NavNode getNearestWalkableNode(Vector2 point) {
-            NavNode closest = new NavNode(point.x, point.y);
+            int baseX = (int) point.x;
+            int baseY = (int) point.y;
+            GridPoint2 neighbor = new GridPoint2();
+
+            NavNode closest = null;
             float minDist = Float.MAX_VALUE;
-            // Check nearby cells (3x3)
+
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
-                    GridPoint2 neighbor = new GridPoint2((int) (point.x + dx), (int) (point.y + dy));
+                    neighbor.set(baseX + dx, baseY + dy);
                     Array<NavNode> candidates = spatialMap.get(neighbor);
                     if (candidates == null) continue;
 
                     for (NavNode node : candidates) {
                         float dist = node.position.dst2(point);
                         if (dist < minDist) {
-//                            System.out.println(dist);
                             minDist = dist;
                             closest = node;
+                            if (dist == 0) return node; // Early exit
                         }
                     }
                 }
             }
-            return closest; // Default to original if no match
+
+            return closest != null ? closest : new NavNode(point.x, point.y);
         }
     }
 
