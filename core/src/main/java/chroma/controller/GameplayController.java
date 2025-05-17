@@ -1261,7 +1261,7 @@ public class GameplayController implements Screen {
             Texture hintTex = directory.getEntry("tutorialhints_bomb", Texture.class);
             hintTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             float worldX = 2f * units;
-            float worldY = 14f * units;
+            float worldY = 8f * units;
 
             batch.draw(hintTex,
                 worldX, worldY,

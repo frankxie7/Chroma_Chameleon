@@ -226,7 +226,7 @@
       "types": ["GUARD", "GUARD", "CAMERA2", "CAMERA2", "GUARD"],
       "patrols": [true, true, false, false, true],
       "patrol_paths": [[[12,18], [2,18]],[[25,25], [8,25]], [], [], [[15,36],[3,36]]],
-      "positions": [[5,18], [10,25], [17,20], [15,47], [3,36]],
+      "positions": [[5,18], [10,25], [17,20.5], [15,47], [3,36]],
       "startRotation": [180, 180, 270, 270, 180],
       "rotateAngle": [0, 0, 40, 0, 0]
     },
