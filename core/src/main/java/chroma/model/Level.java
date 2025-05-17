@@ -188,10 +188,12 @@ public class Level {
                 Vector2 goalCenter = new Vector2(minX + 2f, minY + 2.25f);
 
                 Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
+                Texture texture25 = directory.getEntry("blackmachine25", Texture.class);
+                Texture texture60 = directory.getEntry("blackmachine60", Texture.class);
                 fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture notFull = directory.getEntry("blackmachine",Texture.class);
 
-                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture,texture25,texture60));
                 goal.getObstacle().setName("goal");
                 goalCollisions = goal;
 
@@ -229,8 +231,10 @@ public class Level {
                 Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
                 fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture notFull = directory.getEntry("blackmachine",Texture.class);
+                Texture texture25 = directory.getEntry("blackmachine25", Texture.class);
+                Texture texture60 = directory.getEntry("blackmachine60", Texture.class);
 
-                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture,texture25,texture60));
                 goal.getObstacle().setName("goal");
                 goal2Collisions = goal;
             }
@@ -266,8 +270,10 @@ public class Level {
                 Texture fullTexture = directory.getEntry("pinkmachine", Texture.class);
                 fullTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
                 Texture notFull = directory.getEntry("blackmachine",Texture.class);
+                Texture texture25 = directory.getEntry("blackmachine25", Texture.class);
+                Texture texture60 = directory.getEntry("blackmachine60", Texture.class);
 
-                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture));
+                GoalCollision goal = (new GoalCollision(goalCenter,units, notFull,fullTexture,texture25,texture60));
                 goal.getObstacle().setName("goal");
                 goal3Collisions = goal;
             }

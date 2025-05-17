@@ -488,7 +488,16 @@ public class GameplayController implements Screen {
             }
             // Or if b hits a certain target or distance, b.setFlying(false);
         }
-
+        if(physics.goals125() && !goal1Complete){
+            if(level.getGoalCollisions() != null){
+                level.getGoalCollisions().set25();
+            }
+        }
+        if(physics.goals160() && !goal1Complete){
+            if(level.getGoalCollisions() != null){
+                level.getGoalCollisions().set60();
+            }
+        }
         if(physics.goals1Full() && !goal1Complete){
             goal1Complete = true;
             for(Goal g : physics.getGoalList()){
@@ -496,6 +505,17 @@ public class GameplayController implements Screen {
             }
             if(level.getGoalCollisions() != null){
                 level.getGoalCollisions().setComplete();
+            }
+        }
+
+        if(physics.goals225() && !goal2Complete){
+            if(level.getGoal2Collisions() != null){
+                level.getGoal2Collisions().set25();
+            }
+        }
+        if(physics.goals260() && !goal2Complete){
+            if(level.getGoal2Collisions() != null){
+                level.getGoal2Collisions().set60();
             }
         }
         if(physics.goals2Full() && !goal2Complete) {
@@ -507,6 +527,17 @@ public class GameplayController implements Screen {
                 level.getGoal2Collisions().setComplete();
             }
 
+        }
+
+        if(physics.goals325() && !goal3Complete){
+            if(level.getGoal3Collisions() != null){
+                level.getGoal3Collisions().set25();
+            }
+        }
+        if(physics.goals360() && !goal3Complete){
+            if(level.getGoal3Collisions() != null){
+                level.getGoal3Collisions().set60();
+            }
         }
         if(physics.goals3Full() && !goal3Complete){
             goal3Complete = true;

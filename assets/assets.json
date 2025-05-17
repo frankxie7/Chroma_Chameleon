@@ -73,6 +73,8 @@
     "spray": "platform/spray.png",
     "pinkmachine":"platform/pinkmachine.png",
     "blackmachine" : "platform/blackmachine.png",
+    "blackmachine25" : "platform/blackmachine25.png",
+    "blackmachine60" : "platform/blackmachine60.png",
     "tutorialhints_spray": "platform/tutorialhints_spray.png",
     "tutorialhints_walk": "platform/tutorialhints_walk.png",
     "tutorialhints_bomb": "platform/tutorialhints_bomb.png",
