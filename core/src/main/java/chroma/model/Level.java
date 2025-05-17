@@ -345,7 +345,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
