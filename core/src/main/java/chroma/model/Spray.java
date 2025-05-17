@@ -243,17 +243,16 @@ public void update(float dt) {
         transform.preRotate(angleDeg);
         transform.preTranslate(x * u, y * u);
 
-        Gdx.app.log("SprayDebug",
-            "Sprite size: " +
-                sprite.getRegionWidth() + "×" +
-                sprite.getRegionHeight()
-        );
-        /* 4) 绘制多边形网格 */
+//        Gdx.app.log("SprayDebug",
+//            "Sprite size: " +
+//                sprite.getRegionWidth() + "×" +
+//                sprite.getRegionHeight()
+
         batch.setTextureRegion(sprite);          // 绑定贴图
         batch.drawMesh(mesh, transform, true);   // true -> 乘以 batch 颜色
         batch.setTexture((Texture) null);        // 解绑
 
-        /* 5) 恢复批次颜色 */
+
         batch.setColor(saved);
     }
 

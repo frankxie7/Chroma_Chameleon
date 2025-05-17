@@ -630,6 +630,31 @@ public class PhysicsController implements ContactListener {
         return (float)numFilled / goalList.size() > 0.8;
     }
 
+    public boolean goals125(){
+        int numFilled = 0;
+        if(goalList.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goalList){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goalList.size() > 0.15;
+    }
+    public boolean goals160(){
+        int numFilled = 0;
+        if(goalList.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goalList){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goalList.size() > 0.50;
+    }
+
     /**
      * This function returns if goal 2 is full
      * @return true if full false if not
@@ -646,7 +671,30 @@ public class PhysicsController implements ContactListener {
         }
         return (float)numFilled / goal2List.size() > 0.8;
     }
-
+    public boolean goals225(){
+        int numFilled = 0;
+        if(goal2List.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal2List.size() > 0.25;
+    }
+    public boolean goals260(){
+        int numFilled = 0;
+        if(goal2List.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goal2List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal2List.size() > 0.60;
+    }
     /**
      * This function returns if goal 3 is full
      * @return true if full false if not
@@ -662,6 +710,31 @@ public class PhysicsController implements ContactListener {
             }
         }
         return (float)numFilled / goal3List.size() > 0.8;
+    }
+
+    public boolean goals325(){
+        int numFilled = 0;
+        if(goal3List.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goal3List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal3List.size() > 0.25;
+    }
+    public boolean goals360(){
+        int numFilled = 0;
+        if(goal3List.isEmpty()){
+            return true;
+        }
+        for(Goal goal : goal3List){
+            if(goal != null && goal.isFull()){
+                numFilled +=1;
+            }
+        }
+        return (float)numFilled / goal3List.size() > 0.60;
     }
 
 
