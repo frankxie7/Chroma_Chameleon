@@ -938,6 +938,11 @@ public class GameplayController implements Screen {
         }
     }
 
+    private void drawVignette(Texture vig) {
+        batch.setProjectionMatrix(uiCamera.combined);
+        batch.draw(vig,0,0,width, height);
+    }
+
 
 
 //    /**
@@ -1320,6 +1325,9 @@ public class GameplayController implements Screen {
         }
 
         // Draw the paint container (UI) after objects
+        Texture vig = directory.getEntry("vignette", Texture.class);
+        drawVignette(vig);
+
         Texture barTex = directory.getEntry("paintBar", Texture.class);
         Texture barOverlayTex = directory.getEntry("paintBar-overlay", Texture.class);
 //        barTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
