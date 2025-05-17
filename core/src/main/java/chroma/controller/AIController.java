@@ -1023,6 +1023,7 @@ public class AIController {
                 );
             }
         }
+        batch.setColor(Color.WHITE);
         batch.end();
     }
 
