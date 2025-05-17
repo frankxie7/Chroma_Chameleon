@@ -116,7 +116,8 @@
     "laser_test" : "constants/laser_test.json",
     "level_12" : "constants/level_12.json",
     "level_13" : "constants/level_frank.json",
-    "level_14" : "constants/level_14.json"
+    "level_14" : "constants/level_14.json",
+    "cooper_level" : "constants/cooper_hard_level.json"
   },
   "sounds" : {
     "bomb" : "audio/Bomb_16bit.wav",
