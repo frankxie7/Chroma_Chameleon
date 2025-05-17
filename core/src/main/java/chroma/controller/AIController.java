@@ -545,7 +545,7 @@ public class AIController {
         if (playerDetected) {
             detectionTimer = Math.min(detectionThreshold + 0.5f, detectionTimer + delta);
             outOfSightTimer = 0f;
-        } else {
+        } else if (alertTimer >= alertLength) {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
         if (type == Type.GUARD) {
