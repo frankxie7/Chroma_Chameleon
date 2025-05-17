@@ -299,7 +299,7 @@ public class PhysicsController implements ContactListener {
             sprayTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             sprayLaunch.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             Animation<TextureRegion> fadeAnim   = createAnimation(sprayTex,  14, 0.29f);
-            Animation<TextureRegion> launchAnim   = createAnimation(sprayLaunch,  3, 0.07f);
+            Animation<TextureRegion> launchAnim   = createAnimation(sprayLaunch,  3, 0.05f);
             Spray paintFan = new Spray(polyVerts, units,sprayTex,angle,fadeAnim,launchAnim);
             addObject(paintFan);
         } catch (Exception ignored) {
