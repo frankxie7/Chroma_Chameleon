@@ -506,22 +506,18 @@ public class Chameleon extends ObstacleSprite {
             if (lastDirection == Direction.UP) {
                 currentFrame = bankUpWalk.getKeyFrame(0f, false);
                 animTime = 0f;
-                walkSound.stop();
             }
             // 2) Facing DOWN? keep original static DOWN frame
             else if (lastDirection == Direction.DOWN) {
                 currentFrame = bankDownWalk.getKeyFrame(0f, false);
                 animTime = 0f;
-                walkSound.stop();
             }
             // 3) LEFT or RIGHT (or anything else): play your two‑frame idle loop
             else {
                 animTime += dt;
                 currentFrame = bankIdle.getKeyFrame(animTime, true);
-                walkSound.stop();
             }
-
-
+            walkSound.stop();
         } else {
             animTime += dt;
 

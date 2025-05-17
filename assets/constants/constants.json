@@ -229,9 +229,17 @@
       "positions": [[5,18], [10,25], [17,20], [15,47], [3,36]],
       "startRotation": [180, 180, 270, 270, 180],
       "rotateAngle": [0, 0, 40, 0, 0]
+    },
+    "cooper_level" : {
+      "names": ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5", "enemy6"],
+      "types": ["GUARD", "GUARD", "GUARD", "CAMERA2", "CAMERA1", "CAMERA1"],
+      "patrols": [true, true, true, false, false, false],
+      "patrol_paths": [[[25,12], [25,38]],[[23,38], [23,12]], [[55,30], [55,38]], [], [], []],
+      "positions": [[25,38], [23,12], [55,38], [24,48], [59,18], [24,4]],
+      "startRotation": [180, 180, 270, 270, 180, 90],
+      "rotateAngle": [0, 0, 0, 45, 45, 45]
     }
   },
-
   "bomb": {
     "size"      : 2.0,
     "aimRange": 8
