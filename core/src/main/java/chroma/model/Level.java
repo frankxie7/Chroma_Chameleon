@@ -57,12 +57,25 @@ public class Level {
     private Map<Integer, TextureRegion> tileRegions;
 
     private static final Set<Integer> GRATE_GIDS = Set.of(
-        659, 660, 661, 662, 663, 664,
-        697, 698, 699, 700, 701, 702,
+        659, 660, 661, 662, 663, 664, 665, 666,
+        669,
+        697, 698, 699, 700,
+        703, 704,
         735, 736, 737, 738, 739, 740,
+        741, 742,
         773, 774, 775, 776, 777, 778,
-        811, 812, 813, 814, 815, 816,
-        849, 850, 851, 852, 853, 854
+        779, 780,
+        811, 812, 813, 814,
+        817, 818,
+        849, 850, 851, 852, 853, 854,
+        855, 856,
+        927, 928, 929, 930,
+        965, 966, 967, 968,
+        1003, 1004, 1005, 1006,
+        1041, 1042, 1043, 1044,
+        1079, 1080, 1081, 1082,
+        1117, 1118, 1119, 1120,
+        701, 702, 815, 816
     );
     /**
      * Constructs a new Level by loading the JSON configuration through the provided LevelSelector.
@@ -279,7 +292,6 @@ public class Level {
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;
-                System.out.println("here");// no matching region
                 int tileValue = data.getInt(i);
                 // create a 1×1 tile-based Terrain at (tx,ty)
                 if (tileValue != 0) {
