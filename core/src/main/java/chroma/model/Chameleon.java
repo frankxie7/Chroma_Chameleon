@@ -104,6 +104,24 @@ public class Chameleon extends ObstacleSprite {
     private Animation<TextureRegion> bombWindup;
     private Animation<TextureRegion> bombShoot;
     private Animation<TextureRegion> bombWinddown;
+    private Animation<TextureRegion> pinkBombWindup;
+    private Animation<TextureRegion> pinkBombShoot;
+    private Animation<TextureRegion> pinkBombWinddown;
+    private Animation<TextureRegion> upBombWindup,   upBombShoot,   upBombWinddown;
+    private Animation<TextureRegion> downBombWindup, downBombShoot, downBombWinddown;
+
+    private Animation<TextureRegion> upPinkBombWindup;
+    private Animation<TextureRegion> upPinkBombShoot;
+    private Animation<TextureRegion> upPinkBombWinddown;
+
+    private Animation<TextureRegion> downPinkBombWindup;
+    private Animation<TextureRegion> downPinkBombShoot;
+    private Animation<TextureRegion> downPinkBombWinddown;
+    // Spray fields
+    private Animation<TextureRegion> sprayAnim;
+    private float             sprayTime    = 0f;
+    private boolean           sprayPlaying = false;
+
 
     private enum BombPhase { NONE, WINDUP, SHOOT, WINDDOWN }
     private BombPhase bombPhase = BombPhase.NONE;
@@ -434,6 +452,22 @@ public class Chameleon extends ObstacleSprite {
             super.update(dt);           // still step the physics body
             return;                     // skip walk animation changes
         }
+        if (sprayPlaying) {
+            // keep physics running
+            super.update(dt);
+
+            // advance and grab the splat frame
+            sprayTime += dt;
+            currentFrame = sprayAnim.getKeyFrame(sprayTime, /* looping= */ false);
+
+            // once it’s done, turn it off
+            if (sprayAnim.isAnimationFinished(sprayTime)) {
+                sprayPlaying = false;
+            }
+            // skip all of the walk/idle logic below
+            return;
+        }
+
         if (hmove > 0) {
             faceRight = true;
             faceUp = false;
@@ -559,13 +593,36 @@ public class Chameleon extends ObstacleSprite {
                 currentFrame.flip(true, false);
             }
         }
+        float manualYOffset = 10f; // ← tweak this value until it sits just right
+        float manualXOffset = 2f;
+        float yOffset = 0f;
+        float xOffset = 0f;
+        float extraShootOffset = 5.5f;
+        if (isBombPlaying() && lastDirection == Direction.UP) {
+            yOffset = manualYOffset;
+        }
+        if (isBombPlaying() && lastDirection == Direction.DOWN) {
+            yOffset = -manualYOffset;
+        }
+        if (isBombPlaying() && lastDirection == Direction.LEFT) {
+            xOffset = -manualXOffset;
+            if (bombPhase == BombPhase.SHOOT) {
+                xOffset += extraShootOffset;  // e.g. +8f or -8f depending on art
+            }
+        }
+        if (isBombPlaying() && lastDirection == Direction.RIGHT) {
+            xOffset = manualXOffset;
+            if (bombPhase == BombPhase.SHOOT) {
+                xOffset -= extraShootOffset;  // e.g. +8f or -8f depending on art
+            }
+        }
 //        Vector2 p = getPosition();
 //        float worldPx = p.x * 16f;
 //        float worldPy = p.y * 16f;
 //        Gdx.app.log("SprayDebug", "Player = (" + worldPx + ", " + worldPy + ")");
         batch.draw(currentFrame,
-            px - drawWidth / 2,
-            py - drawHeight / 2,
+            px - drawWidth / 2 + xOffset,
+            py - drawHeight / 2 + yOffset,
             drawWidth / 2, drawHeight / 2,
             drawWidth, drawHeight,
             1, 1,
@@ -663,7 +720,7 @@ public class Chameleon extends ObstacleSprite {
 //    public boolean isBombPlaying() {
 //        return bombPlaying;
 //    }
-//    public void pauseBombAnimation() {
+//    public void pauseBomfbAnimation() {
 //        bombPaused = true;
 //    }
 //
@@ -681,6 +738,14 @@ public class Chameleon extends ObstacleSprite {
 //            maxFrame * frameDur);
 //        currentFrame = bombAnim.getKeyFrame(bombAnimTime, false);
 //    }
+public void setSprayAnimation(Animation<TextureRegion> anim) {
+    this.sprayAnim = anim;
+}
+
+    public void triggerSpray() {
+        sprayTime    = 0f;
+        sprayPlaying = true;
+    }
 
     /**
      * Returns the primary fixture associated with this game object.
@@ -739,40 +804,77 @@ public class Chameleon extends ObstacleSprite {
 
 //    public boolean isBombPlaying()  { return bombPhase != BombPhase.NONE; }
 
-    /** advance the three-phase state machine and pick the video frame */
     private void updateBomb(float dt) {
         if (bombPhase == BombPhase.NONE) return;
-
         bombTime += dt;
 
+        // 1) Select the correct set of animations for this direction:
+        Animation<TextureRegion> windupAnim, shootAnim, winddownAnim;
+        if (isHidden()) {
+            // 隐身时：再按方向分三套粉色动画
+            if (lastDirection == Direction.UP) {
+                windupAnim   = upPinkBombWindup;
+                shootAnim    = upPinkBombShoot;
+                winddownAnim = upPinkBombWinddown;
+            } else if (lastDirection == Direction.DOWN) {
+                windupAnim   = downPinkBombWindup;
+                shootAnim    = downPinkBombShoot;
+                winddownAnim = downPinkBombWinddown;
+            } else {
+                windupAnim   = pinkBombWindup;
+                shootAnim    = pinkBombShoot;
+                winddownAnim = pinkBombWinddown;
+            }
+        }
+        else if (lastDirection == Direction.UP) {
+            windupAnim   = upBombWindup;
+            shootAnim    = upBombShoot;
+            winddownAnim = upBombWinddown;
+        } else if (lastDirection == Direction.DOWN) {
+            windupAnim   = downBombWindup;
+            shootAnim    = downBombShoot;
+            winddownAnim = downBombWinddown;
+        } else {
+            windupAnim   = bombWindup;
+            shootAnim    = bombShoot;
+            winddownAnim = bombWinddown;
+        }
+//        Gdx.app.log("BombDbg",
+//            "windupDur=" + windupAnim.getAnimationDuration()
+//                + " shootDur=" + shootAnim.getAnimationDuration()
+//                + " winddownDur=" + winddownAnim.getAnimationDuration()
+//                + " phase=" + bombPhase);
+
+        // 2) Phase logic using the chosen animations:
         switch (bombPhase) {
             case WINDUP:
-                // stay on the last frame instead of auto-switching
-                if (bombWindup.isAnimationFinished(bombTime)) {
-                    bombTime = bombWindup.getAnimationDuration();   // clamp & freeze
+                if (windupAnim.isAnimationFinished(bombTime)) {
+                    // clamp & freeze to *this* windup’s duration
+                    bombTime = windupAnim.getAnimationDuration();
                 }
                 break;
 
             case SHOOT:
-                if (bombShoot.isAnimationFinished(bombTime)) {
+                if (shootAnim.isAnimationFinished(bombTime)) {
                     bombPhase = BombPhase.WINDDOWN;
                     bombTime  = 0f;
                 }
                 break;
 
             case WINDDOWN:
-                if (bombWinddown.isAnimationFinished(bombTime)) {
-                    bombPhase = BombPhase.NONE;                     // hand control back
+                if (winddownAnim.isAnimationFinished(bombTime)) {
+                    bombPhase = BombPhase.NONE;
                 }
                 break;
         }
 
-        Animation<TextureRegion> strip =
-            bombPhase == BombPhase.WINDUP   ? bombWindup   :
-                bombPhase == BombPhase.SHOOT    ? bombShoot    :
-                    bombWinddown;
+        Animation<TextureRegion> currentAnim =
+            bombPhase == BombPhase.WINDUP ? windupAnim
+                : bombPhase == BombPhase.SHOOT  ? shootAnim
+                    : winddownAnim;
+        currentFrame = currentAnim.getKeyFrame(bombTime, false);
 
-        currentFrame = strip.getKeyFrame(bombTime, false);
+
     }
 
     /* ───────── pink animations (hidden-in-paint) ───────── */
@@ -788,7 +890,48 @@ public class Chameleon extends ObstacleSprite {
         pinkUpWalkAnim= up;
         pinkDownWalkAnim = down;
     }
+    public void setPinkBombAnimations(
+        Animation<TextureRegion> wind,
+        Animation<TextureRegion> shoot,
+        Animation<TextureRegion> down) {
+        this.pinkBombWindup   = wind;
+        this.pinkBombShoot    = shoot;
+        this.pinkBombWinddown = down;
+    }
+    // 新增上下两套 setter
+    public void setUpPinkBombAnimations(
+        Animation<TextureRegion> windup,
+        Animation<TextureRegion> shoot,
+        Animation<TextureRegion> winddown) {
+        this.upPinkBombWindup   = windup;
+        this.upPinkBombShoot    = shoot;
+        this.upPinkBombWinddown = winddown;
+    }
+
+    public void setDownPinkBombAnimations(
+        Animation<TextureRegion> windup,
+        Animation<TextureRegion> shoot,
+        Animation<TextureRegion> winddown) {
+        this.downPinkBombWindup   = windup;
+        this.downPinkBombShoot    = shoot;
+        this.downPinkBombWinddown = winddown;
+    }
+    public void setUpBombAnimations(
+        Animation<TextureRegion> wind, Animation<TextureRegion> shoot, Animation<TextureRegion> down) {
+        this.upBombWindup   = wind;
+        this.upBombShoot    = shoot;
+        this.upBombWinddown = down;
+    }
+
+    public void setDownBombAnimations(
+        Animation<TextureRegion> wind, Animation<TextureRegion> shoot, Animation<TextureRegion> down) {
+        this.downBombWindup   = wind;
+        this.downBombShoot    = shoot;
+        this.downBombWinddown = down;
+    }
+
 }
+
 
 
     /* override your ordinary draw() */

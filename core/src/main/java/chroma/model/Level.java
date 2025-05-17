@@ -501,6 +501,8 @@ public class Level {
         Texture pinkUp     = directory.getEntry("chameleonPinkUpWalk",   Texture.class);
         Texture pinkDown   = directory.getEntry("chameleonPinkDownWalk", Texture.class);
 
+
+
         pinkIdle.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pinkWalk.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pinkUp.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -527,9 +529,86 @@ public class Level {
         Animation<TextureRegion> bombWindup   = createAnimation(windupSheet,   17, 0.03f);
         Animation<TextureRegion> bombShoot    = createAnimation(shootSheet,    13, 0.11f);
         Animation<TextureRegion> bombWinddown = createAnimation(winddownSheet, 18, 0.04f);
+
+// ── NEW pink-bomb sheets (for when the chameleon is hidden/pink) ─────────────────
+        Texture pinkWindupSheet   = directory.getEntry("chameleonPinkWindUp",   Texture.class);
+        Texture pinkShootSheet    = directory.getEntry("chameleonPinkBombShoot",    Texture.class);
+        Texture pinkWinddownSheet = directory.getEntry("chameleonPinkWindDown", Texture.class);
+
+        pinkWindupSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkShootSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pinkWinddownSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+// frame counts & durations should match your art-sheet-layout
+        Animation<TextureRegion> pinkBombWindup   = createAnimation(pinkWindupSheet,   17, 0.03f);
+        Animation<TextureRegion> pinkBombShoot    = createAnimation(pinkShootSheet,    13, 0.05f);
+        Animation<TextureRegion> pinkBombWinddown = createAnimation(pinkWinddownSheet, 18, 0.04f);
+
+        // ── VERTICAL (green) bomb sheets ────────────────────────────────────────────
+// Up-throw
+        Texture upGreenWindUpSheet    = directory.getEntry("chameleonGreenUpWindUp",    Texture.class);
+        Texture upGreenBombShootSheet = directory.getEntry("chameleonGreenUpBombShoot", Texture.class);
+        Texture upGreenWindDownSheet  = directory.getEntry("chameleonGreenUpWindDown",  Texture.class);
+        upGreenWindUpSheet   .setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        upGreenBombShootSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        upGreenWindDownSheet .setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+// TODO: replace “U” and “D” with your actual frame counts and durations
+        Animation<TextureRegion> upBombWindup   = createAnimation(upGreenWindUpSheet,    16, 0.03f);
+        Animation<TextureRegion> upBombShoot    = createAnimation(upGreenBombShootSheet, 14, 0.05f);
+        Animation<TextureRegion> upBombWinddown = createAnimation(upGreenWindDownSheet,  16, 0.04f);
+        upBombWindup  .setPlayMode(Animation.PlayMode.NORMAL);
+        upBombShoot   .setPlayMode(Animation.PlayMode.NORMAL);
+        upBombWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+// Down-throw
+        Texture downGreenWindUpSheet    = directory.getEntry("chameleonGreenDownWindUp",    Texture.class);
+        Texture downGreenBombShootSheet = directory.getEntry("chameleonGreenDownBombShoot", Texture.class);
+        Texture downGreenWindDownSheet  = directory.getEntry("chameleonGreenDownWindDown",  Texture.class);
+        downGreenWindUpSheet   .setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        downGreenBombShootSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        downGreenWindDownSheet .setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Animation<TextureRegion> downBombWindup   = createAnimation(downGreenWindUpSheet,    14, 0.03f);
+        Animation<TextureRegion> downBombShoot    = createAnimation(downGreenBombShootSheet, 15, 0.05f);
+        Animation<TextureRegion> downBombWinddown = createAnimation(downGreenWindDownSheet,  14, 0.04f);
+        downBombWindup  .setPlayMode(Animation.PlayMode.NORMAL);
+        downBombShoot   .setPlayMode(Animation.PlayMode.NORMAL);
+        downBombWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+
+        pinkBombWindup.setPlayMode(Animation.PlayMode.NORMAL);
+        pinkBombShoot.setPlayMode(Animation.PlayMode.NORMAL);
+        pinkBombWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+
+
         bombWindup.setPlayMode(Animation.PlayMode.NORMAL);
         bombShoot.setPlayMode(Animation.PlayMode.NORMAL);
         bombWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+
+        Texture uppinkwindupSheet    = directory.getEntry("upPinkBombWindupSheet",    Texture.class);
+        Texture uppinkbombSheet = directory.getEntry("upPinkBombShootSheet", Texture.class);
+        Texture uppinkwinddownSheet  = directory.getEntry("upPinkBombWinddownSheet",  Texture.class);
+        // 举例：先加载好 uppinkwindup/uppinkbomb/uppinkwinddown 贴图
+        Animation<TextureRegion> upPinkWindup   = createAnimation( uppinkwindupSheet,    16, 0.03f );
+        Animation<TextureRegion> upPinkShoot    = createAnimation( uppinkbombSheet,       14, 0.05f );
+        Animation<TextureRegion> upPinkWinddown = createAnimation( uppinkwinddownSheet,   16, 0.04f );
+
+// 设成 NORMAL 播放模式
+        upPinkWindup  .setPlayMode(Animation.PlayMode.NORMAL);
+        upPinkShoot   .setPlayMode(Animation.PlayMode.NORMAL);
+        upPinkWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+
+        Texture downpinkwindupSheet    = directory.getEntry("downPinkBombWindupSheet",    Texture.class);
+        Texture downpinkbombSheet = directory.getEntry("downPinkBombShootSheet", Texture.class);
+        Texture downpinkwinddownSheet  = directory.getEntry("downPinkBombWinddownSheet",  Texture.class);
+        Animation<TextureRegion> downPinkWindup   = createAnimation( downpinkwindupSheet,    14, 0.03f );
+        Animation<TextureRegion> downPinkShoot    = createAnimation( downpinkbombSheet,       15, 0.05f );
+        Animation<TextureRegion> downPinkWinddown = createAnimation( downpinkwinddownSheet,   14, 0.04f );
+
+        downPinkWindup  .setPlayMode(Animation.PlayMode.NORMAL);
+        downPinkShoot   .setPlayMode(Animation.PlayMode.NORMAL);
+        downPinkWinddown.setPlayMode(Animation.PlayMode.NORMAL);
+
+// 最后注入到 avatar：
+
+
         Music walkSound = directory.getEntry("chameleon_walk", Music.class);
 // build the avatar
         avatar = new Chameleon(units,
@@ -537,9 +616,19 @@ public class Level {
             walkAnim, upAnim, downAnim,
             walkSound, idleAnim);
 
+        Texture splatSheet = directory.getEntry("chameleonSplat", Texture.class);
+        splatSheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        Animation<TextureRegion> splatAnim = createAnimation(splatSheet, 2, 0.2f);
+        avatar.setSprayAnimation(splatAnim);
 // hand all three bomb clips to the chameleon
         avatar.setPinkAnimations(pinkIdleAnim, pinkWalkAnim, pinkUpAnim, pinkDownAnim);
         avatar.setBombAnimations(bombWindup, bombShoot, bombWinddown);
+        avatar.setPinkBombAnimations(pinkBombWindup, pinkBombShoot, pinkBombWinddown);
+        avatar.setUpBombAnimations(   upBombWindup,   upBombShoot,   upBombWinddown);
+        avatar.setDownBombAnimations( downBombWindup, downBombShoot, downBombWinddown);
+        avatar.setUpPinkBombAnimations(   upPinkWindup,   upPinkShoot,   upPinkWinddown);
+        avatar.setDownPinkBombAnimations( downPinkWindup, downPinkShoot, downPinkWinddown);
+
 
         // Create enemies
         enemies = new ArrayList<>();

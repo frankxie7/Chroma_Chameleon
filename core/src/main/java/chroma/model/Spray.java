@@ -91,16 +91,19 @@ public class Spray extends ObstacleSprite {
 //    }
     // How we drive the per-frame fade animation
     private final Animation<TextureRegion> fadeAnim;
-
+    private final Animation<TextureRegion> launchAnim;
+    float texW;
+    float texH;
     public Spray(float[] points,
         float units,
         Texture sprayTex,
-        float angleDeg,Animation<TextureRegion>fadeAnim) {
+        float angleDeg,Animation<TextureRegion>fadeAnim,Animation<TextureRegion>launchAnim) {
 
         this.angleDeg = angleDeg;
         this.sprayTexture = sprayTex;
         Vector2 origin = new Vector2(points[0], points[1]);
         this.fadeAnim = fadeAnim;
+        this.launchAnim =launchAnim;
         float[] localPx = points.clone();
         for (int i = 0; i < localPx.length; i += 2) {
             localPx[i]   -= origin.x;
@@ -139,7 +142,7 @@ public class Spray extends ObstacleSprite {
          * ---------------------------------------------------------- */
         EarClippingTriangulator triangulator = new EarClippingTriangulator();
         ShortArray tris = triangulator.computeTriangles(localMeters);
-        Poly2 poly = new Poly2(localMeters, tris.toArray());   // 像素坐标
+        poly = new Poly2(localMeters, tris.toArray());   // 像素坐标
 
         /* ------------------------------------------------------------
          * 4) Mesh
@@ -149,10 +152,10 @@ public class Spray extends ObstacleSprite {
 
         this.sprite = new SpriteSheet(sprayTex, 1, 1);
 
-        float texW = sprayTex.getWidth()*1.2f/14f;
-        float texH = sprayTex.getHeight()*1.2f;
+        texW = sprayTex.getWidth()*1.2f;
+        texH = sprayTex.getHeight()*1.2f;
 
-        mesh.set(poly, 0, -texH * 0.5f, texW, texH);
+        mesh.set(poly, 0, -texH * 0.5f, texW/14f, texH);
     }
 
 
@@ -175,31 +178,43 @@ public void update(float dt) {
     // 1) advance our timer
     timeAlive += dt;
 
-    // 2) compute fade window
-    float fadeStart = LIFETIME - FADE_DURATION;
+    // 2) compute key timings
+    float launchDuration = launchAnim.getAnimationDuration();
+    float fadeStart     = LIFETIME - FADE_DURATION;
 
     TextureRegion frame;
-    if (timeAlive < fadeStart) {
-        // before fade: hold first frame, full opacity
+
+    if (timeAlive < launchDuration) {
+        // —— launching: play launchAnim at full opacity
+//        mesh.set(poly, 0, -texH * 0.5f, texW/3f, texH);
+        frame = launchAnim.getKeyFrame(timeAlive, false);
+        alpha = 1f;
+
+    } else if (timeAlive < fadeStart) {
+        // —— after launch, before fade: hold first fade frame at full opacity
+//        mesh.set(poly, 0, -texH * 0.5f, texW/14f, texH);
         frame = fadeAnim.getKeyFrame(0f, false);
         alpha = 1f;
+
     } else if (timeAlive < LIFETIME) {
-        // during fade: advance animation & lerp alpha → 0
+        // —— fading window: advance fadeAnim & lerp alpha → 0
         float animTime = timeAlive - fadeStart;
         frame = fadeAnim.getKeyFrame(animTime, false);
-        alpha = Math.max(0f, 1.2f - (animTime / FADE_DURATION));
+        alpha = Math.max(0f, 1f - (animTime / FADE_DURATION));
+
     } else {
-        // after end: last frame (or blank) at zero opacity
+        // —— expired: last fade frame (or blank) at zero alpha
         frame = fadeAnim.getKeyFrame(FADE_DURATION, false);
         alpha = 0f;
     }
 
-    // 3) swap in the new frame
+    // 3) apply the chosen frame
     sprite.setRegion(frame);
 
-    // 4) run normal movement/removal logic
+    // 4) do the usual movement / removal logic
     super.update(dt);
 }
+
 
 
     private Vector2 computeCentroid(float[] points) {
