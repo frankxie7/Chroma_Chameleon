@@ -553,7 +553,7 @@ public class Chameleon extends ObstacleSprite {
     public void draw(SpriteBatch batch) {
         if (falling) return;
         // Save the current color of the batch
-        Color target = isHidden() ? Color.PINK : Color.WHITE;
+        Color target = Color.WHITE;
 //        float alpha = translucent ? 0.2f : 1.0f;
         batch.setColor(target);
 //        Color c = batch.getColor();
