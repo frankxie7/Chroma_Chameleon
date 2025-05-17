@@ -58,7 +58,9 @@ public class ChromaRoot extends Game implements ScreenListener {
     @Override
     public void create() {
         batch = new SpriteBatch();
-
+        Preferences prefs = Gdx.app.getPreferences("GameProgress");
+        prefs.clear();
+        prefs.flush();
         loading = new LoadingMode("assets.json", batch, 1);
         loading.setScreenListener(this);
         setScreen(loading);

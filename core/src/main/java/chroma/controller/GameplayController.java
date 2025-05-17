@@ -38,6 +38,7 @@ import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import edu.cornell.gdiac.util.ScreenListener;
 import com.badlogic.gdx.utils.Queue;
+import com.badlogic.gdx.Preferences;
 
 //import java.awt.*;
 import java.awt.*;
@@ -172,6 +173,7 @@ public class GameplayController implements Screen {
     private boolean goal1Complete = false;
     private boolean goal2Complete = false;
     private boolean goal3Complete = false;
+    private Preferences prefs;
 
 
     public GameplayController(AssetDirectory directory, LevelSelector levelSelector) {
@@ -250,6 +252,8 @@ public class GameplayController implements Screen {
 
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
+
+        prefs = Gdx.app.getPreferences("GameProgress");
 
         this.width = Gdx.graphics.getWidth();
         this.height = Gdx.graphics.getHeight();
@@ -1431,6 +1435,12 @@ public class GameplayController implements Screen {
 
         if (gameState == GameState.WON) {
             drawWinScreen(youWinTexture, restartTex, menuTex, nextlabTex);
+            int levelNum = levelSelector.getCurrentLevel();
+            if (!prefs.getBoolean("level" + levelNum + "Completed", false)) {
+                prefs.putBoolean("level" + levelNum + "Completed", true);
+                prefs.flush();
+            }
+
         } else if (gameState == GameState.LOST) {
             // only pop up the lose UI once we've zoomed all the way in
             if (cageDropped) {

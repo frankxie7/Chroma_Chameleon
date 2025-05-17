@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
+import com.badlogic.gdx.Preferences;
 
 
 public class MenuMode implements Screen, InputProcessor {
@@ -73,7 +74,7 @@ public class MenuMode implements Screen, InputProcessor {
     private boolean rightPressed;
     /** Current page number*/
     private int currPage;
-
+    private Preferences prefs;
     /** Draw the outline for determining */
     private ShapeRenderer shapeRenderer;
 
@@ -115,7 +116,7 @@ public class MenuMode implements Screen, InputProcessor {
         internal = new AssetDirectory( "menu/menu.json" );
         internal.loadAssets();
         internal.finishLoading();
-
+        prefs = Gdx.app.getPreferences("GameProgress");
         levelSelectedSound = internal.getEntry("level-select", Sound.class);
 
         menuSong = internal.getEntry("intro", Sound.class);
@@ -225,15 +226,42 @@ public class MenuMode implements Screen, InputProcessor {
 
             bounds[i] = new Bound(x, y, boundWidth*2, boundHeight*2);
 
-            if (currPage == 0) {
-                Texture texture = i == currLevel - 1 ? buttonPressTexs1[currLevel-1]: buttonTexs1[i];
-                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+//            if (currPage == 0) {
+//                Texture texture = i == currLevel - 1 ? buttonPressTexs1[currLevel-1]: buttonTexs1[i];
+//                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+//            } else {
+//                Texture texture = i == currLevel - 10 ? buttonPressTexs2[currLevel-10]: buttonTexs2[i];
+//                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+//            }
+            int perPage   = numCols * numRows;
+            int levelNum  = i + 1 + currPage * perPage;
+
+
+            boolean done = prefs.getBoolean("level" + levelNum + "Completed", false);
+
+            Texture texture;
+            if (done) {
+                boolean pressed = (currPage == 0 && i == currLevel - 1)
+                    || (currPage != 0 && i == currLevel - 1 - currPage * perPage);
+                String key = pressed
+                    ? "buttonPress" + levelNum + "Red"
+                    : "button"      + levelNum + "Red";
+                texture = internal.getEntry(key, Texture.class);
+            } else if (currPage == 0) {
+                texture = (i == currLevel - 1)
+                    ? buttonPressTexs1[i]
+                    : buttonTexs1[i];
             } else {
-                Texture texture = i == currLevel - 10 ? buttonPressTexs2[currLevel-10]: buttonTexs2[i];
-                texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                batch.draw(texture, x, y, buttonWidth, buttonHeight);
+                int localIndex = i;
+                texture = (localIndex == currLevel - 1 - currPage * perPage)
+                    ? buttonPressTexs2[localIndex]
+                    : buttonTexs2[localIndex];
             }
+
+            texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            batch.draw(texture, x, y, buttonWidth, buttonHeight);
         }
 
         // Draw two arrows
