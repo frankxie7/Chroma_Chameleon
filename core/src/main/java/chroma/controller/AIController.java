@@ -545,7 +545,7 @@ public class AIController {
         if (playerDetected) {
             detectionTimer = Math.min(detectionThreshold + 0.5f, detectionTimer + delta);
             outOfSightTimer = 0f;
-        } else if (alertTimer >= alertLength) {
+        } else {
             detectionTimer = Math.max(0, detectionTimer - delta);
         }
         if (type == Type.GUARD) {
@@ -941,7 +941,7 @@ public class AIController {
         Vector2 enemyScreenPos = new Vector2(enemyWorldPos.x * scale, enemyWorldPos.y * scale);
 
         float halfFOV = (float) Math.toRadians(fov / 2);
-        int numRays = (int) 20f;  // high = smoother
+        int numRays = (int) 10f;  // high = smoother
         float angleStep = (halfFOV * 2) / (numRays - 1);
 
         float angleToLook = enemy.getRotation();
