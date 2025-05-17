@@ -100,8 +100,6 @@ public class Level {
 
         grates = new ArrayList<>();
 
-
-
         // levels.json
         // level files
         JsonValue constants = selector.loadCurrentLevel();
@@ -151,9 +149,6 @@ public class Level {
                 bombableTiles.add(new Point(tx, ty));
             }
         }
-
-
-
 
         //Goal1
         JsonValue goalTileLayer = findLayer(constants, "goal1");
@@ -356,7 +351,7 @@ public class Level {
                 int tx = i % layerWidth;
                 int ty = i / layerWidth;
                 ty = layerHeight - 1 - ty;                        // flip Y origin
-                bombableTiles.remove(new Point(tx, ty));
+                bombableTiles.add(new Point(tx, ty));
                 // lookup the sub-texture for this gid
                 TextureRegion region = tileRegions.get(gid);
                 if (region == null) continue;                     // no matching region
@@ -434,8 +429,6 @@ public class Level {
                 }
             }
         }
-
-
 
         // ---------- Door ----------
         JsonValue doorLayer = findLayer(constants, "door");
