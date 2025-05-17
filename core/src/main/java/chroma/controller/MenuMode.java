@@ -287,8 +287,9 @@ public class MenuMode implements Screen, InputProcessor {
             draw(delta);
         }
 
-        // We are are ready, notify our listener
+        // We are ready, notify our listener
         if (isReady() && listener != null) {
+            menuSong.stop();
             listener.exitScreen(this, currLevel);
         }
     }
