@@ -19,11 +19,15 @@ public class GoalCollision extends ObstacleSprite {
     private Vector2 pos;
     private TextureRegion notFullTex;
     private TextureRegion fullTex;
+    private TextureRegion tex25;
+    private TextureRegion tex60;
     private static final float WIDTH = 4f;  // goal width in world units
     private static final float HEIGHT = 5f;// goal height in world units
     private boolean complete = false;
+    private boolean complete25 = false;
+    private boolean complete60 = false;
 
-    public GoalCollision(Vector2 center, float units, Texture notFull, Texture full) {
+    public GoalCollision(Vector2 center, float units, Texture notFull, Texture full, Texture notFull25, Texture notFull60) {
         super();
         this.units = units;
 
@@ -51,7 +55,8 @@ public class GoalCollision extends ObstacleSprite {
 
         fullTex = new TextureRegion(full);
         notFullTex = new TextureRegion(notFull);
-
+        tex25 = new TextureRegion(notFull25);
+        tex60 = new TextureRegion(notFull60);
         // Scale the polygon and create the mesh
         mesh.set(-halfWidth, -halfHeight, halfWidth*2, halfHeight*2);
 
@@ -65,18 +70,33 @@ public class GoalCollision extends ObstacleSprite {
     public void setComplete() {
         this.complete = true;
     }
+    public void set25() {
+        this.complete25 = true;
+    }
+    public void set60() {
+        this.complete60 = true;
+    }
+
 
     public void draw(SpriteBatch batch) {
         float px = obstacle.getX() * units;
         float py = obstacle.getY() * units;
         float w  = WIDTH * units;
         float h  = HEIGHT * units;
-        if(complete){
-            batch.draw(fullTex,
+        if(!complete&&!complete25&&!complete60){
+            batch.draw(notFullTex,
                 px - w/2, py - h/2,
                 w, h);
-        }else{
-            batch.draw(notFullTex,
+        } else if(!complete && !complete60){
+            batch.draw(tex25,
+                px - w/2, py - h/2,
+                w, h);
+        } else if(!complete){
+            batch.draw(tex60,
+                px - w/2, py - h/2,
+                w, h);
+        }else {
+            batch.draw(fullTex,
                 px - w/2, py - h/2,
                 w, h);
         }
