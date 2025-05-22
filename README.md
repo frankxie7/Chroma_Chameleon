@@ -7,7 +7,9 @@ evading those determined to capture the lab's greatest mistake.
 
 ## Controls 
 WASD Movement
+
 Spray - Left Click
+
 Bomb - Shift + Hold Left Click
 
 ## Installation
