@@ -1,39 +1,19 @@
-# Release Task Summary
+# Chroma Chameleon
 
-## Frank
-- [X] Change spray release control to **Left Click**
-- [] Fix **bomb being drawn outside the map**
-- [] Fix **window zoom issue**
+## Description
+A failed experiment by a group of rogue scientists unleashed Chroma — a super-intelligent chameleon with a nifty knack for spitting out different patterns of paint. 
+Navigate this creature, with its newly acquired party trick, through an evil lab rigged with all kinds of danger. Help Chroma search for his way out while 
+evading those determined to capture the lab's greatest mistake.
 
-## Brian
-- [X] Remove **bomb charging mechanic**
-- [X] Implement Laser system
-- [X] Create **tutorial levels**
+## Controls 
+WASD Movement
+Spray - Left Click
+Bomb - Shift + Hold Left Click
 
-## Cooper
-- [X] Find ways to prevent enemies from **instantly losing track** of the chameleon
-- [] Find and **integrate audio assets**
+## Installation
+Download from the GDIAC Website https://gdiac.cs.cornell.edu/gdiac/showcase/gallery/chromachameleon/
+OR
+Download and unzip the latest release
 
-## Alex
-- [] **spray texturing**
-- [] Goal completion UI
 
-## Beilin
-- [] Design **later levels**
-- [] Coordinate with Alex on the **completion bar**
-- [] Work with artists to integrate assets
 
-## Lower Priority
-- [] Evaluate feasibility of implementing **lighting effects**
-
-Art assets to be implemented:
-- [] lose animation
-- [] win animation autopilot
-- [] tutorial assets
-
-- **All Members**:
-    - If you finish early, help with **level design**
-    - Target: **At least 10 levels** for this release
-        - Brian will do 5–7 tutorial levels 
-        - some intermediately complex level like level-2 & 3 in Alpha release
-        - 1–2 large-scale levels (similar to first demo map)
